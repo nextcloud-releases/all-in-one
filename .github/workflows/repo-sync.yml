@@ -25,8 +25,10 @@ jobs:
         git config --local user.name "GitHub Workflow"
         git add -A
         git commit -m "Repo-sync" || echo "Nothing to update"
-    - name: Push changes
-      uses: ad-m/github-push-action@master
+    - name: Create Pull Request
+      uses: peter-evans/create-pull-request@v3
       with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        force: true
+        commit-message: Repo Sync
+        signoff: true
+        title: Repo Sync
+        body: Automated Repo Sync
