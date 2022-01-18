@@ -1,0 +1,32 @@
+on:
+  schedule:
+  - cron:  "*/15 * * * *"
+  workflow_dispatch:
+
+permissions: write-all
+
+jobs:
+  sync_latest_from_upstream:
+    runs-on: ubuntu-latest
+    name: Sync latest commits from upstream repo
+    steps:
+    - uses: actions/checkout@v2
+    - name: Sync files
+      run: |
+        mkdir -p ../tmp
+        cd ../tmp
+        git clone https://github.com/nextcloud/all-in-one.git --depth 1 .
+        cd ../all-in-one
+        rm -rf ./*
+        mv ../tmp/* ./
+    - name: Commit files
+      run: |
+        git config --local user.email "workflow@github.com"
+        git config --local user.name "GitHub Workflow"
+        git add -A
+        git commit -m "Repo-sync" || echo "Nothing to update"
+    - name: Push changes
+      uses: ad-m/github-push-action@master
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        force: true
