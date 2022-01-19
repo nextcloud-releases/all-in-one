@@ -1,7 +1,8 @@
+name: Repo Sync
+
 on:
-  schedule:
-  - cron:  "00/15 * * * *"
   workflow_dispatch:
+    branches: [ main ]
 
 jobs:
   sync_latest_from_upstream:

@@ -1,8 +1,11 @@
 name: Build docker images
 
 on:
-  push:
+  workflow_run:
     branches: [ main ]
+    workflows: ["Repo Sync"]
+    types:
+      - completed
 
 jobs:
   build:
