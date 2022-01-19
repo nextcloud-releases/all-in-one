@@ -19,6 +19,7 @@ RUN apt-get update; \
         supervisor \
         openssl \
         sudo \
+        dpkg-dev \
     ; \
     rm -rf /var/lib/apt/lists/*
 

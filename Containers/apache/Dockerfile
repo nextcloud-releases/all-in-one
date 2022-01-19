@@ -17,6 +17,7 @@ RUN set -ex; \
         ca-certificates \
         openssl \
         netcat \
+        dpkg-dev \
     ; \
     rm -rf /var/lib/apt/lists/*
 
