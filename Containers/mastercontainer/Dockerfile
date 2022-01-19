@@ -22,9 +22,7 @@ RUN apt-get update; \
     ; \
     rm -rf /var/lib/apt/lists/*
 
-ENV DEB_HOST_ARCH="$(dpkg-architecture --query DEB_HOST_ARCH)"
-
-RUN curl "https://caddyserver.com/api/download?os=linux&arch=$DEB_HOST_ARCH" -o "/usr/bin/caddy" \
+RUN curl "https://caddyserver.com/api/download?os=linux&arch=$(dpkg-architecture --query DEB_HOST_ARCH)" -o "/usr/bin/caddy" \
     && chmod +x /usr/bin/caddy \
     && /usr/bin/caddy version
 
