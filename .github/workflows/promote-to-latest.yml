@@ -1,4 +1,4 @@
-name: Promote a specific Docker image from develop to latest 
+name: Promote to latest
 
 on:
   workflow_dispatch:
