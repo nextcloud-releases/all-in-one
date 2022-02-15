@@ -65,6 +65,11 @@ if ( [ -f "$DATADIR/PG_VERSION" ] && [ "$PG_MAJOR" != "$(cat "$DATADIR/PG_VERSIO
     echo "Restoring the database from database dump"
     psql "$POSTGRES_DB" -U "oc_$POSTGRES_USER" < "$DUMP_FILE"
 
+    # Set correct permissions
+    psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
+        REASSIGN OWNED BY oc_admin TO "oc_$POSTGRES_USER";
+EOSQL
+
     # Shut down the database to be able to start it again
     pg_ctl stop -m fast
 
