@@ -66,7 +66,7 @@ if ( [ -f "$DATADIR/PG_VERSION" ] && [ "$PG_MAJOR" != "$(cat "$DATADIR/PG_VERSIO
         OC_ADMIN_EXISTS=1
         psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
             CREATE USER oc_admin WITH PASSWORD '$POSTGRES_PASSWORD' CREATEDB;
-            ALTER TABLE "$POSTGRES_DB" OWNER TO oc_admin;
+            ALTER DATABASE "$POSTGRES_DB" OWNER TO oc_admin;
 EOSQL
     fi
 
@@ -77,7 +77,7 @@ EOSQL
     # Correct permissions
     if [ -n "$OC_ADMIN_EXISTS" ]; then
         psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
-            ALTER TABLE "$POSTGRES_DB" OWNER TO "oc_$POSTGRES_USER";
+            ALTER DATABASE "$POSTGRES_DB" OWNER TO "oc_$POSTGRES_USER";
             REASSIGN OWNED BY oc_admin TO "oc_$POSTGRES_USER";
 EOSQL
     fi
