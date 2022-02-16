@@ -15,11 +15,6 @@ get_expiration_time() {
     DURATION_READABLE=$(printf "%02d hours %02d minutes %02d seconds" $DURATION_HOUR $DURATION_MIN $DURATION_SEC)
 }
 
-# Export defaults 
-export BORG_PASSPHRASE="$BORG_PASSWORD"
-export BORG_UNKNOWN_UNENCRYPTED_REPO_ACCESS_IS_OK=yes
-export BORG_RELOCATED_REPO_ACCESS_IS_OK=yes
-
 # Test if all volumes aren't empty
 VOLUME_DIRS="$(find /nextcloud_aio_volumes -mindepth 1 -maxdepth 1 -type d)"
 mapfile -t VOLUME_DIRS <<< "$VOLUME_DIRS"
