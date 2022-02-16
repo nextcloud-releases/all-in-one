@@ -93,11 +93,13 @@ class ConfigurationManager
             return [];
         }
 
-        $backupLines = explode('\n', $content);
+        $backupLines = explode("\n", $content);
         $backupTimes = [];
         foreach($backupLines as $lines) {
-            $backupTimesTemp = explode(',', $lines);
-            $backupTimes[] = $backupTimesTemp[1];
+            if ($lines !== "") {
+                $backupTimesTemp = explode(',', $lines);
+                $backupTimes[] = $backupTimesTemp[1];     
+            }
         }
         
         if (!is_array($backupTimes)) {
