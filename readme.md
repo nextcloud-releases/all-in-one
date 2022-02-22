@@ -81,14 +81,14 @@ You might investigate yourself though how it could made work behind reverse prox
 ### Which ports are mandatory to be open?
 Only those (if you acces the Mastercontainer Interface internally via port 8080):
 - `443/TCP` for the Nextcloud container
-- `3478/TCP` and `3478/UPD` for the Talk container
+- `3478/TCP` and `3478/UDP` for the Talk container
 
 ### Explanation of used ports:
 - `8080/TCP`: Mastercontainer Interface with self-signed certificate (works always, also if only access via IP-address is possible, e.g. `https://internal.ip.address:8080/`)
 - `80/TCP`: redirects to Nextcloud (is used for getting the certificate via ACME http-challenge for the Mastercontainer)
 - `8443/TCP`: Mastercontainer Interface with valid certificate (only works if port 80 and 8443 are open and you point a domain to your server. It generates a valid certificate then automatically and access via e.g. `https://public.domain.com:8443/` is possible.)
 - `443/TCP`: will be used by the Nextcloud container later on and needs to be open
-- `3478/TCP` and `3478/UPD`: will be used by the Turnserver inside the Talk container and needs to be open
+- `3478/TCP` and `3478/UDP`: will be used by the Turnserver inside the Talk container and needs to be open
 
 ### How to run `occ` commands?
 Simply run the following: `sudo docker exec -it nextcloud-aio-nextcloud php occ your-command`. Of course `your-command` needs to be exchanged with the command that you want to run.
@@ -113,11 +113,31 @@ It is recommended to create a backup before any container update. By doing this,
 
 If you connect an external drive to your host, and choose the backup directory to be on that drive, you are also kind of save against drive failures of the drive where the docker volumes are stored on. 
 
-Backups can be created and restored in the AIO interface using the buttons `Create Backup` and `Restore last backup`. Additionally, a backup check is provided that checks the integrity of your backups but it shouldn't be needed in most situations. 
+Backups can be created and restored in the AIO interface using the buttons `Create Backup` and `Restore selected backup`. Additionally, a backup check is provided that checks the integrity of your backups but it shouldn't be needed in most situations. 
 
 The backups itself get encrypted with an encryption key that gets shown to you in the AIO interface. Please save that at a safe place as you will not be able to restore from backup without this key.
 
-Note that this implementation does not provide remote backups, for this you can use the [backup app](https://apps.nextcloud.com/apps/backup). 
+Note that this implementation does not provide remote backups, for this you can use the [backup app](https://apps.nextcloud.com/apps/backup).
+
+---
+
+**Pro-tip**: you can open the BorgBackup archives on your host by following these steps:<br>
+(instructions for Ubuntu Desktop)
+```bash
+# Install borgbackup on the host
+sudo apt update && sudo apt install borgbackup
+
+# Mount the archives to /tmp/borg (if you are using the default backup location /mnt/backup/borg)
+sudo mkdir -p /tmp/borg && sudo borg mount "/mnt/backup/borg" /tmp/borg
+
+# After entering your repository key successfully, you should be able to access all archives in /tmp/borg
+# You can now do whatever you want by syncing them to a different place using rsync or doing other things
+# E.g. you can open the file manager on that location by running:
+xhost +si:localuser:root && sudo nautilus /tmp/borg
+
+# When you are done, simply close the file manager and run the following command to unmount the backup archives:
+sudo umount /tmp/borg
+```
 
 ### Huge docker logs
 When your containers run for a few days without a restart, the container logs that you can view from the AIO interface can get really huge. You can limit the loge sizes by enabling logrotate for docker container logs. Feel free to enable this by following those instructions: https://sandro-keil.de/blog/logrotate-for-docker-container/
@@ -133,6 +153,9 @@ You can move the whole docker library and all its files including all Nextcloud 
 
 ### How to edit Nextclouds config.php file with a texteditor?
 You can edit Nextclouds config.php file directly from the host with your favorite text editor. E.g. like this: `sudo nano /var/lib/docker/volumes/nextcloud_aio_nextcloud/_data/config/config.php`. Make sure to not break the file though which might corrupt your Nextcloud instance otherwise. In best case, create a backup using the built-in backup solution before editing the file.
+
+### Custom skeleton directory
+If you want to define a custom skeleton directory, you can do so by putting your skeleton files into `/var/lib/docker/volumes/nextcloud_aio_nextcloud_data/_data/skeleton/`, applying the correct permissions with `sudo chown -R 33:0 /var/lib/docker/volumes/nextcloud_aio_nextcloud_data/_data/skeleton` and setting the skeleton directory option with `sudo docker exec -it nextcloud-aio-nextcloud php occ config:system:set skeletondirectory --value="/mnt/ncdata/skeleton"`. You can read further on this option here: [click here](https://docs.nextcloud.com/server/stable/admin_manual/configuration_server/config_sample_php_parameters.html?highlight=skeletondir#:~:text=adding%20%3Fdirect%3D1-,'skeletondirectory',-%3D%3E%20'%2Fpath%2Fto%2Fnextcloud)
 
 ### LDAP
 It is possible to connect to an existing LDAP server. You need to make sure that the LDAP server is reachable from the Nextcloud container. Then you can enable the LDAP app and configure LDAP in Nextcloud manually. If you don't have a LDAP server yet, recommended is to use this docker container: https://hub.docker.com/r/osixia/openldap/. Make sure here as well that Nextcloud can talk to the LDAP server. The easiest way is by adding the LDAP docker container to the docker network `nextcloud-aio`. Then you can connect to the LDAP container by its name from the Nextcloud container. **Pro-tip**: You will probably find this app useful: https://apps.nextcloud.com/apps/ldap_write_support
