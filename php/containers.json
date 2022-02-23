@@ -98,6 +98,11 @@
           "name": "nextcloud_aio_nextcloud_data",
           "location": "/mnt/ncdata",
           "writeable": true
+        },
+        {
+          "name": "%NEXTCLOUD_MOUNT%",
+          "location": "%NEXTCLOUD_MOUNT%",
+          "writeable": true
         }
       ],
       "environmentVariables": [
@@ -114,7 +119,6 @@
         "NEXTCLOUD_DATA_DIR=/mnt/ncdata",
         "OVERWRITEHOST=%NC_DOMAIN%",
         "OVERWRITEPROTOCOL=https",
-        "TRUSTED_PROXIES=127.0.0.1",
         "TURN_SECRET=%TURN_SECRET%",
         "SIGNALING_SECRET=%SIGNALING_SECRET%",
         "AIO_URL=%AIO_URL%"

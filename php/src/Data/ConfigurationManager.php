@@ -126,6 +126,11 @@ class ConfigurationManager
             throw new InvalidSettingConfigurationException("Domain is not in a valid format!");
         }
 
+        // Validate that it is not an IP-address
+        if(filter_var($domain, FILTER_VALIDATE_IP)) {
+            throw new InvalidSettingConfigurationException("Please enter a domain and not an IP-address!");
+        }
+
         $dnsRecordIP = gethostbyname($domain);
 
         // Validate IP
@@ -253,5 +258,28 @@ class ConfigurationManager
         }
 
         return $config['backup-mode'];
+    }
+
+    public function GetNextcloudMount() : string {
+        $mount = getenv('NEXTCLOUD_MOUNT');
+        if ($mount === false) {
+            $config = $this->GetConfig();
+            if (!isset($config['nextcloud_mount'])) {
+                $config['nextcloud_mount'] = '';
+            }
+            return $config['nextcloud_mount'];
+        } else {
+            if(file_exists(DataConst::GetConfigFile())) {
+                $config = $this->GetConfig();
+                if (!isset($config['nextcloud_mount'])) {
+                    $config['nextcloud_mount'] = '';
+                }
+                if ($mount !== $config['nextcloud_mount']) {
+                    $config['nextcloud_mount'] = $mount;
+                    $this->WriteConfig($config);
+                }
+            }
+            return $mount;
+        }
     }
 }
