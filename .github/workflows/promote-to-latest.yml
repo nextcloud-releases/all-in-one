@@ -10,7 +10,7 @@ on:
 jobs:
   promote_to_latest:
     runs-on: ubuntu-latest
-    name: Promote a specific Docker image from develop to latest 
+    name: Promote ${{ github.event.inputs.imageName }} from develop to latest 
     steps:
     - name: Login to DockerHub
       uses: docker/login-action@v1 
