@@ -148,10 +148,18 @@ class ConfigurationManager
         // Get Instance ID
         $instanceID = $this->GetSecret('INSTANCE_ID');
 
+        // set protocol
+        $port = $this->GetApachePort();
+        if ($port !== '443') {
+            $protocol = 'https://';
+        } else {
+            $protocol = 'http://';
+        }
+
         $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL,'http://' . $domain . ':443');
+        curl_setopt($ch, CURLOPT_URL, $protocol . $domain . ':443');
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        $response = curl_exec($ch);
+        $response = (string)curl_exec($ch);
         # Get rid of trailing \n
         $response = str_replace("\n", "", $response);
 
@@ -230,6 +238,29 @@ class ConfigurationManager
         $config = $this->GetConfig();
         $config['borg_backup_host_location'] = $location;
         $this->WriteConfig($config);
+    }
+
+    public function GetApachePort() : string {
+        $port = getenv('APACHE_PORT');
+        if ($port === false) {
+            $config = $this->GetConfig();
+            if (!isset($config['apache_port']) || $config['apache_port'] === '') {
+                $config['apache_port'] = '443';
+            }
+            return $config['apache_port'];
+        } else {
+            if(file_exists(DataConst::GetConfigFile())) {
+                $config = $this->GetConfig();
+                if (!isset($config['apache_port'])) {
+                    $config['apache_port'] = '';
+                }
+                if ($port !== $config['apache_port']) {
+                    $config['apache_port'] = $port;
+                    $this->WriteConfig($config);
+                }
+            }
+            return $port;
+        }
     }
 
     /**
