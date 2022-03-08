@@ -1,8 +1,6 @@
 name: Repo Sync
 
 on:
-  schedule:
-  - cron:  '00 12 * * *'
   workflow_dispatch:
     branches: [ main ]
 
