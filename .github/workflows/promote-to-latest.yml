@@ -1,11 +1,11 @@
+name: Promote to latest
+
 on:
   workflow_dispatch:
     inputs:
       imageName:
         description: "Name of the container image - See https://github.com/nextcloud-releases/all-in-one/blob/main/.github/workflows/build_images.yml#L21-L30 for available names. Please verify before running this workflow that no job is running here: https://github.com/nextcloud-releases/all-in-one/actions/workflows/build_images.yml"
         required: true
-
-name: Promote ${{ github.event.inputs.imageName }} from develop to latest 
 
 jobs:
   promote_to_latest:
