@@ -117,8 +117,8 @@ class ConfigurationManager
      * @throws InvalidSettingConfigurationException
      */
     public function SetDomain(string $domain) : void {
-        // Validate URL
-        if (!filter_var('http://' . $domain, FILTER_VALIDATE_URL)) {
+        // Validate domain
+        if (!filter_var($domain, FILTER_VALIDATE_DOMAIN, FILTER_FLAG_HOSTNAME)) {
             throw new InvalidSettingConfigurationException("Domain is not in a valid format!");
         }
 
@@ -160,7 +160,7 @@ class ConfigurationManager
         $response = str_replace("\n", "", $response);
 
         if($response !== $instanceID) {
-            throw new InvalidSettingConfigurationException("Domain does not point to this server.");
+            throw new InvalidSettingConfigurationException("Domain does not point to this server or reverse proxy not configured correctly.");
         }
 
         // Write domain
@@ -236,6 +236,34 @@ class ConfigurationManager
         $this->WriteConfig($config);
     }
 
+    /**
+     * @throws InvalidSettingConfigurationException
+     */
+    public function ChangeMasterPassword(string $currentPassword, string $newPassword) : void {
+        if ($currentPassword === '') {
+            throw new InvalidSettingConfigurationException("Please enter your current password.");
+        }
+
+        if ($currentPassword !== $this->GetPassword()) {
+            throw new InvalidSettingConfigurationException("The entered current password is not correct.");
+        }
+
+        if ($newPassword === '') {
+            throw new InvalidSettingConfigurationException("Please enter a new password.");
+        }
+
+        if (strlen($newPassword) < 24) {
+            throw new InvalidSettingConfigurationException("New passwords must be >= 24 digits.");
+        }
+
+        if (!preg_match("#^[a-zA-Z0-9 ]+$#", $newPassword)) {
+            throw new InvalidSettingConfigurationException('Not allowed characters in the new password.');
+        }
+
+        // All checks pass so set the password
+        $this->SetPassword($newPassword);
+    }
+
     public function GetApachePort() : string {
         $port = getenv('APACHE_PORT');
         if ($port === false) {
@@ -303,6 +331,29 @@ class ConfigurationManager
                 }
                 if ($mount !== $config['nextcloud_mount']) {
                     $config['nextcloud_mount'] = $mount;
+                    $this->WriteConfig($config);
+                }
+            }
+            return $mount;
+        }
+    }
+
+    public function GetNextcloudDatadirMount() : string {
+        $mount = getenv('NEXTCLOUD_DATADIR');
+        if ($mount === false) {
+            $config = $this->GetConfig();
+            if (!isset($config['nextcloud_datadir']) || $config['nextcloud_datadir'] === '') {
+                $config['nextcloud_datadir'] = 'nextcloud_aio_nextcloud_data';
+            }
+            return $config['nextcloud_datadir'];
+        } else {
+            if(file_exists(DataConst::GetConfigFile())) {
+                $config = $this->GetConfig();
+                if (!isset($config['nextcloud_datadir'])) {
+                    $config['nextcloud_datadir'] = '';
+                }
+                if ($mount !== $config['nextcloud_datadir']) {
+                    $config['nextcloud_datadir'] = $mount;
                     $this->WriteConfig($config);
                 }
             }
