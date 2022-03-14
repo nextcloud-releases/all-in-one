@@ -120,12 +120,12 @@ class DockerActionManager
         }
     }
 
-    public function GetLogs(Container $container) : string
+    public function GetLogs(string $id) : string
     {
         $url = $this->BuildApiUrl(
             sprintf(
                 'containers/%s/logs?stdout=true&stderr=true',
-                urlencode($container->GetIdentifier())
+                urlencode($id)
             ));
         $responseBody = (string)$this->guzzleClient->get($url)->getBody();
 
@@ -216,6 +216,8 @@ class DockerActionManager
                     $replacements[1] = $this->configurationManager->GetSelectedRestoreTime();
                 } elseif ($out[1] === 'APACHE_PORT') {
                     $replacements[1] = $this->configurationManager->GetApachePort();
+                } elseif ($out[1] === 'NEXTCLOUD_MOUNT') {
+                    $replacements[1] = $this->configurationManager->GetNextcloudMount();
                 } else {
                     $replacements[1] = $this->configurationManager->GetSecret($out[1]);
                 }
@@ -261,19 +263,14 @@ class DockerActionManager
 
     public function PullContainer(Container $container) : void
     {
-        $pullcontainer = true;
-        if ($container->GetIdentifier() === 'nextcloud-aio-database') {
-            if ($this->GetDatabasecontainerExitCode() > 0) {
-                $pullcontainer = false;
-            }
-        }
-        if ($pullcontainer) {
-            $url = $this->BuildApiUrl(sprintf('images/create?fromImage=%s', urlencode($this->BuildImageName($container))));
-            try {
-                $this->guzzleClient->post($url);
-            } catch (RequestException $e) {
-                throw $e;
-            }
+        $url = $this->BuildApiUrl(sprintf('images/create?fromImage=%s', urlencode($this->BuildImageName($container))));
+        try {
+            $this->guzzleClient->post($url);
+        } catch (RequestException $e) {
+            error_log($e->getMessage());
+            // Don't exit here because it is possible that the image is already present 
+            // and we ran into docker hub limits.
+            // We will exit later if not image should be available.
         }
     }
 

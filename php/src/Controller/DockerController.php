@@ -33,9 +33,17 @@ class DockerController
             $this->PerformRecursiveContainerStart($dependency);
         }
 
+        $pullcontainer = true;
+        if ($id === 'nextcloud-aio-database') {
+            if ($this->dockerActionManager->GetDatabasecontainerExitCode() > 0) {
+                $pullcontainer = false;
+            }
+        }
         $this->dockerActionManager->DeleteContainer($container);
         $this->dockerActionManager->CreateVolumes($container);
-        $this->dockerActionManager->PullContainer($container);
+        if ($pullcontainer) {
+            $this->dockerActionManager->PullContainer($container);
+        }
         $this->dockerActionManager->CreateContainer($container);
         $this->dockerActionManager->StartContainer($container);
         $this->dockerActionManager->ConnectContainerToNetwork($container);
@@ -44,8 +52,12 @@ class DockerController
     public function GetLogs(Request $request, Response $response, $args) : Response
     {
         $id = $request->getQueryParams()['id'];
-        $container = $this->containerDefinitionFetcher->GetContainerById($id);
-        $logs = $this->dockerActionManager->GetLogs($container);
+        if (str_starts_with($id, 'nextcloud-aio-')) {
+            $logs = $this->dockerActionManager->GetLogs($id);
+        } else {
+            $logs = 'Container not found.';
+        }
+
         $body = $response->getBody();
         $body->write($logs);
 
