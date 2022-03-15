@@ -15,8 +15,8 @@ jobs:
       fail-fast: false
       matrix:
         platform: [ 
-          {arch: 'linux/amd64',  tag: 'develop' },
-          {arch: 'linux/arm64', tag: 'develop-arm64' } ]
+          {arch: 'linux/amd64', tag: 'develop'},
+          {arch: 'linux/arm64', tag: 'develop-arm64'}]
         container: [
           {name: 'aio-apache', context: './Containers/apache'},
           {name: 'aio-borgbackup', context: './Containers/borgbackup'},
@@ -27,7 +27,11 @@ jobs:
           {name: 'aio-postgresql', context: './Containers/postgresql'},
           {name: 'aio-redis', context: './Containers/redis'},
           {name: 'aio-talk', context: './Containers/talk'},
-          {name: 'aio-watchtower', context: './Containers/watchtower'}]
+          {name: 'aio-watchtower', context: './Containers/watchtower'},
+          {name: 'aio-clamav', context: './Containers/clamav'}]
+        exclude:
+          - platform: {arch: 'linux/arm64', tag: 'develop-arm64'}
+            container: {name: 'aio-clamav', context: './Containers/clamav'}
 
     steps:
       - name: Check out the repo
