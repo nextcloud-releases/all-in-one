@@ -2,4 +2,4 @@
 FROM clamav/clamav:0.104.2-2
 
 COPY clamav.conf /tmp/
-RUN cat /tmp/clamav.conf >> /clamav/etc/clamav/clamd.conf
+RUN cat /tmp/clamav.conf >> etc/clamav/clamd.conf
