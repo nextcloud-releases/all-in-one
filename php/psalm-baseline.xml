@@ -18,17 +18,19 @@
     <MissingParamType occurrences="1">
       <code>$args</code>
     </MissingParamType>
-    <PossiblyInvalidArrayAccess occurrences="2">
+    <PossiblyInvalidArrayAccess occurrences="3">
       <code>$request-&gt;getParsedBody()['borg_backup_host_location']</code>
       <code>$request-&gt;getParsedBody()['domain']</code>
+      <code>$request-&gt;getParsedBody()['clamav']</code>
     </PossiblyInvalidArrayAccess>
     <PossiblyNullArgument occurrences="2">
       <code>$request-&gt;getParsedBody()['borg_backup_host_location']</code>
       <code>$request-&gt;getParsedBody()['domain']</code>
     </PossiblyNullArgument>
-    <PossiblyNullArrayAccess occurrences="2">
+    <PossiblyNullArrayAccess occurrences="3">
       <code>$request-&gt;getParsedBody()['borg_backup_host_location']</code>
       <code>$request-&gt;getParsedBody()['domain']</code>
+      <code>$request-&gt;getParsedBody()['clamav']</code>
     </PossiblyNullArrayAccess>
   </file>
   <file src="src/Controller/DockerController.php">
@@ -47,13 +49,6 @@
     <PossiblyNullArrayAccess occurrences="1">
       <code>$request-&gt;getParsedBody()['selected_restore_time']</code>
     </PossiblyNullArrayAccess>
-    <PossiblyNullReference occurrences="5">
-      <code>GetDependsOn</code>
-      <code>GetDependsOn</code>
-      <code>GetIdentifier</code>
-      <code>GetIdentifier</code>
-      <code>GetRunningState</code>
-    </PossiblyNullReference>
   </file>
   <file src="src/Controller/LoginController.php">
     <MissingParamType occurrences="3">
@@ -71,12 +66,6 @@
       <code>$request-&gt;getParsedBody()['password']</code>
     </PossiblyNullArrayAccess>
   </file>
-  <file src="src/Cron/cron.php">
-    <PossiblyNullArgument occurrences="2">
-      <code>$nextcloudContainer</code>
-      <code>$nextcloudContainer</code>
-    </PossiblyNullArgument>
-  </file>
   <file src="src/Docker/DockerActionManager.php">
     <InvalidReturnType occurrences="1">
       <code>IContainerState</code>
@@ -87,12 +76,6 @@
     <PossiblyFalseOperand occurrences="1">
       <code>strpos($fullDigest, "@")</code>
     </PossiblyFalseOperand>
-    <PossiblyNullArgument occurrences="1">
-      <code>$apacheContainer</code>
-    </PossiblyNullArgument>
-    <PossiblyNullReference occurrences="1">
-      <code>GetUpdateState</code>
-    </PossiblyNullReference>
     <RedundantCondition occurrences="1">
       <code>$container-&gt;GetInternalPorts() !== null</code>
     </RedundantCondition>
