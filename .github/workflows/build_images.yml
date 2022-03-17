@@ -28,10 +28,13 @@ jobs:
           {name: 'aio-redis', context: './Containers/redis'},
           {name: 'aio-talk', context: './Containers/talk'},
           {name: 'aio-watchtower', context: './Containers/watchtower'},
-          {name: 'aio-clamav', context: './Containers/clamav'}]
+          {name: 'aio-clamav', context: './Containers/clamav'},
+          {name: 'aio-onlyoffice', context: './Containers/onlyoffice'}]
         exclude:
           - platform: {arch: 'linux/arm64', tag: 'develop-arm64'}
             container: {name: 'aio-clamav', context: './Containers/clamav'}
+          - platform: {arch: 'linux/arm64', tag: 'develop-arm64'}
+            container: {name: 'aio-onlyoffice', context: './Containers/onlyoffice'}
 
     steps:
       - name: Check out the repo
