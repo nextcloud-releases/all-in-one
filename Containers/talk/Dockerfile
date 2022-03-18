@@ -1,4 +1,4 @@
-FROM ubuntu:focal-20220302
+FROM ubuntu:focal-20220316
 
 EXPOSE 3478
 
@@ -54,7 +54,8 @@ RUN mkdir -p /etc/nats; \
     chown talk:talk -R /etc/nats; \
     chown talk:talk -R /etc/janus; \
     chown talk:talk -R /etc/signaling; \
-    chown talk:talk -R /usr/share/janus
+    chown talk:talk -R /usr/share/janus; \
+    cat /etc/janus/janus.jcfg
 
 # Give root a random password
 RUN echo "root:$(openssl rand -base64 12)" | chpasswd
