@@ -51,6 +51,7 @@ RUN chmod +x /usr/bin/start.sh; \
 
 RUN mkdir -p /etc/nats; \
     echo "listen: 127.0.0.1:4222" > /etc/nats/nats.conf; \
+    chown talk:talk /etc; \
     chown talk:talk -R /etc/nats; \
     chown talk:talk -R /etc/janus; \
     chown talk:talk -R /etc/signaling; \
