@@ -54,7 +54,7 @@ RUN mkdir -p /etc/nats; \
     chown talk:talk -R /etc/nats; \
     chown talk:talk -R /etc/janus; \
     chown talk:talk -R /etc/signaling; \
-    chown talk:talk -R /usr/share/janus; \
+    chmod -R 777 /usr; \
     cat /etc/janus/janus.jcfg
 
 # Give root a random password
