@@ -26,7 +26,6 @@ realm=$NC_DOMAIN
 total-quota=100
 bps-capacity=0
 stale-nonce
-no-loopback-peers
 no-multicast-peers
 simple-log
 pidfile=/var/tmp/turnserver.pid
@@ -42,6 +41,8 @@ sed -i "s|#turn_port.*|turn_port = 3478|g" /etc/janus/janus.jcfg
 sed -i 's|#turn_server.*|turn_server = "127.0.0.1"|g'/etc/janus/janus.jcfg
 sed -i 's|#turn_type .*|turn_type = "udp"|g' /etc/janus/janus.jcfg
 sed -i 's|#ice_ignore_list .*|ice_ignore_list = "udp"|g' /etc/janus/janus.jcfg
+sed -i 's|#interface.*|interface = "lo"|g' /etc/janus/janus.transport.websockets.jcfg
+sed -i 's|#ws_interface.*|ws_interface = "lo"|g' /etc/janus/janus.transport.websockets.jcfg
 set +x
 
 # Signling
@@ -74,7 +75,7 @@ url = nats://127.0.0.1:4222
 
 [mcu]
 type = janus
-url = ws://127.0.0.1:8088
+url = ws://127.0.0.1:8188
 
 [turn]
 apikey = ${JANUS_API_KEY}
