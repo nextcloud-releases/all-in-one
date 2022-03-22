@@ -15,26 +15,13 @@ Included are:
 **Found a bug?** Please file an issue at https://github.com/nextcloud/all-in-one
 
 ## How to use this?
+The following instructions are especially meant for Linux. For macOS see [this](#how-to-run-it-on-macos), for Windows see [this](#how-to-run-it-on-windows).
 1. Install Docker on your Linux installation using:
     ```
     curl -fsSL get.docker.com | sudo sh
     ```
-2. Make sure to pull the latest image:
-    ```
-    # For x64 CPUs:
-    sudo docker pull nextcloud/all-in-one:latest
-    ```
-    <details>
-    <summary>Command for arm64 CPUs like the Raspberry Pi 4</summary>
 
-    ```
-    # For arm64 CPUs:
-    sudo docker pull nextcloud/all-in-one:latest-arm64
-    ```
-
-    </details>
-
-3. Run the following command in order to start the container:
+2. Run the following command in order to start the container:
     ```
     # For x64 CPUs:
     sudo docker run -it \
@@ -65,11 +52,11 @@ Included are:
 
     </details>
 
-4. After the initial startup, you should be able to open the Nextcloud AIO Interface now on port 8080 of this server.<br>
+3. After the initial startup, you should be able to open the Nextcloud AIO Interface now on port 8080 of this server.<br>
 E.g. `https://internal.ip.of.this.server:8080`<br>
-If your server has port 80 and 8443 open and you point a domain to your server, you can get a valid certificate automatially by opening the Nextcloud AIO Interface via:<br>
+If your firewall/router has port 80 and 8443 open and you point a domain to your server, you can get a valid certificate automatially by opening the Nextcloud AIO Interface via:<br>
 `https://your-domain-that-points-to-this-server.tld:8443`
-5. Please do not forget to open port `3478/TCP` and `3478/UDP` for the Talk container!
+4. Please do not forget to open port `3478/TCP` and `3478/UDP` in your firewall/router for the Talk container!
 
 ## FAQ
 ### How does it work?
@@ -78,10 +65,7 @@ Nextcloud AIO is inspired by projects like Portainer that allow to manage the do
 ### Are reverse proxies supported?
 Yes. Please refer to the following documentation on this: [reverse-proxy.md](https://github.com/nextcloud/all-in-one/blob/main/reverse-proxy.md)
 
-### How to run it on macOS?
-On macOS, there is one specialty in comparison to linux: instead of using `--volume /var/run/docker.sock:/var/run/docker.sock:ro`, you need to use `--volume /var/run/docker.sock.raw:/var/run/docker.sock:ro`. Apart from that it should work and behave the same like on linux.
-
-### Which ports are mandatory to be open?
+### Which ports are mandatory to be open in your firewall/router?
 Only those (if you acces the Mastercontainer Interface internally via port 8080):
 - `443/TCP` for the Apache container
 - `3478/TCP` and `3478/UDP` for the Talk container
@@ -89,9 +73,31 @@ Only those (if you acces the Mastercontainer Interface internally via port 8080)
 ### Explanation of used ports:
 - `8080/TCP`: Mastercontainer Interface with self-signed certificate (works always, also if only access via IP-address is possible, e.g. `https://internal.ip.address:8080/`)
 - `80/TCP`: redirects to Nextcloud (is used for getting the certificate via ACME http-challenge for the Mastercontainer)
-- `8443/TCP`: Mastercontainer Interface with valid certificate (only works if port 80 and 8443 are open and you point a domain to your server. It generates a valid certificate then automatically and access via e.g. `https://public.domain.com:8443/` is possible.)
-- `443/TCP`: will be used by the Apache container later on and needs to be open
-- `3478/TCP` and `3478/UDP`: will be used by the Turnserver inside the Talk container and needs to be open
+- `8443/TCP`: Mastercontainer Interface with valid certificate (only works if port 80 and 8443 are open in your firewall/router and you point a domain to your server. It generates a valid certificate then automatically and access via e.g. `https://public.domain.com:8443/` is possible.)
+- `443/TCP`: will be used by the Apache container later on and needs to be open in your firewall/router
+- `3478/TCP` and `3478/UDP`: will be used by the Turnserver inside the Talk container and needs to be open in your firewall/router
+
+### How to run it on macOS?
+On macOS, there is one specialty in comparison to Linux: instead of using `--volume /var/run/docker.sock:/var/run/docker.sock:ro`, you need to use `--volume /var/run/docker.sock.raw:/var/run/docker.sock:ro` to run it after you installed [Docker Desktop](https://www.docker.com/products/docker-desktop/). Apart from that it should work and behave the same like on Linux.
+
+### How to run it on Windows?
+On Windows, the following command should work after you installed [Docker Desktop](https://www.docker.com/products/docker-desktop/):
+<details>
+<summary>Click here to show it</summary>
+
+```
+docker run -it ^
+--name nextcloud-aio-mastercontainer ^
+--restart always ^
+-p 80:80 ^
+-p 8080:8080 ^
+-p 8443:8443 ^
+--volume nextcloud_aio_mastercontainer:/mnt/docker-aio-config ^
+--volume //var/run/docker.sock:/var/run/docker.sock:ro ^
+nextcloud/all-in-one:latest
+```
+
+</details>
 
 ### How to run `occ` commands?
 Simply run the following: `sudo docker exec -it nextcloud-aio-nextcloud php occ your-command`. Of course `your-command` needs to be exchanged with the command that you want to run.
@@ -254,10 +260,10 @@ You can simply copy and past the script into a file e.g. named `backup-script.sh
 Afterwards apply the correct permissions with `sudo chown root:root /root/backup-script.sh` and `sudo chmod 700 /root/backup-script.sh`. Then you can create a cronjob that runs e.g. at `20:00` each week on sundays like this: `crontab -u root -l | { cat; echo "0 20 * * 7 /root/backup-script.sh"; } | crontab -u root -`. Make sure that it does not collidate with the daily backups from AIO (if configured) since the target backup repository might get into an inconsistent state. (There is no check in place that checks this.)
 
 ### How to change the default location of Nextcloud's Datadir?
-You can configure the Nextcloud container to use a specific directory on your host as data directory. You can do so by adding the environmental variable `NEXTCLOUD_DATADIR` to the initial startup of the mastercontainer. Allowed values for that variable are strings that start with `/mnt/` or `/media/`. An example for this is `-e NEXTCLOUD_DATADIR="/mnt/ncdata"`. Please make sure to apply the correct permissions to the chosen directory before starting Nextcloud the first time. In this example would the command for this be: `sudo chown -R 33:0 /mnt/ncdata`. **Attention:** It is very important to change the datadir **before** Nextcloud is installed/started the first time and not to change it afterwards!
+You can configure the Nextcloud container to use a specific directory on your host as data directory. You can do so by adding the environmental variable `NEXTCLOUD_DATADIR` to the initial startup of the mastercontainer. Allowed values for that variable are strings that start with `/mnt/`, `/media/` or `/host_mnt/`. An example for Linux and macOS is `-e NEXTCLOUD_DATADIR="/mnt/ncdata"`. On Windows it might be `-e NEXTCLOUD_DATADIR="/host_mnt/c/your/data/path"` (This Windows example would be equivalent to `C:\your\data\path` on the Windows host. So you need to translate the path that you want to use into the correct format.) Please make sure to apply the correct permissions to the chosen directory before starting Nextcloud the first time (not needed on Windows). In this example would the command for this be: `sudo chown -R 33:0 /mnt/ncdata`. ⚠ **Attention:** It is very important to change the datadir **before** Nextcloud is installed/started the first time and not to change it afterwards!
 
 ### How to allow the Nextcloud container to access directories on the host?
-By default, the Nextcloud container is confined and cannot access directories on the host OS. You might want to change this when you are planning to use local external storage in Nextcloud to store some files outside the data directory and can do so by adding the environmental variable `NEXTCLOUD_MOUNT` to the initial startup of the mastercontainer. Allowed values for that variable are strings that are equal to or start with `/mnt/` or `/media/` or are equal to `/var/backups` and unequal to `/mnt/ncdata`. Two examples for this are: `-e NEXTCLOUD_MOUNT="/mnt/"` or `-e NEXTCLOUD_MOUNT="/media/"`. After doing so, please make sure to apply the correct permissions to the directories that you want to use in Nextcloud. E.g. `sudo chown -R 33:0 /mnt/your-drive-mountpoint` should make it work. You can then navigate to the apps management page, activate the external storage app, navigate to `https://your-nc-domain.com/settings/admin/externalstorages` and add a local external storage directory that will be accessible inside the container at the same place that you've entered. E.g. `/mnt/your-drive-mountpoint` will be mounted to `/mnt/your-drive-mountpoint` inside the container, etc. Be aware though that these locations will not be covered by the built-in backup solution!
+By default, the Nextcloud container is confined and cannot access directories on the host OS. You might want to change this when you are planning to use local external storage in Nextcloud to store some files outside the data directory and can do so by adding the environmental variable `NEXTCLOUD_MOUNT` to the initial startup of the mastercontainer. Allowed values for that variable are strings that are equal to or start with `/mnt/`, `/media/` or `/host_mnt/` or are equal to `/var/backups` and unequal to `/mnt/ncdata`. Two examples for Linux and macOS are: `-e NEXTCLOUD_MOUNT="/mnt/"` or `-e NEXTCLOUD_MOUNT="/media/"`. On Windows it might be `-e NEXTCLOUD_DATADIR="/host_mnt/c"` (This Windows example would be equivalent to `C:\` on the Windows host. So you need to translate the path that you want to use into the correct format.) After using this option, please make sure to apply the correct permissions to the directories that you want to use in Nextcloud (not needed on Windows). E.g. `sudo chown -R 33:0 /mnt/your-drive-mountpoint` should make it work. You can then navigate to the apps management page, activate the external storage app, navigate to `https://your-nc-domain.com/settings/admin/externalstorages` and add a local external storage directory that will be accessible inside the container at the same place that you've entered. E.g. `/mnt/your-drive-mountpoint` will be mounted to `/mnt/your-drive-mountpoint` inside the container, etc. Be aware though that these locations will not be covered by the built-in backup solution!
 
 ### Huge docker logs
 When your containers run for a few days without a restart, the container logs that you can view from the AIO interface can get really huge. You can limit the loge sizes by enabling logrotate for docker container logs. Feel free to enable this by following those instructions: https://sandro-keil.de/blog/logrotate-for-docker-container/
