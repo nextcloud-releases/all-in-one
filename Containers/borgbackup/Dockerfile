@@ -1,4 +1,4 @@
-FROM debian:bullseye-20220316-slim
+FROM debian:bullseye-20220328-slim
 
 RUN set -ex; \
     \
@@ -8,6 +8,7 @@ RUN set -ex; \
         rsync \
         fuse \
         python3-llfuse \
+        jq \
     ; \
     rm -rf /var/lib/apt/lists/*
 
