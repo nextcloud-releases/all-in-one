@@ -2,31 +2,47 @@ name: Promote to latest
 
 on:
   workflow_dispatch:
-    inputs:
-      imageName:
-        description: "Name of the container image - See https://github.com/nextcloud-releases/all-in-one/blob/main/.github/workflows/build_images.yml#L21-L30 for available names. Please verify before running this workflow that no job is running here: https://github.com/nextcloud-releases/all-in-one/actions/workflows/build_images.yml"
-        required: true
 
 jobs:
   promote_to_latest:
     runs-on: ubuntu-latest
-    name: Promote ${{ github.event.inputs.imageName }} from develop to latest 
+    name: Promote from beta to latest 
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        name: [
+          'aio-apache',
+          'aio-borgbackup',
+          'aio-collabora',
+          'aio-domaincheck',
+          'all-in-one',
+          'aio-nextcloud',
+          'aio-postgresql',
+          'aio-redis',
+          'aio-talk',
+          'aio-watchtower',
+          'aio-clamav',
+          'aio-onlyoffice']
+
     steps:
     - name: Login to DockerHub
       uses: docker/login-action@v1 
       with:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
-    - name: Promote image to Docker Hub
+    - name: Promote images from beta to latest
       run: |
-        AIO_NAME=${{ github.event.inputs.imageName }}
+        set -x
+        AIO_NAME=${{ matrix.name }}
+        set +x
         # x64
-        docker pull nextcloud/$AIO_NAME\:develop
-        docker tag nextcloud/$AIO_NAME\:develop nextcloud/$AIO_NAME\:latest
+        docker pull nextcloud/$AIO_NAME\:beta
+        docker tag nextcloud/$AIO_NAME\:beta nextcloud/$AIO_NAME\:latest
         docker push nextcloud/$AIO_NAME\:latest
         if [ "$AIO_NAME" != "aio-clamav" ] && [ "$AIO_NAME" != "aio-onlyoffice" ]; then
           # arm64 
-          docker pull nextcloud/$AIO_NAME\:develop-arm64
-          docker tag nextcloud/$AIO_NAME\:develop-arm64 nextcloud/$AIO_NAME\:latest-arm64
+          docker pull nextcloud/$AIO_NAME\:beta-arm64
+          docker tag nextcloud/$AIO_NAME\:beta-arm64 nextcloud/$AIO_NAME\:latest-arm64
           docker push nextcloud/$AIO_NAME\:latest-arm64
         fi

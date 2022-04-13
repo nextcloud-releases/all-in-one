@@ -1,0 +1,48 @@
+name: Promote to beta
+
+on:
+  workflow_dispatch:
+
+jobs:
+  promote_to_latest:
+    runs-on: ubuntu-latest
+    name: Promote from develop to beta 
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        name: [
+          'aio-apache',
+          'aio-borgbackup',
+          'aio-collabora',
+          'aio-domaincheck',
+          'all-in-one',
+          'aio-nextcloud',
+          'aio-postgresql',
+          'aio-redis',
+          'aio-talk',
+          'aio-watchtower',
+          'aio-clamav',
+          'aio-onlyoffice']
+
+    steps:
+    - name: Login to DockerHub
+      uses: docker/login-action@v1 
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+    - name: Promote images from develop to beta
+      run: |
+        set -x
+        AIO_NAME=${{ matrix.name }}
+        set +x
+        # x64
+        docker pull nextcloud/$AIO_NAME\:develop
+        docker tag nextcloud/$AIO_NAME\:develop nextcloud/$AIO_NAME\:beta
+        docker push nextcloud/$AIO_NAME\:beta
+        if [ "$AIO_NAME" != "aio-clamav" ] && [ "$AIO_NAME" != "aio-onlyoffice" ]; then
+          # arm64 
+          docker pull nextcloud/$AIO_NAME\:develop-arm64
+          docker tag nextcloud/$AIO_NAME\:develop-arm64 nextcloud/$AIO_NAME\:beta-arm64
+          docker push nextcloud/$AIO_NAME\:beta-arm64
+        fi
