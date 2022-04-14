@@ -1,0 +1,44 @@
+name: Publish to Linode
+
+on:
+  workflow_dispatch:
+    branches: [ main ]
+
+jobs:
+  publish_to_linode:
+    runs-on: ubuntu-latest
+    name: Build and Publish to Linode
+    steps:
+    - name: Install dependencies
+      run: |
+        curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
+        sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
+        sudo apt-get update && sudo apt-get install packer
+        packer --version
+    - name: Create template file
+      run: |
+        cat << TEMPLATE > aio.hcl
+          variable "linode_api_token" {
+            type    = string
+            default = ""
+          }
+
+          source "linode" "aio" {
+            image             = "linode/debian10"
+            image_description = "This image was created using Packer and Github Workflows."
+            image_label       = "packer-debian-10"
+            instance_label    = "temp-packer-debian-10"
+            instance_type     = "g6-nanode-1"
+            linode_token      = "${var.linode_api_token}"
+            region            = "us-east"
+            ssh_username      = "root"
+          }
+
+          build {
+            sources = ["source.linode.aio"]
+          }
+        TEMPLATE
+    - name: Build
+      run: |
+        packer validate -var linode_api_token=${{ secrets.LINODE_TOKEN }} aio.hcl
+        packer build -var linode_api_token=${{ secrets.LINODE_TOKEN }} aio.hcl
