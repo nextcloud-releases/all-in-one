@@ -1,0 +1,26 @@
+name: Publish to Digital Ocean
+
+on:
+  workflow_dispatch:
+    branches: [ main ]
+
+jobs:
+  publish_to_digitalocean:
+    runs-on: ubuntu-latest
+    name: Publish image to Digital Ocean 
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Install Packer
+      run: |
+        curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
+        sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
+        sudo apt-get update && sudo apt-get install packer
+        packer --version
+    - name: Create Image
+      run: |
+        cd ./build/digitalocean
+        chmod +x -R ./files/var/lib/cloud/scripts
+        export DIGITALOCEAN_TOKEN=${{ secrets.DIGITALOCEAN_TOKEN }}
+        packer validate marketplace-image.json
+        packer build marketplace-image.json
