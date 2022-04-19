@@ -9,11 +9,12 @@ sudo chown -R 33:0 /mnt/ncdata
 
 # Some Info
 cat << EOF > /etc/motd
- _   _           _       _                 _
-| \ | | _____  _| |_ ___| | ___  _   _  __| |
-|  \| |/ _ \ \/ / __/ __| |/ _ \| | | |/ _` |
-| |\  |  __/>  <| || (__| | (_) | |_| | (_| |
-|_| \_|\___/_/\_\\__\___|_|\___/ \__,_|\__,_|
+ #    #  ######  #    #   #####   ####   #        ####   #    #  #####
+ ##   #  #        #  #      #    #    #  #       #    #  #    #  #    #
+ # #  #  #####     ##       #    #       #       #    #  #    #  #    #
+ #  # #  #         ##       #    #       #       #    #  #    #  #    #
+ #   ##  #        #  #      #    #    #  #       #    #  #    #  #    #
+ #    #  ######  #    #     #     ####   ######   ####    ####   #####
 
 If you point a domain to this server (\$(hostname -I | cut -f1 -d' ')), you can open the admin interface at https://yourdomain.com:8443
 Otherwise you can open the admin interface at https://\$(hostname -I | cut -f1 -d' '):8080
