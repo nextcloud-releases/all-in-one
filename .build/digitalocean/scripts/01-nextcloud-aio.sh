@@ -7,9 +7,6 @@ curl -fsSL get.docker.com | sudo sh
 sudo mkdir -p /mnt/ncdata
 sudo chown -R 33:0 /mnt/ncdata
 
-# Get Nextcloud AIO
-sudo docker pull nextcloud/all-in-one:latest
-
 # Some Info
 cat << EOF > /etc/motd
  _   _           _       _                 _
