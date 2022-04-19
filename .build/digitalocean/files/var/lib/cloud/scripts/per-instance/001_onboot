@@ -1,0 +1,21 @@
+#!/bin/bash
+
+# Remove the ssh force logout command
+sed -e '/Match User root/d' \
+    -e '/.*ForceCommand.*droplet.*/d' \
+    -i /etc/ssh/sshd_config
+
+systemctl restart ssh
+
+# Install Nextcloud AIO
+sudo docker run -d \
+--name nextcloud-aio-mastercontainer \
+--restart always \
+-p 80:80 \
+-p 8080:8080 \
+-p 8443:8443 \
+-e NEXTCLOUD_MOUNT=/mnt/ \
+-e NEXTCLOUD_DATADIR=/mnt/ncdata \
+--volume nextcloud_aio_mastercontainer:/mnt/docker-aio-config \
+--volume /var/run/docker.sock:/var/run/docker.sock:ro \
+nextcloud/all-in-one:latest
