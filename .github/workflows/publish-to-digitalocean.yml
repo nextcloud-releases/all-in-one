@@ -19,7 +19,7 @@ jobs:
         packer --version
     - name: Create Image
       run: |
-        cd ./build/digitalocean
+        cd ./.build/digitalocean
         chmod +x -R ./files/var/lib/cloud/scripts
         export DIGITALOCEAN_TOKEN=${{ secrets.DIGITALOCEAN_TOKEN }}
         packer validate marketplace-image.json
