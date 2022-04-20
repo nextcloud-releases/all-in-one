@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Pull the image another time
+sudo docker pull nextcloud/all-in-one:latest
+
 # Install Nextcloud AIO
 sudo docker run -d \
 --name nextcloud-aio-mastercontainer \
