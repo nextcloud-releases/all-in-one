@@ -4,6 +4,8 @@ Basically, you need to specify the port that the apache container shall use and 
 
 All examples below will use port `11000` as example apache port. Also it is supposed that the reverse proxy runs on the same server like AIO, hence `localhost` is used and not an internal ip-address to point to the AIO instance. Modify both to your needings.
 
+**Info:** The instructions below assume that your reverse proxy is installed directly on the host, not inside a separate docker container. If you want to run the reverse proxy inside a docker container, you can do so by using the `--network host` option when starting the reverse proxy container.
+
 ### Reverse proxy config examples
 
 #### Caddy
@@ -31,6 +33,9 @@ Of course you need to modify `<your-nc-domain>` to the domain on which you want 
 
 <summary>click here to expand</summary>
 <br>
+
+**Disclaimer:** the config below is not working 100% correctly, yet. See e.g. https://github.com/nextcloud/all-in-one/issues/450, https://github.com/nextcloud/all-in-one/issues/447 and https://github.com/nextcloud/all-in-one/issues/491. Improvements to it are very welcome!
+
 Add this to you nginx config:
 
 ```
