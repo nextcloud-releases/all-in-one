@@ -1,4 +1,4 @@
-name: Promote to latest
+name: Promote single container
 
 on:
   workflow_dispatch:
