@@ -1,0 +1,46 @@
+name: Promote to latest
+
+on:
+  workflow_dispatch:
+    inputs:
+      imageName:
+        description: "Name of the container image"
+        required: true
+      targetTag:
+        description: "Name of the target tag to publish to. Supported are beta and latest"
+        required: true
+
+jobs:
+  promote_to_latest:
+    runs-on: ubuntu-latest
+    name: Promote ${{ github.event.inputs.imageName }} from develop to latest 
+    steps:
+    - name: Login to DockerHub
+      uses: docker/login-action@v1 
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+    - name: Promote image to Docker Hub
+      run: |
+        AIO_NAME=${{ github.event.inputs.imageName }}
+        TARGET_TAG=${{ github.event.inputs.targetTag }}
+        if [ "$TARGET_TAG" != beta ] && [ "$TARGET_TAG" != latest ]; then
+          echo "only beta and latest are supported as tags"
+          exit 1
+        fi
+        if [ "$TARGET_TAG" = beta ]; then
+          SOURCE_TAG=develop
+        fi
+        if [ "$TARGET_TAG" = latest ]; then
+          SOURCE_TAG=beta
+        fi
+        # x64
+        docker pull nextcloud/$AIO_NAME\:"$SOURCE_TAG"
+        docker tag nextcloud/$AIO_NAME\:"$SOURCE_TAG" nextcloud/$AIO_NAME\:"$TARGET_TAG"
+        docker push nextcloud/$AIO_NAME\:"$TARGET_TAG"
+        if [ "$AIO_NAME" != "aio-clamav" ] && [ "$AIO_NAME" != "aio-onlyoffice" ]; then
+          # arm64 
+          docker pull nextcloud/$AIO_NAME\:"$SOURCE_TAG"-arm64
+          docker tag nextcloud/$AIO_NAME\:"$SOURCE_TAG"-arm64 nextcloud/$AIO_NAME\:"$TARGET_TAG"-arm64
+          docker push nextcloud/$AIO_NAME\:"$TARGET_TAG"-arm64
+        fi
