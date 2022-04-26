@@ -48,6 +48,14 @@ if [ "$installed_version" != "0.0.0.0" ]; then
     unset ADMIN_PASSWORD
 fi
 
+# Don't start the container if Nextcloud is not compatible with the PHP version
+if [ -f "/var/www/html/lib/versioncheck.php" ] && ! php /var/www/html/lib/versioncheck.php; then
+    echo "It seems like your installed Nextcloud is not compatible with the by the container provided PHP version."
+    echo "This most likely happened because you tried to restore an old Nextcloud version from backup that is not compatible with the PHP version that comes with the container."
+    echo "Please try to restore a more recent backup which contains a Nextcloud version that is compatible with the PHP version that comes with the container."
+    exit 1
+fi
+
 # Skip any update if Nextcloud was just restored
 if ! [ -f "/mnt/ncdata/skip.update" ]; then
     if version_greater "$image_version" "$installed_version"; then
@@ -248,6 +256,12 @@ fi
 if [ -z "$(find "/mnt/ncdata/" -maxdepth 1 -mindepth 1 -type d -name "appdata_*")" ]; then
     echo "Appdata is not present. Did you maybe change the datadir after aio was first started?"
     exit 1
+fi
+
+# Perform fingerprint update if instance was restored
+if [ -f "/mnt/ncdata/fingerprint.update" ]; then
+    php /var/www/html/occ maintenance:data-fingerprint
+    rm "/mnt/ncdata/fingerprint.update"
 fi
 
 # Apply one-click-instance settings
