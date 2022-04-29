@@ -2,7 +2,6 @@ name: Publish to Digital Ocean
 
 on:
   workflow_dispatch:
-    branches: [ main ]
 
 jobs:
   publish_to_digitalocean:

@@ -2,7 +2,6 @@ name: Promote to latest
 
 on:
   workflow_dispatch:
-    branches: [ main ]
 
 jobs:
   promote_to_latest:
