@@ -1,5 +1,10 @@
 #!/bin/bash
 
+# Install dependency updates
+sudo apt-get -qqy update
+sudo apt-get -qqy -o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold' full-upgrade
+sudo apt-get -qqy clean
+
 # Pull the image another time
 sudo docker pull nextcloud/all-in-one:latest
 
