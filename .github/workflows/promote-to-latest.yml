@@ -35,14 +35,23 @@ jobs:
       run: |
         set -x
         AIO_NAME=${{ matrix.name }}
+        DATE="$(date +"%Y%m%d_%H%M%S")"
         set +x
         # x64
         docker pull nextcloud/$AIO_NAME\:beta
         docker tag nextcloud/$AIO_NAME\:beta nextcloud/$AIO_NAME\:latest
         docker push nextcloud/$AIO_NAME\:latest
+        if [ "$AIO_NAME" != "all-in-one" ]; then 
+          docker tag nextcloud/$AIO_NAME\:beta nextcloud/$AIO_NAME\:"$DATE"-latest
+          docker push nextcloud/$AIO_NAME\:"$DATE"-latest
+        fi
         if [ "$AIO_NAME" != "aio-clamav" ] && [ "$AIO_NAME" != "aio-onlyoffice" ]; then
           # arm64 
           docker pull nextcloud/$AIO_NAME\:beta-arm64
           docker tag nextcloud/$AIO_NAME\:beta-arm64 nextcloud/$AIO_NAME\:latest-arm64
           docker push nextcloud/$AIO_NAME\:latest-arm64
+          if [ "$AIO_NAME" != "all-in-one" ]; then 
+            docker tag nextcloud/$AIO_NAME\:beta-arm64 nextcloud/$AIO_NAME\:"$DATE"-latest-arm64
+            docker push nextcloud/$AIO_NAME\:"$DATE"-latest-arm64
+          fi
         fi
