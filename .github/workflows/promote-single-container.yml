@@ -39,8 +39,17 @@ jobs:
         docker pull nextcloud/$AIO_NAME\:"$SOURCE_TAG"
         docker tag nextcloud/$AIO_NAME\:"$SOURCE_TAG" nextcloud/$AIO_NAME\:"$TARGET_TAG"
         if [ "$AIO_NAME" != "all-in-one" ] && [ "$TARGET_TAG" = latest ]; then 
-          docker tag nextcloud/$AIO_NAME\:"$SOURCE_TAG" nextcloud/$AIO_NAME\:"$DATE"-"$TARGET_TAG"
-          docker push nextcloud/$AIO_NAME\:"$DATE"-"$TARGET_TAG"
+          docker tag nextcloud/$AIO_NAME\:beta nextcloud/$AIO_NAME\:"$DATE"-latest
+          docker push nextcloud/$AIO_NAME\:"$DATE"-latest
+        fi
+        if [ "$AIO_NAME" = "aio-nextcloud" ] && [ "$TARGET_TAG" = latest ]; then
+          set -x
+          PHP_VERSION="$(docker inspect nextcloud/aio-nextcloud:beta | grep PHP_VERSION | grep -oP '[0-8.]+' | sed 's|\.[0-9]\+$||')"
+          if [ -n "$PHP_VERSION" ]; then
+            docker tag nextcloud/aio-nextcloud\:beta nextcloud/aio-nextcloud\:php"$PHP_VERSION"-latest
+            docker push nextcloud/aio-nextcloud\:php"$PHP_VERSION"-latest
+          fi
+          set +x
         fi
         docker push nextcloud/$AIO_NAME\:"$TARGET_TAG"
         if [ "$AIO_NAME" != "aio-clamav" ] && [ "$AIO_NAME" != "aio-onlyoffice" ]; then
@@ -49,7 +58,16 @@ jobs:
           docker tag nextcloud/$AIO_NAME\:"$SOURCE_TAG"-arm64 nextcloud/$AIO_NAME\:"$TARGET_TAG"-arm64
           docker push nextcloud/$AIO_NAME\:"$TARGET_TAG"-arm64
           if [ "$AIO_NAME" != "all-in-one" ] && [ "$TARGET_TAG" = latest ]; then 
-            docker tag nextcloud/$AIO_NAME\:"$SOURCE_TAG"-arm64 nextcloud/$AIO_NAME\:"$DATE"-"$TARGET_TAG"-arm64
-            docker push nextcloud/$AIO_NAME\:"$DATE"-"$TARGET_TAG"-arm64
+            docker tag nextcloud/$AIO_NAME\:beta-arm64 nextcloud/$AIO_NAME\:"$DATE"-latest-arm64
+            docker push nextcloud/$AIO_NAME\:"$DATE"-latest-arm64
           fi
+          if [ "$AIO_NAME" = "aio-nextcloud" ] && [ "$TARGET_TAG" = latest ]; then
+          set -x
+          PHP_VERSION="$(docker inspect nextcloud/aio-nextcloud:beta-arm64 | grep PHP_VERSION | grep -oP '[0-8.]+' | sed 's|\.[0-9]\+$||')"
+          if [ -n "$PHP_VERSION" ]; then
+            docker tag nextcloud/aio-nextcloud\:beta-arm64 nextcloud/aio-nextcloud\:php"$PHP_VERSION"-latest-arm64
+            docker push nextcloud/aio-nextcloud\:php"$PHP_VERSION"-latest-arm64
+          fi
+          set +x
+        fi
         fi
