@@ -94,9 +94,17 @@ docker run -it ^
 nextcloud/all-in-one:latest
 ```
 
-**Please note:** AIO works on Windows in general but due to a bug in `Docker for Windows`, it currently does not support mounting directories from the host into AIO which means that `NEXTCLOUD_DATADIR`, `NEXTCLOUD_MOUNT` do not work and the built-in backup solution is not able to write to the host OS. See https://github.com/nextcloud/all-in-one/discussions/600.
-
 </details>
+
+### How to resolve firewall problems with Fedora Linux, RHEL OS, CentOS, SUSE Linux and others?
+It is known that Linux distros that use [firewalld](https://firewalld.org) as their firewall daemon have problems with docker networks. In case the containers are not able to communicate with each other, you may change your firewalld to use the iptables backend by running:
+```
+sudo sed -i 's/FirewallBackend=nftables/FirewallBackend=iptables/g' /etc/firewalld/firewalld.conf
+sudo systemctl restart firewalld docker
+```
+Afterwards it should work.<br>
+
+See https://dev.to/ozorest/fedora-32-how-to-solve-docker-internal-network-issue-22me for more details on this. This limitation is even mentioned on the official firewalld website: https://firewalld.org/#who-is-using-it
 
 ### How to run `occ` commands?
 Simply run the following: `sudo docker exec -it nextcloud-aio-nextcloud php occ your-command`. Of course `your-command` needs to be exchanged with the command that you want to run.
@@ -119,6 +127,23 @@ Additionally, there is a cronjob that runs once a day that checks for container 
 
 ### How to easily log in to the AIO interface?
 If your Nextcloud is running and you are logged in as admin in your Nextcloud, you can easily log in to the AIO interface by opening `https://yourdomain.tld/settings/admin/overview` which will show a button on top that enables you to log in to the AIO interface by just clicking on this button. **Note:** You can change the domain/ip-address/port of the button by simply stopping the containers, visiting the AIO interface from the correct and desired domain/ip-address/port and clicking once on `Start containers`.
+
+### How to properly reset the instance?
+If something goes unexpected routes during the initial installation, you might want to reset the AIO installation to be able to start from scratch.
+
+**Please note**: if you already have it running and have data on your instance, you should not follow these instructions as it will delete all data that is coupled to your AIO instance.
+
+Here is how to reset the AIO instance properly:
+1. Stop all containers if they are running from the AIO interface
+1. Stop the mastercontainer with `sudo docker stop nextcloud-aio-mastercontainer`
+1. If the domaincheck container is still running, stop it with `sudo docker stop nextcloud-aio-domaincheck`
+1. Check which containers are stopped: `sudo docker ps --filter "status=exited"`
+1. Now remove all these stopped containers with `sudo docker container prune`
+1. Delete the docker network with `sudo docker network rm nextcloud-aio`
+1. Check which volumes are dangling with `sudo volume ls --filter "dangling=true"`
+1. Now remove all these dangling volumes: `sudo docker volume prune` (on Windows you might need to remove some volumes afterwards manually with `docker volume rm nextcloud_aio_backup`, `docker volume rm nextcloud_aio_nextcloud_data`, `docker volume rm nextcloud_aio_nextcloud_mount`)
+1. Optional: You can remove all docker images with `sudo docker image prune -a`.
+1. And you are done! Now feel free to start over with the recommended docker run command!
 
 ### Backup solution
 Nextcloud AIO provides a local backup solution based on [BorgBackup](https://github.com/borgbackup/borg#what-is-borgbackup). These backups act as a local restore point in case the installation gets corrupted. 
@@ -278,14 +303,14 @@ fi
 
 </details>
 
-You can simply copy and past the script into a file e.g. named `backup-script.sh` e.g. here: `/root/backup-script.sh`. Do not forget to modify the variables to your needings though!
+You can simply copy and past the script into a file e.g. named `backup-script.sh` e.g. here: `/root/backup-script.sh`. Do not forget to modify the variables to your requirements!
 
-Afterwards apply the correct permissions with `sudo chown root:root /root/backup-script.sh` and `sudo chmod 700 /root/backup-script.sh`. Then you can create a cronjob that runs e.g. at `20:00` each week on sundays like this: 
+Afterwards apply the correct permissions with `sudo chown root:root /root/backup-script.sh` and `sudo chmod 700 /root/backup-script.sh`. Then you can create a cronjob that runs e.g. at `20:00` each week on Sundays like this: 
 1. Open the cronjob with `sudo crontab -u root -e` (and choose your editor of choice if not already done. I'd recommend nano). 
-1. Add the following new line to the crontab if not alreaddy present: `0 20 * * 7 /root/backup-script.sh` which will run the script at 20:00 on sundays each week. 
-1. save and close the crontab (when using nano are the shortcouts for this `Ctrl + o` -> `Enter` and close the editor with `Ctrl + x`).
+1. Add the following new line to the crontab if not already present: `0 20 * * 7 /root/backup-script.sh` which will run the script at 20:00 on Sundays each week. 
+1. save and close the crontab (when using nano are the shortcuts for this `Ctrl + o` -> `Enter` and close the editor with `Ctrl + x`).
 
-⚠ **Attention:** Make sure that the execution of the script does not collidate with the daily backups from AIO (if configured) since the target backup repository might get into an inconsistent state. (There is no check in place that checks this.)
+⚠ **Attention:** Make sure that the execution of the script does not collide with the daily backups from AIO (if configured) since the target backup repository might get into an inconsistent state. (There is no check in place that checks this.)
 
 ### How to change the default location of Nextcloud's Datadir?
 You can configure the Nextcloud container to use a specific directory on your host as data directory. You can do so by adding the environmental variable `NEXTCLOUD_DATADIR` to the initial startup of the mastercontainer. Allowed values for that variable are strings that start with `/` and are not equal to `/`.

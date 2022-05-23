@@ -190,7 +190,7 @@ class ConfigurationManager
     public function SetDomain(string $domain) : void {
         // Validate domain
         if (!filter_var($domain, FILTER_VALIDATE_DOMAIN, FILTER_FLAG_HOSTNAME)) {
-            throw new InvalidSettingConfigurationException("Domain is not in a valid format!");
+            throw new InvalidSettingConfigurationException("Domain is not a valid domain!");
         }
 
         // Validate that it is not an IP-address
@@ -202,14 +202,15 @@ class ConfigurationManager
 
         // Validate IP
         if(!filter_var($dnsRecordIP, FILTER_VALIDATE_IP)) {
-            throw new InvalidSettingConfigurationException("DNS config is not set or domain is not in a valid format!");
+            throw new InvalidSettingConfigurationException("DNS config is not set for this domain or the domain is not a valid domain! (It was found to be set to '" . $dnsRecordIP . "')");
         }
 
-        $connection = @fsockopen($domain, 443, $errno, $errstr, 0.1);
+        // Check if port 443 is open
+        $connection = @fsockopen($domain, 443, $errno, $errstr, 10);
         if ($connection) {
             fclose($connection);
         } else {
-            throw new InvalidSettingConfigurationException("The server is not reachable on Port 443.");
+            throw new InvalidSettingConfigurationException("The server is not reachable on Port 443. You can verify this e.g. with 'https://portchecker.co/' by entering your domain there as ip-address and port 443 as port.");
         }
 
         // Get Instance ID
@@ -223,15 +224,18 @@ class ConfigurationManager
             $protocol = 'http://';
         }
 
+        // Check if response is correct
         $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $protocol . $domain . ':443');
+        $testUrl = $protocol . $domain . ':443';
+        curl_setopt($ch, CURLOPT_URL, $testUrl);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         $response = (string)curl_exec($ch);
         # Get rid of trailing \n
         $response = str_replace("\n", "", $response);
 
-        if($response !== $instanceID) {
-            throw new InvalidSettingConfigurationException("Domain does not point to this server or reverse proxy not configured correctly.");
+        if ($response !== $instanceID) {
+            error_log('The response of the connection attempt to "' . $testUrl . '" was: ' . $response);
+            throw new InvalidSettingConfigurationException("Domain does not point to this server or the reverse proxy is not configured correctly. See the mastercontainer logs for more details. ('sudo docker logs -f nextcloud-aio-mastercontainer')");
         }
 
         // Write domain
@@ -478,5 +482,54 @@ class ConfigurationManager
             return true;
         }
         return false;
+    }
+
+    public function GetTimezone() : string {
+        $config = $this->GetConfig();
+        if(!isset($config['timezone'])) {
+            $config['timezone'] = '';
+        }
+
+        return $config['timezone'];
+    }
+
+    public function SetTimezone(string $timezone) : void {
+        if ($timezone === "") {
+            throw new InvalidSettingConfigurationException("The timezone must not be empty!");
+        }
+
+        if (!preg_match("#[a-zA-Z0-9_-/+]+$#", $timezone)) {
+            throw new InvalidSettingConfigurationException("The entered timezone does not seem to be a valid timezone!");
+        }
+
+        $config = $this->GetConfig();
+        $config['timezone'] = $timezone;
+        $this->WriteConfig($config);
+    }
+
+    public function DeleteTimezone() : void {
+        $config = $this->GetConfig();
+        $config['timezone'] = '';
+        $this->WriteConfig($config);
+    }
+
+    public function isWindowsPath(string $path) : bool {
+        $windowsPath = '/host_mnt/';
+        if (str_starts_with($path, $windowsPath)) {
+            return true;
+        }
+        return false;
+    }
+
+    public function GetWindowsVolumeName(string $volumeName) : string {
+        $name = '';
+        if ($volumeName === $this->GetNextcloudDatadirMount()) {
+            $name = 'nextcloud_aio_nextcloud_data';
+        } elseif ($volumeName === $this->GetNextcloudMount()) {
+            $name = 'nextcloud_aio_nextcloud_mount';
+        } elseif ($volumeName === $this->GetBorgBackupHostLocation()) {
+            $name = 'nextcloud_aio_backup';
+        }
+        return $name;
     }
 }
