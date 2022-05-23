@@ -289,6 +289,8 @@ class ConfigurationManager
         $isValidPath = false;
         if (str_starts_with($location, '/') && !str_ends_with($location, '/')) {
             $isValidPath = true;
+        } elseif ($location === 'nextcloud_aio_backupdir') {
+            $isValidPath = true;
         }
 
         if (!$isValidPath) {
@@ -311,6 +313,8 @@ class ConfigurationManager
         
         $isValidPath = false;
         if (str_starts_with($location, '/') && !str_ends_with($location, '/')) {
+            $isValidPath = true;
+        } elseif ($location === 'nextcloud_aio_backupdir') {
             $isValidPath = true;
         }
 
@@ -511,25 +515,5 @@ class ConfigurationManager
         $config = $this->GetConfig();
         $config['timezone'] = '';
         $this->WriteConfig($config);
-    }
-
-    public function isWindowsPath(string $path) : bool {
-        $windowsPath = '/host_mnt/';
-        if (str_starts_with($path, $windowsPath)) {
-            return true;
-        }
-        return false;
-    }
-
-    public function GetWindowsVolumeName(string $volumeName) : string {
-        $name = '';
-        if ($volumeName === $this->GetNextcloudDatadirMount()) {
-            $name = 'nextcloud_aio_nextcloud_data';
-        } elseif ($volumeName === $this->GetNextcloudMount()) {
-            $name = 'nextcloud_aio_nextcloud_mount';
-        } elseif ($volumeName === $this->GetBorgBackupHostLocation()) {
-            $name = 'nextcloud_aio_backup';
-        }
-        return $name;
     }
 }

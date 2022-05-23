@@ -94,6 +94,15 @@ docker run -it ^
 nextcloud/all-in-one:latest
 ```
 
+**Please note:** In order to make the built-in backup solution able to back up to the host system, you need to create a volume with the name `nextcloud_aio_backupdir` beforehand:
+```
+docker volume create --driver local --name nextcloud_aio_backupdir ^
+    -o device="/host_mnt/c/your/backup/path" ^
+    -o type="none" ^
+    -o o="bind"
+```
+(This Windows example would be equivalent to `C:\your\backup\path` on the Windows host. So you need to translate the path that you want to use into the correct format.) 
+
 </details>
 
 ### How to resolve firewall problems with Fedora Linux, RHEL OS, CentOS, SUSE Linux and others?
@@ -140,7 +149,7 @@ Here is how to reset the AIO instance properly:
 1. Check which containers are stopped: `sudo docker ps --filter "status=exited"`
 1. Now remove all these stopped containers with `sudo docker container prune`
 1. Delete the docker network with `sudo docker network rm nextcloud-aio`
-1. Check which volumes are dangling with `sudo volume ls --filter "dangling=true"`
+1. Check which volumes are dangling with `sudo docker volume ls --filter "dangling=true"`
 1. Now remove all these dangling volumes: `sudo docker volume prune` (on Windows you might need to remove some volumes afterwards manually with `docker volume rm nextcloud_aio_backup`, `docker volume rm nextcloud_aio_nextcloud_data`, `docker volume rm nextcloud_aio_nextcloud_mount`)
 1. Optional: You can remove all docker images with `sudo docker image prune -a`.
 1. And you are done! Now feel free to start over with the recommended docker run command!
@@ -318,7 +327,14 @@ You can configure the Nextcloud container to use a specific directory on your ho
 - An example for Linux is `-e NEXTCLOUD_DATADIR="/mnt/ncdata"`.
 - On macOS it might be `-e NEXTCLOUD_DATADIR="/var/nextcloud-data"`
 - For Synology it may be `-e NEXTCLOUD_DATADIR="/volume1/docker/nextcloud/data"`. 
-- On Windows it might be `-e NEXTCLOUD_DATADIR="/host_mnt/c/your/data/path"` (This Windows example would be equivalent to `C:\your\data\path` on the Windows host. So you need to translate the path that you want to use into the correct format.) 
+- On Windows it must be `-e NEXTCLOUD_DATADIR="nextcloud_aio_nextcloud_datadir"`. In order to use this, you need to create the `nextcloud_aio_nextcloud_datadir` volume beforehand:
+    ```
+    docker volume create --driver local --name nextcloud_aio_nextcloud_datadir ^
+        -o device="/host_mnt/c/your/data/path" ^
+        -o type="none" ^
+        -o o="bind"
+    ```
+    (This Windows example would be equivalent to `C:\your\data\path` on the Windows host. So you need to translate the path that you want to use into the correct format.) 
 
 ⚠ Please make sure to apply the correct permissions to the chosen directory before starting Nextcloud the first time (not needed on Windows). 
 
@@ -334,9 +350,9 @@ By default, the Nextcloud container is confined and cannot access directories on
 
 - Two examples for Linux are `-e NEXTCLOUD_MOUNT="/mnt/"` and `-e NEXTCLOUD_MOUNT="/media/"`.
 - For Synology it may be `-e NEXTCLOUD_MOUNT="/volume1/"`.
-- On Windows it might be `-e NEXTCLOUD_MOUNT="/host_mnt/c"` (This Windows example would be equivalent to `C:\` on the Windows host. So you need to translate the path that you want to use into the correct format.) 
+- On Windows is this option not supported.
 
-After using this option, please make sure to apply the correct permissions to the directories that you want to use in Nextcloud (not needed on Windows). E.g. `sudo chown -R 33:0 /mnt/your-drive-mountpoint` and `sudo chmod -R 750 /mnt/your-drive-mountpoint` should make it work on Linux when you have used `-e NEXTCLOUD_MOUNT="/mnt/"`. 
+After using this option, please make sure to apply the correct permissions to the directories that you want to use in Nextcloud. E.g. `sudo chown -R 33:0 /mnt/your-drive-mountpoint` and `sudo chmod -R 750 /mnt/your-drive-mountpoint` should make it work on Linux when you have used `-e NEXTCLOUD_MOUNT="/mnt/"`. 
 
 You can then navigate to the apps management page, activate the external storage app, navigate to `https://your-nc-domain.com/settings/admin/externalstorages` and add a local external storage directory that will be accessible inside the container at the same place that you've entered. E.g. `/mnt/your-drive-mountpoint` will be mounted to `/mnt/your-drive-mountpoint` inside the container, etc. 
 
