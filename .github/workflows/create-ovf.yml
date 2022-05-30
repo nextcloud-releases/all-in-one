@@ -1,0 +1,23 @@
+name: Create OVF
+
+on:
+  workflow_dispatch:
+
+jobs:
+  publish_to_digitalocean:
+    runs-on: ubuntu-latest
+    name: Publish image to Digital Ocean 
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Install Packer
+      run: |
+        curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
+        sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
+        sudo apt-get update && sudo apt-get install packer virtualbox
+        packer --version
+    - name: Create Image
+      run: |
+        cd ./.build/ovf
+        packer validate -only=virtualbox-iso -var-file=ubuntu2004.json ubuntu.json
+        packer build -only=virtualbox-iso -var-file=ubuntu2004.json ubuntu.json
