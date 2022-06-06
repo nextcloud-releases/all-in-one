@@ -1,7 +1,7 @@
 # Caddy is a requirement
 FROM caddy:2.5.1-alpine as caddy
 
-FROM debian:bullseye-20220509-slim
+FROM debian:bullseye-20220527-slim
 
 EXPOSE 80
 
@@ -65,8 +65,7 @@ COPY start.sh /usr/bin/
 COPY supervisord.conf /
 RUN chmod +x /usr/bin/start.sh; \
     chmod +r /supervisord.conf; \
-    chmod a+w /Caddyfile; \
-    chmod 777 /; \
+    chown www-data:www-data /Caddyfile; \
     chmod +r -R /etc/apache2
 
 # Give root a random password
