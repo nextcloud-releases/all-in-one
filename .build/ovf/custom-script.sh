@@ -28,7 +28,7 @@ cat << EOF > /etc/motd
  #  # #  #         ##       #    #       #       #    #  #    #  #    #
  #   ##  #        #  #      #    #    #  #       #    #  #    #  #    #
  #    #  ######  #    #     #     ####   ######   ####    ####   #####
-If you point a domain to this server ($(hostname -I | cut -f1 -d' ')), you can open the admin interface at https://yourdomain.com:8443
+If you point a domain to this server, you can open the admin interface at https://yourdomain.com:8443
 Otherwise you can open the admin interface at https://$(hostname -I | cut -f1 -d' '):8080
     
 Further documentation is available here: https://github.com/nextcloud/all-in-one

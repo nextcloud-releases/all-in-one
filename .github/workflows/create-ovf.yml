@@ -21,3 +21,11 @@ jobs:
         cd ./.build/ovf
         packer validate -only=virtualbox-iso -var-file=ubuntu2004.json ubuntu.json
         packer build -only=virtualbox-iso -var-file=ubuntu2004.json ubuntu.json
+    - name: Archive production artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: AIO-VM
+        retention-days: 1
+        path: |
+          output-ubuntu2004-virtualbox-iso
+          .build/ovf/output-ubuntu2004-virtualbox-iso
