@@ -78,7 +78,7 @@ Only those (if you access the Mastercontainer Interface internally via port 8080
 On macOS, there are two things different in comparison to Linux: instead of using `--volume /var/run/docker.sock:/var/run/docker.sock:ro`, you need to use `--volume /var/run/docker.sock.raw:/var/run/docker.sock:ro` to run it after you installed [Docker Desktop](https://www.docker.com/products/docker-desktop/). You also need to add `-e DOCKER_SOCKET_PATH="/var/run/docker.sock.raw"`to the startup command. Apart from that it should work and behave the same like on Linux.
 
 ### How to run it on Windows?
-On Windows, the following command should work after you installed [Docker Desktop](https://www.docker.com/products/docker-desktop/):
+On Windows, the following command should work in the command prompt after you installed [Docker Desktop](https://www.docker.com/products/docker-desktop/):
 
 ```
 docker run -it ^
@@ -357,6 +357,9 @@ After using this option, please make sure to apply the correct permissions to th
 You can then navigate to the apps management page, activate the external storage app, navigate to `https://your-nc-domain.com/settings/admin/externalstorages` and add a local external storage directory that will be accessible inside the container at the same place that you've entered. E.g. `/mnt/your-drive-mountpoint` will be mounted to `/mnt/your-drive-mountpoint` inside the container, etc. 
 
 Be aware though that these locations will not be covered by the built-in backup solution!
+
+### How to run this with docker rootless?
+You can run AIO also with docker rootless. How to do this is documented here: [docker-rootless.md](https://github.com/nextcloud/all-in-one/blob/main/docker-rootless.md)
 
 ### Huge docker logs
 When your containers run for a few days without a restart, the container logs that you can view from the AIO interface can get really huge. You can limit the loge sizes by enabling logrotate for docker container logs. Feel free to enable this by following those instructions: https://sandro-keil.de/blog/logrotate-for-docker-container/

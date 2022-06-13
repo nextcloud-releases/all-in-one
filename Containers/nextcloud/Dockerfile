@@ -1,5 +1,5 @@
 # From https://github.com/nextcloud/docker/blob/master/23/fpm-alpine/Dockerfile
-FROM php:8.0.19-fpm-alpine3.15
+FROM php:8.0.20-fpm-alpine3.15
 
 # Custom: change id of www-data user as it needs to be the same like on old installations
 RUN set -ex; \
@@ -85,7 +85,7 @@ RUN set -ex; \
 # set recommended PHP.ini settings
 # see https://docs.nextcloud.com/server/stable/admin_manual/configuration_server/server_tuning.html#enable-php-opcache
 RUN { \
-        echo 'opcache.interned_strings_buffer=16'; \
+        echo 'opcache.interned_strings_buffer=64'; \
         echo 'opcache.save_comments=1'; \
         echo 'opcache.revalidate_freq=60'; \
     } > /usr/local/etc/php/conf.d/opcache-recommended.ini; \
