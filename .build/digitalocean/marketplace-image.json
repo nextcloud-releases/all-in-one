@@ -40,6 +40,7 @@
       ],
       "inline": [
         "apt-get -qqy update",
+        "apt-get install unattended-upgrades",
         "apt-get -qqy -o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold' full-upgrade",
         "apt-get -qqy -o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold' install {{user `apt_packages`}}",
         "apt-get -qqy clean"
