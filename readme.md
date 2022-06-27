@@ -119,6 +119,9 @@ Simply run the following: `sudo docker exec -it nextcloud-aio-nextcloud php occ 
 ### How to resolve `Security & setup warnings displays the "missing default phone region" after initial install`?
 Simply run the following command: `sudo docker exec -it nextcloud-aio-nextcloud php occ config:system:set default_phone_region --value="yourvalue"`. Of course you need to modify `yourvalue` based on your location. Examples are `DE`, `EN` and `GB`. See this list for more codes: https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2#Officially_assigned_code_elements
 
+### Bruteforce protection FAQ
+Nextcloud features a built-in bruteforce protection which may get triggered and will block an ip-address or disable a user. You can unblock an ip-address by running `sudo docker exec -it nextcloud-aio-nextcloud php occ security:bruteforce:reset <ip-address>` and enable a disabled user by running `sudo docker exec -it nextcloud-aio-nextcloud php occ user:enable <name of user>`. See https://docs.nextcloud.com/server/latest/admin_manual/configuration_server/occ_command.html#security for further information.
+
 ### Update policy
 This project values stability over new features. That means that when a new major Nextcloud update gets introduced, we will wait at least until the first patch release, e.g. `24.0.1` is out before upgrading to it. Also we will wait with the upgrade until all important apps are compatible with the new major version. Minor or patch releases for Nextcloud and all dependencies as well as all containers will be updated to new versions as soon as possible but we try to give all updates first a good test round before pushing them. That means that it can take around 2 weeks before new updates reach the `latest` channel. If you want to help testing, you can switch to the `beta` channel by following [this documentation](#how-to-switch-the-channel) which will also give you the updates earlier.
 
@@ -387,11 +390,30 @@ You can edit Nextclouds config.php file directly from the host with your favorit
 ### Custom skeleton directory
 If you want to define a custom skeleton directory, you can do so by putting your skeleton files into `/var/lib/docker/volumes/nextcloud_aio_nextcloud_data/_data/skeleton/`, applying the correct permissions with `sudo chown -R 33:0 /var/lib/docker/volumes/nextcloud_aio_nextcloud_data/_data/skeleton` and and `sudo chmod -R 750 /var/lib/docker/volumes/nextcloud_aio_nextcloud_data/_data/*` and setting the skeleton directory option with `sudo docker exec -it nextcloud-aio-nextcloud php occ config:system:set skeletondirectory --value="/mnt/ncdata/skeleton"`. You can read further on this option here: [click here](https://docs.nextcloud.com/server/stable/admin_manual/configuration_server/config_sample_php_parameters.html?highlight=skeletondir#:~:text=adding%20%3Fdirect%3D1-,'skeletondirectory',-%3D%3E%20'%2Fpath%2Fto%2Fnextcloud)
 
+### Fail2ban
+You can configure your server to block certain ip-addresses using fail2ban as bruteforce protection. Here is how to set it up: https://docs.nextcloud.com/server/stable/admin_manual/installation/harden_server.html#setup-fail2ban. The logpath of AIO is by default `/var/lib/docker/volumes/nextcloud_aio_nextcloud/_data/data/nextcloud.log`.
+
 ### LDAP
 It is possible to connect to an existing LDAP server. You need to make sure that the LDAP server is reachable from the Nextcloud container. Then you can enable the LDAP app and configure LDAP in Nextcloud manually. If you don't have a LDAP server yet, recommended is to use this docker container: https://hub.docker.com/r/osixia/openldap/. Make sure here as well that Nextcloud can talk to the LDAP server. The easiest way is by adding the LDAP docker container to the docker network `nextcloud-aio`. Then you can connect to the LDAP container by its name from the Nextcloud container. **Pro-tip**: You will probably find this app useful: https://apps.nextcloud.com/apps/ldap_write_support
+
+### Netdata
+Netdata allows you to monitor your server using a GUI. You can install it by following https://learn.netdata.cloud/docs/agent/packaging/docker#create-a-new-netdata-agent-container.
 
 ### USER_SQL
 If you want to use the user_sql app, the easiest way is to create an additional database container and add it to the docker network `nextcloud-aio`. Then the Nextcloud container should be able to talk to the database container using its name.
 
+### phpMyAdmin, Adminer or pgAdmin
+It is possible to install any of these to get a GUI for your AIO database. The pgAdmin container is recommended. You can get some docs on it here: https://www.pgadmin.org/docs/pgadmin4/latest/container_deployment.html. For the container to connect to the aio-database, you need to connect the container to the docker network `nextcloud-aio` and use `nextcloud-aio-database` as database host, `oc_nextcloud` as database username and the password that you get when running `sudo grep dbpassword /var/lib/docker/volumes/nextcloud_aio_nextcloud/_data/config/config.php` as the password. 
+
 ### How to migrate from an already existing Nextcloud installation to Nextcloud AIO?
 Please see the following documentation on this: [migration.md](https://github.com/nextcloud/all-in-one/blob/main/migration.md)
+
+### Requirements for integrating new containers
+For integrating new containers, they must pass specific requirements for being considered to get integrated in AIO itself. Even if not considered, we may add some documentation on it.
+
+What are the requirements?
+1. New containers must be related to Nextcloud. Related means that there must be a feature in Nextcloud that gets added by adding this container.
+2. It must be optionally installable. Disabling and enabling the container from the AIO interface must work and must not produce any unexpected side-effects.
+3. The feature that gets added into Nextcloud by adding the container must be maintained by the Nextcloud GmbH. 
+4. It must be possible to run the container without big quirks inside docker containers. Big quirks means e.g. needing to change the capabilities or security options. 
+5. The container should not mount directories from the host into the container: only docker volumes should be used.
