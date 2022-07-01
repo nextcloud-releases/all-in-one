@@ -1,4 +1,6 @@
-#!/usr/bin/bash
+#!/bin/bash
+
+set -ex
 
 # Install docker
 curl -fsSL get.docker.com | sudo sh
@@ -31,8 +33,8 @@ cat << EOF > /etc/motd
  #    #  ######  #    #     #     ####   ######   ####    ####   #####
 
 If you point a domain to this server, open port 8443 and 80 you can open the admin interface at https://yourdomain.com:8443
-Otherwise you can open the admin interface at https://$(hostname -I | cut -f1 -d' '):8080
-    
+Otherwise you can open the admin interface at https://ip.address.of.this.server:8080
+
 Further documentation is available here: https://github.com/nextcloud/all-in-one
 
 EOF
@@ -40,6 +42,7 @@ EOF
 # Cleanup
 export DEBIAN_FRONTEND=noninteractive
 apt-get -y update
+sudo apt-get install unattended-upgrades
 apt-get -o Dpkg::Options::="--force-confold" upgrade -q -y --force-yes
 apt-get -y autoremove
 apt-get -y autoclean
@@ -51,5 +54,8 @@ find /var/log -mtime -1 -type f -exec truncate -s 0 {} \;
 rm -rf /var/log/*.gz /var/log/*.[0-9] /var/log/*-????????
 rm -rf /var/lib/cloud/instances/*
 rm -f /root/.ssh/authorized_keys /etc/ssh/*key*
+rm -rf /home/ncadmin/.ssh/authorized_keys
 touch /etc/ssh/revoked_keys
 chmod 600 /etc/ssh/revoked_keys
+docker stop nextcloud-aio-mastercontainer
+rm /var/lib/docker/volumes/nextcloud_aio_mastercontainer/_data/certs/ssl.*
