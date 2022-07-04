@@ -198,60 +198,71 @@ class ConfigurationManager
             throw new InvalidSettingConfigurationException("Please enter a domain and not an IP-address!");
         }
 
-        $dnsRecordIP = gethostbyname($domain);
-        if ($dnsRecordIP === $domain) {
-            $dnsRecordIP = '';
-        }
+        // Skip domain validation if opted in to do so
+        if ($this->shouldDomainValidationBeSkipped()) {
 
-        // Validate IP
-        if(!filter_var($dnsRecordIP, FILTER_VALIDATE_IP)) {
-            throw new InvalidSettingConfigurationException("DNS config is not set for this domain or the domain is not a valid domain! (It was found to be set to '" . $dnsRecordIP . "')");
-        }
-
-        // Get the apache port
-        $port = $this->GetApachePort();
-
-        if (!filter_var($dnsRecordIP, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
-            $errorMessage = "It seems like the ip-address is set to an internal or reserved ip-address. This is not supported. (It was found to be set to '" . $dnsRecordIP . "')";
-            if ($port === '443') {
-                throw new InvalidSettingConfigurationException($errorMessage);
-            } else {
-                error_log($errorMessage);
+            $dnsRecordIP = gethostbyname($domain);
+            if ($dnsRecordIP === $domain) {
+                $dnsRecordIP = '';
             }
-        }
 
-        // Check if port 443 is open
-        $connection = @fsockopen($domain, 443, $errno, $errstr, 10);
-        if ($connection) {
-            fclose($connection);
-        } else {
-            throw new InvalidSettingConfigurationException("The server is not reachable on Port 443. You can verify this e.g. with 'https://portchecker.co/' by entering your domain there as ip-address and port 443 as port.");
-        }
+            if (empty($dnsRecordIP)) {
+                $record = dns_get_record($domain, DNS_AAAA);
+                if (!empty($record)) {
+                    $dnsRecordIP = $record[0]['ipv6'];
+                }
+            }
 
-        // Get Instance ID
-        $instanceID = $this->GetSecret('INSTANCE_ID');
+            // Validate IP
+            if (!filter_var($dnsRecordIP, FILTER_VALIDATE_IP)) {
+                throw new InvalidSettingConfigurationException("DNS config is not set for this domain or the domain is not a valid domain! (It was found to be set to '" . $dnsRecordIP . "')");
+            }
 
-        // set protocol
-        if ($port !== '443') {
-            $protocol = 'https://';
-        } else {
-            $protocol = 'http://';
-        }
+            // Get the apache port
+            $port = $this->GetApachePort();
 
-        // Check if response is correct
-        $ch = curl_init();
-        $testUrl = $protocol . $domain . ':443';
-        curl_setopt($ch, CURLOPT_URL, $testUrl);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        $response = (string)curl_exec($ch);
-        # Get rid of trailing \n
-        $response = str_replace("\n", "", $response);
+            if (!filter_var($dnsRecordIP, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
+                $errorMessage = "It seems like the ip-address is set to an internal or reserved ip-address. This is not supported. (It was found to be set to '" . $dnsRecordIP . "')";
+                if ($port === '443') {
+                    throw new InvalidSettingConfigurationException($errorMessage);
+                } else {
+                    error_log($errorMessage);
+                }
+            }
 
-        if ($response !== $instanceID) {
-            error_log('The response of the connection attempt to "' . $testUrl . '" was: ' . $response);
-            error_log('Expected was: ' . $instanceID);
-            error_log('The error message was: ' . curl_error($ch));
-            throw new InvalidSettingConfigurationException("Domain does not point to this server or the reverse proxy is not configured correctly. See the mastercontainer logs for more details. ('sudo docker logs -f nextcloud-aio-mastercontainer')");
+            // Check if port 443 is open
+            $connection = @fsockopen($domain, 443, $errno, $errstr, 10);
+            if ($connection) {
+                fclose($connection);
+            } else {
+                throw new InvalidSettingConfigurationException("The server is not reachable on Port 443. You can verify this e.g. with 'https://portchecker.co/' by entering your domain there as ip-address and port 443 as port.");
+            }
+
+            // Get Instance ID
+            $instanceID = $this->GetSecret('INSTANCE_ID');
+
+            // set protocol
+            if ($port !== '443') {
+                $protocol = 'https://';
+            } else {
+                $protocol = 'http://';
+            }
+
+            // Check if response is correct
+            $ch = curl_init();
+            $testUrl = $protocol . $domain . ':443';
+            curl_setopt($ch, CURLOPT_URL, $testUrl);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            $response = (string)curl_exec($ch);
+            # Get rid of trailing \n
+            $response = str_replace("\n", "", $response);
+
+            if ($response !== $instanceID) {
+                error_log('The response of the connection attempt to "' . $testUrl . '" was: ' . $response);
+                error_log('Expected was: ' . $instanceID);
+                error_log('The error message was: ' . curl_error($ch));
+                throw new InvalidSettingConfigurationException("Domain does not point to this server or the reverse proxy is not configured correctly. See the mastercontainer logs for more details. ('sudo docker logs -f nextcloud-aio-mastercontainer')");
+            }
         }
 
         // Write domain
@@ -381,6 +392,13 @@ class ConfigurationManager
         $envVariableName = 'APACHE_PORT';
         $configName = 'apache_port';
         $defaultValue = '443';
+        return $this->GetEnvironmentalVariableOrConfig($envVariableName, $configName, $defaultValue);
+    }
+
+    public function GetTalkPort() : string {
+        $envVariableName = 'TALK_PORT';
+        $configName = 'talk_port';
+        $defaultValue = '3478';
         return $this->GetEnvironmentalVariableOrConfig($envVariableName, $configName, $defaultValue);
     }
 
@@ -540,6 +558,46 @@ class ConfigurationManager
     public function DeleteTimezone() : void {
         $config = $this->GetConfig();
         $config['timezone'] = '';
+        $this->WriteConfig($config);
+    }
+
+    public function shouldDomainValidationBeSkipped() : bool {
+        $envVariableOutput = getenv('SKIP_DOMAIN_VALIDATION');
+        if ($envVariableOutput !== false) {
+            return true;
+        }
+        return false;
+    }
+
+    public function GetCollaboraDictionaries() : string {
+        $config = $this->GetConfig();
+        if(!isset($config['collabora_dictionaries'])) {
+            $config['collabora_dictionaries'] = '';
+        }
+
+        return $config['collabora_dictionaries'];
+    }
+
+    /**
+     * @throws InvalidSettingConfigurationException
+     */
+    public function SetCollaboraDictionaries(string $CollaboraDictionaries) : void {
+        if ($CollaboraDictionaries === "") {
+            throw new InvalidSettingConfigurationException("The dictionaries must not be empty!");
+        }
+
+        if (!preg_match("#^[a-zA-Z_ ]+$#", $CollaboraDictionaries)) {
+            throw new InvalidSettingConfigurationException("The entered dictionaries do not seem to be a valid!");
+        }
+
+        $config = $this->GetConfig();
+        $config['collabora_dictionaries'] = $CollaboraDictionaries;
+        $this->WriteConfig($config);
+    }
+
+    public function DeleteCollaboraDictionaries() : void {
+        $config = $this->GetConfig();
+        $config['collabora_dictionaries'] = '';
         $this->WriteConfig($config);
     }
 }

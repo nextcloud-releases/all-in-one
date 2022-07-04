@@ -250,6 +250,8 @@ class DockerActionManager
                     $replacements[1] = $this->configurationManager->GetSelectedRestoreTime();
                 } elseif ($out[1] === 'APACHE_PORT') {
                     $replacements[1] = $this->configurationManager->GetApachePort();
+                } elseif ($out[1] === 'TALK_PORT') {
+                    $replacements[1] = $this->configurationManager->GetTalkPort();
                 } elseif ($out[1] === 'NEXTCLOUD_MOUNT') {
                     $replacements[1] = $this->configurationManager->GetNextcloudMount();
                 } elseif ($out[1] === 'BACKUP_RESTORE_PASSWORD') {
@@ -289,6 +291,12 @@ class DockerActionManager
                         $replacements[1] = 'UTC';
                     } else {
                         $replacements[1] = $this->configurationManager->GetTimezone();
+                    }
+                } elseif ($out[1] === 'COLLABORA_DICTIONARIES') {
+                    if ($this->configurationManager->GetCollaboraDictionaries() === '') {
+                        $replacements[1] = 'de_DE en_GB en_US es_ES fr_FR it nl pt_BR pt_PT ru';
+                    } else {
+                        $replacements[1] = $this->configurationManager->GetCollaboraDictionaries();
                     }
                 } else {
                     $replacements[1] = $this->configurationManager->GetSecret($out[1]);

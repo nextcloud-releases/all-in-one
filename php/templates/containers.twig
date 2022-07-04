@@ -16,7 +16,7 @@
     </header>
 
     <div class="content">
-        <h1>Nextcloud AIO v1.4.2</h1>
+        <h1>Nextcloud AIO v1.5.0</h1>
 
         {% set isAnyRunning = false %}
         {% set isAnyRestarting = false %}
@@ -79,14 +79,19 @@
                         Nextcloud AIO stands for Nextcloud All In One and provides easy deployment and maintenance with most features included in this one Nextcloud instance.<br><br>
                         <h2>New AIO instance</h2>
                         Please type in the domain that will be used for Nextcloud if you want to create a new instance:<br><br />
+                        {% if skip_domain_validation == true %}
+                            <b>Please Note:</b> The domain validation is disabled so any domain will be accepted here! So make sure that you do not make a typo here as you will not be able to change it afterwards!<br><br>
+                        {% endif %}
                         <form method="POST" action="/api/configuration" class="xhr">
                             <input type="text" name="domain" value="{{ domain }}" placeholder="nextcloud.yourdomain.com"/>
                             <input type="hidden" name="{{csrf.keys.name}}" value="{{csrf.name}}">
                             <input type="hidden" name="{{csrf.keys.value}}" value="{{csrf.value}}">
                             <input class="button" type="submit" value="Submit" />
                         </form>
-                        Make sure that this server is reachable on Port 443 and you've correctly set up the DNS config for the domain that you enter. <br><br>
-                        If you have a dynamic IP-address, you can use e.g. <a href="https://ddclient.net/">DDclient</a> with a compatible domain provider for DNS updates. <br /><br/>
+                        {% if skip_domain_validation == false %}
+                            Make sure that this server is reachable on Port 443 and you've correctly set up the DNS config for the domain that you enter. <br><br>
+                            If you have a dynamic IP-address, you can use e.g. <a href="https://ddclient.net/">DDclient</a> with a compatible domain provider for DNS updates. <br /><br/>
+                        {% endif %}
 
                         <h2>Restore former AIO instance from backup</h2>
                         You can alternatively restore a former AIO instance from backup.<br><br>
@@ -433,9 +438,9 @@
                             <input type="checkbox" id="collabora" name="collabora"><label for="collabora">Collabora (Nextcloud Office)</label><br>
                         {% endif %}
                         {% if is_talk_enabled == true %}
-                            <input type="checkbox" id="talk" name="talk" checked="checked"><label for="talk">Nextcloud Talk (needs ports 3478/TCP and 3478/UDP open in your firewall/router)</label><br><br>
+                            <input type="checkbox" id="talk" name="talk" checked="checked"><label for="talk">Nextcloud Talk (needs ports {{ talk_port }}/TCP and {{ talk_port }}/UDP open in your firewall/router)</label><br><br>
                         {% else %}
-                            <input type="checkbox" id="talk" name="talk"><label for="talk">Nextcloud Talk (needs ports 3478/TCP and 3478/UDP open in your firewall/router)</label><br><br>
+                            <input type="checkbox" id="talk" name="talk"><label for="talk">Nextcloud Talk (needs ports {{ talk_port }}/TCP and {{ talk_port }}/UDP open in your firewall/router)</label><br><br>
                         {% endif %}
                         {% if is_onlyoffice_enabled == true %}
                             <input type="checkbox" id="onlyoffice" name="onlyoffice" checked="checked"><label for="onlyoffice">OnlyOffice (only supported on x64)</label><br>
@@ -452,6 +457,29 @@
                     {% if isAnyRunning == true %}
                         <script type="text/javascript" src="disable-talk.js"></script>
                         <script type="text/javascript" src="disable-collabora.js"></script>
+                    {% endif %}
+
+                    {% if is_collabora_enabled == true and isAnyRunning == false and was_start_button_clicked == true %}
+                        <h3>Collabora dictionaries</h3>
+
+                        {% if collabora_dictionaries == "" %}
+                            In order to get the correct dictionaries in Collabora, you may configure the dictionaries below:<br><br>
+                            <form method="POST" action="/api/configuration" class="xhr">
+                                <input type="text" name="collabora_dictionaries" placeholder="de_DE en_GB en_US es_ES fr_FR it nl pt_BR pt_PT ru" />
+                                <input type="hidden" name="{{csrf.keys.name}}" value="{{csrf.name}}">
+                                <input type="hidden" name="{{csrf.keys.value}}" value="{{csrf.value}}">
+                                <input class="button" type="submit" value="Submit" />
+                            </form>
+                            You need to make sure that the dictionaries that you enter are valid. An example is <b>de_DE en_GB en_US es_ES fr_FR it nl pt_BR pt_PT ru</b>.<br><br>
+                        {% else %}
+                            The dictionaries for Collabora are currently set to <b>{{ collabora_dictionaries }}</b>. You can reset them again by clicking on the button below.<br><br/>
+                            <form method="POST" action="/api/configuration" class="xhr">
+                                <input type="hidden" name="delete_collabora_dictionaries" value="yes"/>
+                                <input type="hidden" name="{{csrf.keys.name}}" value="{{csrf.name}}">
+                                <input type="hidden" name="{{csrf.keys.value}}" value="{{csrf.value}}">
+                                <input class="button" type="submit" value="Reset collabora dictionaries" />
+                            </form>
+                        {% endif %}
                     {% endif %}
 
                     <h2>Timezone change</h2>

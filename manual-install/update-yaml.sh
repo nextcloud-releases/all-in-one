@@ -59,10 +59,12 @@ done
 sed -i 's|_ENABLED=|_ENABLED=no          # Setting this to "yes" enables the option in Nextcloud automatically.|' sample.conf
 sed -i 's|TALK_ENABLED=no|TALK_ENABLED=yes|' sample.conf
 sed -i 's|COLLABORA_ENABLED=no|COLLABORA_ENABLED=yes|' sample.conf
+sed -i 's|COLLABORA_DICTIONARIES=|COLLABORA_DICTIONARIES=de_DE en_GB en_US es_ES fr_FR it nl pt_BR pt_PT ru        # You can change this in order to enable other dictionaries for collabora|' sample.conf
 sed -i 's|NEXTCLOUD_DATADIR=|NEXTCLOUD_DATADIR=nextcloud_aio_nextcloud_data          # You can change this to e.g. "/mnt/ncdata" to map it to a location on your host. It needs to be adjusted before the first startup and never afterwards!|' sample.conf
 sed -i 's|NEXTCLOUD_MOUNT=|NEXTCLOUD_MOUNT=/mnt/          # This allows the Nextcloud container to access directories on the host. It must never be equal to the value of NEXTCLOUD_DATADIR!|' sample.conf
 sed -i 's|DAILY_BACKUP_RUNNING=|DAILY_BACKUP_RUNNING=no          # When setting to yes, it will automatically update all installed Nextcloud apps upon container startup.|' sample.conf
 sed -i 's|APACHE_PORT=|APACHE_PORT=443          # Changing this to a different value than 443 will allow you to run it behind a reverse proxy.|' sample.conf
+sed -i 's|TALK_PORT=|TALK_PORT=3478          # This allows to adjust the port that the talk container is using.|' sample.conf
 sed -i 's|AIO_TOKEN=|AIO_TOKEN=123456          # Has no function but needs to be set!|' sample.conf
 sed -i 's|AIO_URL=|AIO_URL=localhost          # Has no function but needs to be set!|' sample.conf
 sed -i 's|NC_DOMAIN=|NC_DOMAIN=yourdomain.com          # TODO! Needs to be changed to the domain that you want to use for Nextcloud.|' sample.conf
@@ -119,5 +121,6 @@ sed -i '/CLAMAV_ENABLED/d' latest-arm64.yml
 sed -i '/  nextcloud-aio-onlyoffice:/,/^$/d' latest-arm64.yml
 sed -i '/nextcloud[-_]aio[-_]onlyoffice/d' latest-arm64.yml
 sed -i '/ONLYOFFICE_ENABLED/d' latest-arm64.yml
+sed -i '/ONLYOFFICE_SECRET/d' latest-arm64.yml
 
 rm containers.yml
