@@ -12,7 +12,7 @@ variable "builder_sa" {
 
 source "googlecompute" "test-image" {
   project_id                  = var.project_id
-  source_image_family         = "ubuntu-2204"
+  source_image_family         = "ubuntu-2004"
   zone                        = var.zone
   image_description           = "Nextcloud"
   ssh_username                = "root"
