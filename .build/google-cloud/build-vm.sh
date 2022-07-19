@@ -41,4 +41,4 @@ gcloud config set project nextcloud-aio
 
 # gcloud builds submit .
 
-gcloud builds submit --region="us-central1-a" --config [CONFIG_FILE_PATH] [SOURCE_DIRECTORY]
+gcloud builds submit .
