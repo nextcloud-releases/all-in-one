@@ -41,4 +41,25 @@ gcloud config set project nextcloud-aio
 
 # gcloud builds submit .
 
+#
+# Configure service account based on https://github.com/GoogleCloudPlatform/cloud-builders-community/tree/master/packer/examples/gce
+#
+
+# export PROJECT_ID=nextcloud-aio
+# export PROJECT_NUMBER=$(gcloud projects list --filter="$PROJECT_ID" --format="value(PROJECT_NUMBER)")
+
+# gcloud iam service-accounts create packer --description "Packer image builder"
+
+# gcloud projects add-iam-policy-binding $PROJECT_ID \
+#   --role="roles/compute.instanceAdmin.v1" \
+#   --member="serviceAccount:packer@${PROJECT_ID}.iam.gserviceaccount.com"
+# gcloud projects add-iam-policy-binding $PROJECT_ID \
+#   --role="roles/iam.serviceAccountUser" \
+#   --member="serviceAccount:packer@${PROJECT_ID}.iam.gserviceaccount.com"
+
+# gcloud iam service-accounts add-iam-policy-binding \
+#   packer@${PROJECT_ID}.iam.gserviceaccount.com \
+#   --role="roles/iam.serviceAccountTokenCreator" \
+#   --member="serviceAccount:${PROJECT_NUMBER}@cloudbuild.gserviceaccount.com"
+
 gcloud builds submit .
