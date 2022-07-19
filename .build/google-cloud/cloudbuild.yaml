@@ -4,7 +4,7 @@
 #
 # See README.md for invocation instructions.
 steps:
-- name: 'gcr.io/$PROJECT_ID/packer'
+- name: 'gcr.io/$PROJECT_ID/nextcloud-aio'
   args:
   - build
   - -var-file=variables.pkrvars.hcl
