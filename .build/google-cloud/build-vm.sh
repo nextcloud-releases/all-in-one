@@ -25,4 +25,20 @@ gcloud config set project nextcloud-aio
 # IAM permissions
 #
 
-CLOUD_BUILD_ACCOUNT=$(gcloud projects get-iam-policy nextcloud-aio --filter="(bindings.role:roles/cloudbuild.builds.builder)"  --flatten="bindings[].members" --format="value(bindings.members[])")
+# gcloud projects get-iam-policy nextcloud-aio --filter="(bindings.role:roles/cloudbuild.builds.builder)"  --flatten="bindings[].members" --format="value(bindings.members[])"
+
+# gcloud projects add-iam-policy-binding nextcloud-aio \
+#   --member serviceAccount:builder@nextcloud-aio.iam.gserviceaccount.com \
+#   --role roles/compute.instanceAdmin
+
+#
+# Allow to run Packer commands
+#
+
+# git clone https://github.com/GoogleCloudPlatform/cloud-builders-community.git
+
+# cd cloud-builders-community/packer
+
+# gcloud builds submit .
+
+gcloud builds submit --region="us-central1-a" --config [CONFIG_FILE_PATH] [SOURCE_DIRECTORY]
