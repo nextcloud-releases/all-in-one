@@ -189,3 +189,6 @@ az identity delete --ids $imgBuilderId
 
 # Will delete the VM:
 # az group delete -n $imageResourceGroup
+
+# Revert git changes
+git stash
