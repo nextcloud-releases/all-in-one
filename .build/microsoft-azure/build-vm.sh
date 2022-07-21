@@ -23,7 +23,7 @@ fi
 
 # az feature show --namespace Microsoft.VirtualMachineImages --name VirtualMachineTemplatePreview | grep state
 
-# az feature show --namespace Microsoft.KeyVault --name VirtualMachineTemplatePreview
+# az feature show --namespace Microsoft.KeyVault --name VirtualMachineTemplatePreview | grep state
 
 # # wait until it says registered
 
