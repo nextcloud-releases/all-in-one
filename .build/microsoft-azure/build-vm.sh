@@ -35,6 +35,14 @@ fi
 # az provider show -n Microsoft.VirtualMachineImages -o json | grep registrationState
 # az provider show -n Microsoft.Network -o json | grep registrationState
 
+# # Register them if not present
+
+# az provider register -n Microsoft.VirtualMachineImages
+# az provider register -n Microsoft.Compute
+# az provider register -n Microsoft.KeyVault
+# az provider register -n Microsoft.Storage
+# az provider register -n Microsoft.Network
+
 #
 # Set Permissions & Create Resource Group for Image Builder Images
 #
