@@ -42,7 +42,7 @@ EOF
 # Cleanup
 export DEBIAN_FRONTEND=noninteractive
 apt-get -y update
-sudo apt-get install unattended-upgrades
+sudo apt-get install unattended-upgrades -y
 apt-get -o Dpkg::Options::="--force-confold" upgrade -q -y --force-yes
 apt-get -y autoremove
 apt-get -y autoclean
