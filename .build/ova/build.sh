@@ -58,4 +58,4 @@ rm -rf /home/ncadmin/.ssh/authorized_keys
 touch /etc/ssh/revoked_keys
 chmod 600 /etc/ssh/revoked_keys
 docker stop nextcloud-aio-mastercontainer
-rm -f /var/lib/docker/volumes/nextcloud_aio_mastercontainer/_data/certs/ssl.*
+rm /var/lib/docker/volumes/nextcloud_aio_mastercontainer/_data/certs/ssl.*
