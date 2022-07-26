@@ -19,8 +19,7 @@ The procedure for migrating only the files works like this:
 1. Run `sudo docker exec -it nextcloud-aio-nextcloud php occ files:scan-app-data && sudo docker exec -it nextcloud-aio-nextcloud php occ files:scan --all` in order to scan all files in the datadirectory.
 
 ## Migrate the files and the database
-**Please note**: this is much more complicated than migrating only the files and also not as failproof so be warned!<br>
-Also, you will currently not be able to use local external storage in Nextcloud AIO since that is not supported, yet. See https://github.com/nextcloud/all-in-one/issues/76
+**Please note**: this is much more complicated than migrating only the files and also not as failproof so be warned!
 
 The procedure for migrating the files and the database works like this:
 1. Make sure that your old instance is on exactly the same version like the version used in Nextcloud AIO. (e.g. 23.0.0) You can find the used version here: [click here](https://github.com/nextcloud/all-in-one/search?l=Dockerfile&q=NEXTCLOUD_VERSION&type=). If not, simply upgrade your former installation to that version or wait until the version used in Nextcloud AIO got updated to the same version of your former installation or the other way around.
@@ -70,13 +69,12 @@ The procedure for migrating the files and the database works like this:
     sudo rm /var/lib/docker/volumes/nextcloud_aio_database_dump/_data/database-dump.sql
     sudo cp database-dump.sql /var/lib/docker/volumes/nextcloud_aio_database_dump/_data/
     sudo chmod 777 /var/lib/docker/volumes/nextcloud_aio_database_dump/_data/database-dump.sql
-    sudo rm -r /var/lib/docker/volumes/nextcloud_aio_database/_data/*
+    sudo rm /var/lib/docker/volumes/nextcloud_aio_database_dump/_data/initial-cleanup-done
     ```
 1. If the commands above were executed successfully, restore the datadirectory of your former instance into the following directory: `/var/lib/docker/volumes/nextcloud_aio_nextcloud_data/_data/`
 1. Next, run `sudo chown -R 33:0 /var/lib/docker/volumes/nextcloud_aio_nextcloud_data/_data/*` and `sudo chmod -R 750 /var/lib/docker/volumes/nextcloud_aio_nextcloud_data/_data/*`to apply the correct permissions
 1. Edit the Nextcloud AIO config.php file that is stored in `/var/lib/docker/volumes/nextcloud_aio_nextcloud/_data/config/config.php` and modify only `passwordsalt`, `secret`, `instanceid` and set it to the old values that you used on your old installation. If you are brave, feel free to modify further values e.g. add your old LDAP config or S3 storage config. (Some things like Mail server config can be added back using Nextcloud's webinterface later on).
 1. When you are done and saved your changes to the file, finally start the containers again and wait until all containers are running.
-1. Now run `sudo docker exec -it nextcloud-aio-nextcloud php occ maintenance:data-fingerprint`.
 1. As last step, install all apps again that were installed before on your old instance by using the webinterface.
 
 Now the whole Nextcloud instance should work again.<br>
