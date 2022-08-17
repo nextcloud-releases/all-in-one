@@ -132,6 +132,9 @@ No and it will not be added. Please use a dedicated domain for Nextcloud and set
 ### How can I access Nextcloud locally?
 The recommended way is to set up a local dns-server like a pi-hole and set up a custom dns-record for that domain that points to the internal ip-adddress of your server that runs Nextcloud AIO.
 
+### How to skip the domain validation?
+If you are completely sure that you've configured everything correctly and are not able to pass the domain validation, you may skip the domain validation by adding `-e SKIP_DOMAIN_VALIDATION=true` to the docker run command of the mastercontainer.
+
 ### How to resolve firewall problems with Fedora Linux, RHEL OS, CentOS, SUSE Linux and others?
 It is known that Linux distros that use [firewalld](https://firewalld.org) as their firewall daemon have problems with docker networks. In case the containers are not able to communicate with each other, you may change your firewalld to use the iptables backend by running:
 ```
@@ -171,10 +174,10 @@ Additionally, there is a cronjob that runs once a day that checks for container 
 If your Nextcloud is running and you are logged in as admin in your Nextcloud, you can easily log in to the AIO interface by opening `https://yourdomain.tld/settings/admin/overview` which will show a button on top that enables you to log in to the AIO interface by just clicking on this button. **Note:** You can change the domain/ip-address/port of the button by simply stopping the containers, visiting the AIO interface from the correct and desired domain/ip-address/port and clicking once on `Start containers`.
 
 ### How to change the domain?
+**⚠️ Please note:** Editing the configuration.json manually and making a mistake may break your instance so please create a backup first!
+
 If you set up a new AIO instance, you need to enter a domain. Currently there is no way to change this domain afterwards from the AIO interface. So in order to change it, you need to edit the configuration.json manually that is most likely stored in `/var/lib/docker/volumes/nextcloud_aio_mastercontainer/_data/data/configuration.json`, subsitute each occurrence of your old domain with your new domain and save and write out the file. Afterwards restart your containers from the AIO interface and everything should work as expected if the new domain is correctly configured.<br>
 If you are running AIO behind a reverse proxy, you need to obviously also change the domain in your reverse proxy config.
-
-**⚠️ Please note:** Editing the configuration.json manually and making a mistake may break your instance so please create a backup first!
 
 ### How to properly reset the instance?
 If something goes unexpected routes during the initial installation, you might want to reset the AIO installation to be able to start from scratch.
@@ -381,6 +384,8 @@ One example for this would be `sudo docker exec -it nextcloud-aio-mastercontaine
 If you already have a backup solution in place, you may want to hide the backup section. You can do so by adding `-e DISABLE_BACKUP_SECTION=true` to the initial startup of the mastercontainer.
 
 ### How to change the default location of Nextcloud's Datadir?
+⚠️ **Attention:** It is very important to change the datadir **before** Nextcloud is installed/started the first time and not to change it afterwards! If you still want to do it afterwards, see [this](https://github.com/nextcloud/all-in-one/discussions/890#discussioncomment-3089903) on how to do it.
+
 You can configure the Nextcloud container to use a specific directory on your host as data directory. You can do so by adding the environmental variable `NEXTCLOUD_DATADIR` to the initial startup of the mastercontainer. Allowed values for that variable are strings that start with `/` and are not equal to `/`.
 
 - An example for Linux is `-e NEXTCLOUD_DATADIR="/mnt/ncdata"`.
@@ -404,8 +409,6 @@ You can configure the Nextcloud container to use a specific directory on your ho
 - For Synology, the command for this example would be `sudo chown -R 33:0 /volume1/docker/nextcloud/data` and `sudo chmod -R 750 /volume1/docker/nextcloud/data`
 - On Windows, this command is not needed.
 
-⚠️ **Attention:** It is very important to change the datadir **before** Nextcloud is installed/started the first time and not to change it afterwards! If you still want to do it afterwards, see [this](https://github.com/nextcloud/all-in-one/discussions/890#discussioncomment-3089903) on how to do it.
-
 ### How to allow the Nextcloud container to access directories on the host?
 By default, the Nextcloud container is confined and cannot access directories on the host OS. You might want to change this when you are planning to use local external storage in Nextcloud to store some files outside the data directory and can do so by adding the environmental variable `NEXTCLOUD_MOUNT` to the initial startup of the mastercontainer. Allowed values for that variable are strings that start with `/` and are not equal to `/`.
 
@@ -418,6 +421,9 @@ After using this option, please make sure to apply the correct permissions to th
 You can then navigate to the apps management page, activate the external storage app, navigate to `https://your-nc-domain.com/settings/admin/externalstorages` and add a local external storage directory that will be accessible inside the container at the same place that you've entered. E.g. `/mnt/your-drive-mountpoint` will be mounted to `/mnt/your-drive-mountpoint` inside the container, etc. 
 
 Be aware though that these locations will not be covered by the built-in backup solution!
+
+### How to adjust the Talk port?
+By default will the talk container use port `3478/UDP` and `3478/TCP` for connections. You can adjust the port by adding e.g. `-e TALK_PORT=3478` to the initial docker run command and adjusting the port to your desired value.
 
 ### What can I do to fix the internal or reserved ip-address error?
 If you get an error during the domain validation which states that your ip-address is an internal or reserved ip-address, you can fix this by first making sure that your domain indeed has the correct public ip-address that points to the server and then adding `--add-host yourdomain.com:<public-ip-address>` to the initial docker run command which will allow the domain validation to work correctly. And so that you know: even if the `A` record of your domain should change over time, this is no problem since the mastercontainer will not make any attempt to access the chosen domain after the initial domain validation.
@@ -444,7 +450,7 @@ You can edit Nextclouds config.php file directly from the host with your favorit
 If you want to define a custom skeleton directory, you can do so by putting your skeleton files into `/var/lib/docker/volumes/nextcloud_aio_nextcloud_data/_data/skeleton/`, applying the correct permissions with `sudo chown -R 33:0 /var/lib/docker/volumes/nextcloud_aio_nextcloud_data/_data/skeleton` and and `sudo chmod -R 750 /var/lib/docker/volumes/nextcloud_aio_nextcloud_data/_data/*` and setting the skeleton directory option with `sudo docker exec -it nextcloud-aio-nextcloud php occ config:system:set skeletondirectory --value="/mnt/ncdata/skeleton"`. You can read further on this option here: [click here](https://docs.nextcloud.com/server/stable/admin_manual/configuration_server/config_sample_php_parameters.html?highlight=skeletondir#:~:text=adding%20%3Fdirect%3D1-,'skeletondirectory',-%3D%3E%20'%2Fpath%2Fto%2Fnextcloud)
 
 ### Fail2ban
-You can configure your server to block certain ip-addresses using fail2ban as bruteforce protection. Here is how to set it up: https://docs.nextcloud.com/server/stable/admin_manual/installation/harden_server.html#setup-fail2ban. The logpath of AIO is by default `/var/lib/docker/volumes/nextcloud_aio_nextcloud/_data/data/nextcloud.log`. Do not forget to add `chain=DOCKER-USER` to your nextcloud jail config (`nextcloud.local`) otherwise the nextcloud service running on docker will still be accessible even if the IP is banned.
+You can configure your server to block certain ip-addresses using fail2ban as bruteforce protection. Here is how to set it up: https://docs.nextcloud.com/server/stable/admin_manual/installation/harden_server.html#setup-fail2ban. The logpath of AIO is by default `/var/lib/docker/volumes/nextcloud_aio_nextcloud/_data/data/nextcloud.log`. Do not forget to add `chain=DOCKER-USER` to your nextcloud jail config (`nextcloud.local`) otherwise the nextcloud service running on docker will still be accessible even if the IP is banned. Also, you may change the blocked ports to cover all AIO ports: by default `80,443,8080,8443,3478` (see [this](https://github.com/nextcloud/all-in-one#explanation-of-used-ports))
 
 ### LDAP
 It is possible to connect to an existing LDAP server. You need to make sure that the LDAP server is reachable from the Nextcloud container. Then you can enable the LDAP app and configure LDAP in Nextcloud manually. If you don't have a LDAP server yet, recommended is to use this docker container: https://hub.docker.com/r/nitnelave/lldap. Make sure here as well that Nextcloud can talk to the LDAP server. The easiest way is by adding the LDAP docker container to the docker network `nextcloud-aio`. Then you can connect to the LDAP container by its name from the Nextcloud container.

@@ -1,5 +1,5 @@
 # From https://github.com/nextcloud/docker/blob/master/23/fpm-alpine/Dockerfile
-FROM php:8.0.21-fpm-alpine3.16
+FROM php:8.0.22-fpm-alpine3.16
 
 # Custom: change id of www-data user as it needs to be the same like on old installations
 RUN set -ex; \
@@ -104,7 +104,7 @@ RUN { \
 
 VOLUME /var/www/html
 
-ENV NEXTCLOUD_VERSION 24.0.3
+ENV NEXTCLOUD_VERSION 24.0.4
 
 RUN set -ex; \
     apk add --no-cache --virtual .fetch-deps \

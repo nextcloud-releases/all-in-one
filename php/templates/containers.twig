@@ -16,7 +16,7 @@
     </header>
 
     <div class="content">
-        <h1>Nextcloud AIO v1.7.0</h1>
+        <h1>Nextcloud AIO v1.7.1</h1>
 
         {% set isAnyRunning = false %}
         {% set isAnyRestarting = false %}
@@ -82,7 +82,7 @@
                         <h2>New AIO instance</h2>
                         Please type in the domain that will be used for Nextcloud if you want to create a new instance:<br><br />
                         {% if skip_domain_validation == true %}
-                            <b>Please Note:</b> The domain validation is disabled so any domain will be accepted here! So make sure that you do not make a typo here as you will not be able to change it afterwards!<br><br>
+                            <b>Please note:</b> The domain validation is disabled so any domain will be accepted here! So make sure that you do not make a typo here as you will not be able to change it afterwards!<br><br>
                         {% endif %}
                         <form method="POST" action="/api/configuration" class="xhr">
                             <input type="text" name="domain" value="{{ domain }}" placeholder="nextcloud.yourdomain.com"/>
@@ -93,6 +93,7 @@
                         {% if skip_domain_validation == false %}
                             Make sure that this server is reachable on Port 443 and you've correctly set up the DNS config for the domain that you enter. <br><br>
                             If you have a dynamic IP-address, you can use e.g. <a href="https://ddclient.net/">DDclient</a> with a compatible domain provider for DNS updates. <br /><br/>
+                            <b>Hint:<b> If the domain validation fails but you are completely sure that you've configured everything correctly, you may skip the domain validation by following <a href="https://github.com/nextcloud/all-in-one#how-to-skip-the-domain-validation">this documentation</a>.<br><br>
                         {% endif %}
 
                         <h2>Restore former AIO instance from backup</h2>
@@ -152,7 +153,7 @@
                             An example for Linux is <b>/mnt/backup</b>.<br>
                             For macOS it may be <b>/var/backup</b>.<br>
                             On Windows it must be <b>nextcloud_aio_backupdir</b>. You need to create the 'nextcloud_aio_backupdir' volume beforehand by following this documentation: <a href="https://github.com/nextcloud/all-in-one#how-to-run-aio-on-windows"><b>click here</b></a><br><br>
-                            ⚠️ Note that the backup archive must be located in a subfolder of the folder that you enter here and the subfolder which contains the archive must be named 'borg'. Otherwise will the backup container not find the backup archive!<br><br>
+                            ⚠️ Please note that the backup archive must be located in a subfolder of the folder that you enter here and the subfolder which contains the archive must be named 'borg'. Otherwise will the backup container not find the backup archive!<br><br>
                         {% endif %}
                     {% else %}
                         <b>Everything set!</b> Click on the button below to test the path and password:<br/><br/>
@@ -345,7 +346,7 @@
                                 {% endif %}
                                 <h3>Backup information</h3>
                                 This is your encryption password for backups: <b>{{ borgbackup_password }}</b><br /><br/>
-                                Please save it at a safe place since you won't be able to restore from backup if you loose this password! <br /><br/>
+                                Please save it at a safe place since you won't be able to restore from backup if you lose this password! <br /><br/>
                                 Backed up will get all important data of your Nextcloud AIO instance like the database, your files and configuration files of the mastercontainer and else. <br /><br/>
                                 The backup itself will use a tool that is called <a href="https://github.com/borgbackup/borg#what-is-borgbackup"><b>BorgBackup</b><a/> which is a well-known server backup tool that efficiently backs up your files and encrypts them on the fly. <br /><br/>
                                 Backups get created in the following directory on the host: <b>{{ borg_backup_host_location }}/borg</b> <br /><br/>
@@ -435,7 +436,7 @@
                     <h2>Optional addons</h2>
                     In this section you can enable or disable optional addons.<br><br>
                     {% if isAnyRunning == true %}
-                        <b>Note:</b> You can enable or disable them when your containers are stopped.<br><br>
+                        <b>Please note:</b> You can enable or disable them when your containers are stopped.<br><br>
                     {% endif %}
                     <form id="options-form" method="POST" action="/api/configuration" class="xhr">
                         <input type="hidden" name="{{csrf.keys.name}}" value="{{csrf.name}}">
@@ -501,7 +502,7 @@
                         {% if timezone != "" %}
                             The timezone for Nextcloud is currently set to <b>{{ timezone }}</b>.<br><br>
                         {% endif %}
-                        <b>Note:</b> You can change the timezone when your containers are stopped.<br><br>
+                        <b>Please note:</b> You can change the timezone when your containers are stopped.<br><br>
                     {% else %}
                         {% if timezone == "" %}
                             In order to get the correct time values for certain Nextcloud features, it makes sense to set the timezone for Nextcloud to the one that your users mainly use. Please note that this setting does not apply to the mastercontainer and any backup option.<br><br>
