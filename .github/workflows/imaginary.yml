@@ -31,7 +31,7 @@ jobs:
 
           # Fix the build based on https://github.com/h2non/imaginary/issues/387
           sed -i 's|github.com/h2non/bimg v1.1.4|github.com/h2non/bimg v1.1.7|' go.mod
-          sed -i 's|^RUN go mod download$|RUN go mod tidy && go mod download|' Dockerfile
+          sed -i 's|RUN go mod download|RUN go mod tidy\; go mod download|' Dockerfile
 
           # Build the image
           DATE="$(date +"%Y%m%d_%H%M%S")"
