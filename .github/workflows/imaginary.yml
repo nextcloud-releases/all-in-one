@@ -8,12 +8,7 @@ on:
 jobs:
   push_to_registry:
     runs-on: ubuntu-latest
-
     name: Create Imaginary Container
-
-    permissions:
-      packages: write
-      contents: read
 
     steps:
       - name: Log in to GitHub Container Registry
