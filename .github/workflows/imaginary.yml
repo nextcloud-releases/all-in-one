@@ -3,7 +3,7 @@ name: Create Imaginary Container
 on:
   workflow_dispatch:
   schedule:
-    - cron: '5 4 * * *'
+    - cron: '5 4 * * 1'
 
 jobs:
   push_to_registry:
