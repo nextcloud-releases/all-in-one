@@ -28,6 +28,12 @@ jobs:
       - name: Build and push image
         run: |
           cd imaginary
+
+          # Fix the build based on https://github.com/h2non/imaginary/issues/387
+          sed -i 's|github.com/h2non/bimg v1.1.4|github.com/h2non/bimg v1.1.7|' go.mod
+          sed -i 's|RUN go mod download|RUN go mod tidy && go mod download|' Dockerfile
+
+          # Build the image
           DATE="$(date +"%Y%m%d_%H%M%S")"
           docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
           docker buildx create --name builder --driver docker-container --use
