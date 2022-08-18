@@ -1,7 +1,7 @@
 packer {
   required_plugins {
     amazon = {
-      version = ">= 0.0.2"
+      version = ">= 1.1.1"
       source  = "github.com/hashicorp/amazon"
     }
   }
@@ -29,6 +29,7 @@ build {
     "source.amazon-ebs.ubuntu"
   ]
   provisioner "shell" {
-    inline = ["curl -fsSL https://raw.githubusercontent.com/nextcloud-releases/all-in-one/main/.build/ova/build.sh | sed 's|sudo||' | bash"]
+    inline = ["curl -sL -o build.sh https://raw.githubusercontent.com/nextcloud-releases/all-in-one/main/.build/ova/build.sh", "chmod +x build.sh", "./build.sh"]
+    execute_command = "{{.Vars}} bash '{{.Path}}'"
   }
 }

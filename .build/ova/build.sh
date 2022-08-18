@@ -23,7 +23,7 @@ sudo docker run -d \
 nextcloud/all-in-one:latest
 
 # Some Info
-cat << EOF > /etc/motd
+cat << EOF | sudo tee /etc/motd
 
  #    #  ######  #    #   #####   ####   #        ####   #    #  #####
  ##   #  #        #  #      #    #    #  #       #    #  #    #  #    #
@@ -41,21 +41,21 @@ EOF
 
 # Cleanup
 export DEBIAN_FRONTEND=noninteractive
-apt-get -y update
+sudo apt-get -y update
 sudo apt-get install unattended-upgrades -y
-apt-get -o Dpkg::Options::="--force-confold" upgrade -q -y --force-yes
-apt-get -y autoremove
-apt-get -y autoclean
-rm -rf /tmp/* /var/tmp/*
+sudo apt-get -o Dpkg::Options::="--force-confold" upgrade -q -y --force-yes
+sudo apt-get -y autoremove
+sudo apt-get -y autoclean
+sudo rm -rf /tmp/* /var/tmp/*
 history -c
-cat /dev/null > /root/.bash_history
+cat /dev/null | sudo tee /root/.bash_history
 unset HISTFILE
-find /var/log -mtime -1 -type f -exec truncate -s 0 {} \;
-rm -rf /var/log/*.gz /var/log/*.[0-9] /var/log/*-????????
-rm -rf /var/lib/cloud/instances/*
-rm -f /root/.ssh/authorized_keys /etc/ssh/*key*
-rm -rf /home/ncadmin/.ssh/authorized_keys
-touch /etc/ssh/revoked_keys
-chmod 600 /etc/ssh/revoked_keys
-docker stop nextcloud-aio-mastercontainer
-rm /var/lib/docker/volumes/nextcloud_aio_mastercontainer/_data/certs/ssl.*
+sudo find /var/log -mtime -1 -type f -exec truncate -s 0 {} \;
+sudo rm -rf /var/log/*.gz /var/log/*.[0-9] /var/log/*-????????
+sudo rm -rf /var/lib/cloud/instances/*
+sudo rm -f /root/.ssh/authorized_keys /etc/ssh/*key*
+sudo rm -rf /home/ncadmin/.ssh/authorized_keys
+sudo touch /etc/ssh/revoked_keys
+sudo chmod 600 /etc/ssh/revoked_keys
+sudo docker stop nextcloud-aio-mastercontainer
+sudo rm -f /var/lib/docker/volumes/nextcloud_aio_mastercontainer/_data/certs/ssl.*
