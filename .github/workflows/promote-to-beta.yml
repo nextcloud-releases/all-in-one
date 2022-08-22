@@ -23,7 +23,8 @@ jobs:
           'aio-talk',
           'aio-watchtower',
           'aio-clamav',
-          'aio-onlyoffice']
+          'aio-onlyoffice',
+          'aio-imaginary']
 
     steps:
     - name: Login to DockerHub
