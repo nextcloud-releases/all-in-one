@@ -452,6 +452,11 @@
                         {% else %}
                             <input type="checkbox" id="collabora" name="collabora"><label for="collabora">Collabora (Nextcloud Office)</label><br>
                         {% endif %}
+                        {% if is_imaginary_enabled == true %}
+                            <input type="checkbox" id="imaginary" name="imaginary" checked="checked"><label for="imaginary">Imaginary</label><br>
+                        {% else %}
+                            <input type="checkbox" id="imaginary" name="imaginary"><label for="imaginary">Imaginary</label><br>
+                        {% endif %}
                         {% if is_talk_enabled == true %}
                             <input type="checkbox" id="talk" name="talk" checked="checked"><label for="talk">Nextcloud Talk (needs ports {{ talk_port }}/TCP and {{ talk_port }}/UDP open in your firewall/router)</label><br><br>
                         {% else %}
@@ -460,11 +465,11 @@
                         {% if is_onlyoffice_enabled == true %}
                             <input type="checkbox" id="onlyoffice" name="onlyoffice" checked="checked"><label for="onlyoffice">OnlyOffice (only supported on x64)</label><br>
                         {% else %}
-                            <input type="checkbox" id="onlyoffice" name="onlyoffice"><label for="onlyoffice">OnlyOffice (only supported on x64)</label><br>
+                            {#<input type="checkbox" id="onlyoffice" name="onlyoffice"><label for="onlyoffice">OnlyOffice (only supported on x64)</label><br>#}
                         {% endif %}
                         <input id="options-form-submit" class="button" type="submit" value="Save changes" />
                     </form>
-                    <b>System requirements:</b> When any optional addon is enabled, at least 2GB RAM, a dual-core CPU and 40GB system storage are required. When enabling ClamAV, at least 3GB RAM are required.<br><br>
+                    <b>Minimal system requirements:</b> When any optional addon is enabled, at least 2GB RAM, a dual-core CPU and 40GB system storage are required. When enabling ClamAV, at least 3GB RAM are required. Recommended are at least 4GB of RAM.<br><br>
                     {% if isAnyRunning == true or is_x64_platform == false %}
                         <script type="text/javascript" src="disable-clamav.js"></script>
                         <script type="text/javascript" src="disable-onlyoffice.js"></script>
@@ -472,6 +477,7 @@
                     {% if isAnyRunning == true %}
                         <script type="text/javascript" src="disable-talk.js"></script>
                         <script type="text/javascript" src="disable-collabora.js"></script>
+                        <script type="text/javascript" src="disable-imaginary.js"></script>
                     {% endif %}
 
                     {% if is_collabora_enabled == true and isAnyRunning == false and was_start_button_clicked == true %}
