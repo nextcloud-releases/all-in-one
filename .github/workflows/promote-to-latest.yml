@@ -24,7 +24,8 @@ jobs:
           'aio-watchtower',
           'aio-clamav',
           'aio-onlyoffice',
-          'aio-imaginary']
+          'aio-imaginary',
+          'aio-fulltextsearch']
 
     steps:
     - name: Login to DockerHub
