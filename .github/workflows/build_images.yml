@@ -29,7 +29,8 @@ jobs:
           {name: 'aio-watchtower', context: './Containers/watchtower'},
           {name: 'aio-clamav', context: './Containers/clamav'},
           {name: 'aio-onlyoffice', context: './Containers/onlyoffice'},
-          {name: 'aio-imaginary', context: './Containers/imaginary'}]
+          {name: 'aio-imaginary', context: './Containers/imaginary'},
+          {name: 'aio-fulltextsearch', context: './Containers/fulltextsearch'}]
         exclude:
           - platform: {arch: 'linux/arm64', tag: 'develop-arm64'}
             container: {name: 'aio-clamav', context: './Containers/clamav'}
