@@ -103,6 +103,8 @@ $app->get('/containers', function ($request, $response, $args) use ($container) 
         'automatic_updates' => $configurationManager->areAutomaticUpdatesEnabled(),
         'is_backup_section_enabled' => $configurationManager->isBackupSectionEnabled(),
         'is_imaginary_enabled' => $configurationManager->isImaginaryEnabled(),
+        'is_fulltextsearch_enabled' => $configurationManager->isFulltextsearchEnabled(),
+        'additional_backup_directories' => $configurationManager->GetAdditionalBackupDirectoriesString(),
     ]);
 })->setName('profile');
 $app->get('/login', function ($request, $response, $args) use ($container) {

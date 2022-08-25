@@ -1,7 +1,7 @@
 # Caddy is a requirement
 FROM caddy:2.5.2-alpine as caddy
 
-FROM debian:bullseye-20220801-slim
+FROM debian:bullseye-20220822-slim
 
 RUN mkdir -p /mnt/data; \
     chown www-data:www-data /mnt/data;
@@ -19,6 +19,7 @@ RUN set -ex; \
         openssl \
         netcat \
         dpkg-dev \
+        curl \
     ; \
     rm -rf /var/lib/apt/lists/*
 
@@ -73,3 +74,5 @@ USER www-data
 
 ENTRYPOINT ["start.sh"]
 CMD ["/usr/bin/supervisord", "-c", "/supervisord.conf"]
+
+HEALTHCHECK CMD (curl -skfI localhost:8000 && curl -skfI localhost:$APACHE_PORT) || exit 1

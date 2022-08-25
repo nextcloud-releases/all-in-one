@@ -57,6 +57,11 @@ class ConfigurationController
                 $this->configurationManager->DeleteDailyBackupTime();
             }
 
+            if (isset($request->getParsedBody()['additional_backup_directories'])) {
+                $additionalBackupDirectories = $request->getParsedBody()['additional_backup_directories'] ?? '';
+                $this->configurationManager->SetAdditionalBackupDirectories($additionalBackupDirectories);
+            }
+
             if (isset($request->getParsedBody()['delete_timezone'])) {
                 $this->configurationManager->DeleteTimezone();
             }
@@ -94,6 +99,11 @@ class ConfigurationController
                     $this->configurationManager->SetImaginaryEnabledState(1);
                 } else {
                     $this->configurationManager->SetImaginaryEnabledState(0);
+                }
+                if (isset($request->getParsedBody()['fulltextsearch'])) {
+                    $this->configurationManager->SetFulltextsearchEnabledState(1);
+                } else {
+                    $this->configurationManager->SetFulltextsearchEnabledState(0);
                 }
             }
 
