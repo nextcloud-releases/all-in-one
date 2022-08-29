@@ -54,7 +54,7 @@ sudo find /var/log -mtime -1 -type f -exec truncate -s 0 {} \;
 sudo rm -rf /var/log/*.gz /var/log/*.[0-9] /var/log/*-????????
 sudo rm -rf /var/lib/cloud/instances/*
 sudo rm -f /root/.ssh/authorized_keys /etc/ssh/*key*
-sudo rm -rf /home/ncadmin/.ssh/authorized_keys
+sudo rm -rf /home/*/.ssh/authorized_keys
 sudo touch /etc/ssh/revoked_keys
 sudo chmod 600 /etc/ssh/revoked_keys
 sudo docker stop nextcloud-aio-mastercontainer
