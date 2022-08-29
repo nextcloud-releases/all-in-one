@@ -8,7 +8,7 @@ packer {
 }
 
 source "amazon-ebs" "ubuntu" {
-  ami_name      = "nextcloud-aio"
+  ami_name      = "nextcloud-aio-{{timestamp}}"
   instance_type = "t2.micro"
   region        = "us-east-1"
   source_ami_filter {
