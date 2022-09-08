@@ -30,20 +30,19 @@ class DockerController
         $container = $this->containerDefinitionFetcher->GetContainerById($id);
 
         foreach($container->GetDependsOn() as $dependency) {
-            $this->PerformRecursiveContainerStart($dependency);
+            $this->PerformRecursiveContainerStart($dependency, $pullContainer);
         }
 
         if ($id === 'nextcloud-aio-database') {
             if ($this->dockerActionManager->GetDatabasecontainerExitCode() > 0) {
                 $pullContainer = false;
+                error_log('Not pulling the latest database image because the container was not correctly shut down.');
             }
         }
         $this->dockerActionManager->DeleteContainer($container);
         $this->dockerActionManager->CreateVolumes($container);
         if ($pullContainer) {
             $this->dockerActionManager->PullContainer($container);
-        } else {
-            error_log('Not pulling the latest database image because the container was not correctly shut down.');
         }
         $this->dockerActionManager->CreateContainer($container);
         $this->dockerActionManager->StartContainer($container);
@@ -86,14 +85,17 @@ class DockerController
     }
 
     public function StartBackupContainerCheck(Request $request, Response $response, $args) : Response {
+        $this->checkBackup();
+        return $response->withStatus(201)->withHeader('Location', '/');
+    }
+
+    public function checkBackup() : void {
         $config = $this->configurationManager->GetConfig();
         $config['backup-mode'] = 'check';
         $this->configurationManager->WriteConfig($config);
 
         $id = 'nextcloud-aio-borgbackup';
         $this->PerformRecursiveContainerStart($id);
-
-        return $response->withStatus(201)->withHeader('Location', '/');
     }
 
     public function StartBackupContainerRestore(Request $request, Response $response, $args) : Response {
