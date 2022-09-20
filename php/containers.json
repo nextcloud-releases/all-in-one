@@ -24,7 +24,9 @@
         "TALK_HOST=nextcloud-aio-talk",
         "APACHE_PORT=%APACHE_PORT%",
         "ONLYOFFICE_HOST=nextcloud-aio-onlyoffice",
-        "TZ=%TIMEZONE%"
+        "TZ=%TIMEZONE%",
+        "APACHE_MAX_SIZE=%APACHE_MAX_SIZE%",
+        "APACHE_MAX_TIME=%NEXTCLOUD_MAX_TIME%"
       ],
       "volumes": [
         {
@@ -112,6 +114,11 @@
           "name": "%NEXTCLOUD_MOUNT%",
           "location": "%NEXTCLOUD_MOUNT%",
           "writeable": true
+        },
+        {
+          "name": "%TRUSTED_CACERTS_DIR%",
+          "location": "/usr/local/share/ca-certificates",
+          "writeable": false
         }
       ],
       "environmentVariables": [
@@ -148,7 +155,8 @@
         "PHP_UPLOAD_LIMIT=%NEXTCLOUD_UPLOAD_LIMIT%",
         "FULLTEXTSEARCH_ENABLED=%FULLTEXTSEARCH_ENABLED%",
         "FULLTEXTSEARCH_HOST=nextcloud-aio-fulltextsearch",
-        "PHP_MAX_TIME=%NEXTCLOUD_MAX_TIME%"
+        "PHP_MAX_TIME=%NEXTCLOUD_MAX_TIME%",
+        "TRUSTED_CACERTS_DIR=%TRUSTED_CACERTS_DIR%"
       ],
       "maxShutdownTime": 10,
       "restartPolicy": "unless-stopped"
@@ -185,7 +193,7 @@
       ],
       "environmentVariables": [
         "aliasgroup1=https://%NC_DOMAIN%:443",
-        "extra_params=--o:ssl.enable=false --o:ssl.termination=true --o:logging.level=warning --o:home_mode.enable=true",
+        "extra_params=--o:ssl.enable=false --o:ssl.termination=true --o:logging.level=warning --o:home_mode.enable=true %COLLABORA_SECCOMP_POLICY%",
         "dictionaries=%COLLABORA_DICTIONARIES%",
         "TZ=%TIMEZONE%"
       ],

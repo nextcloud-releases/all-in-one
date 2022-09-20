@@ -1,5 +1,5 @@
 # Docker CLI is a requirement
-FROM docker:20.10.17-dind-alpine3.16 as dind
+FROM docker:20.10.18-dind-alpine3.16 as dind
 
 # Caddy is a requirement
 FROM caddy:2.5.2-alpine as caddy
@@ -37,7 +37,7 @@ COPY --from=dind /usr/local/bin/docker /usr/local/bin/
 RUN chmod +x /usr/local/bin/docker
 
 RUN set -ex; \
-    pecl install APCu-5.1.21; \
+    pecl install APCu-5.1.22; \
     docker-php-ext-enable apcu
 
 RUN set -e && \

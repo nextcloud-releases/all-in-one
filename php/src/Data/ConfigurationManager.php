@@ -524,6 +524,11 @@ class ConfigurationManager
         return $this->GetEnvironmentalVariableOrConfig($envVariableName, $configName, $defaultValue);
     }
 
+    public function GetApacheMaxSize() : int {
+        $uploadLimit = (int)rtrim($this->GetNextcloudUploadLimit(), 'G');
+        return $uploadLimit * 1024 * 1024 * 1024;
+    }
+
     public function GetNextcloudMaxTime() : string {
         $envVariableName = 'NEXTCLOUD_MAX_TIME';
         $configName = 'nextcloud_max_time';
@@ -535,6 +540,28 @@ class ConfigurationManager
         $envVariableName = 'DOCKER_SOCKET_PATH';
         $configName = 'docker_socket_path';
         $defaultValue = '/var/run/docker.sock';
+        return $this->GetEnvironmentalVariableOrConfig($envVariableName, $configName, $defaultValue);
+    }
+
+    public function GetTrustedCacertsDir() : string {
+        $envVariableName = 'TRUSTED_CACERTS_DIR';
+        $configName = 'trusted_cacerts_dir';
+        $defaultValue = '';
+        return $this->GetEnvironmentalVariableOrConfig($envVariableName, $configName, $defaultValue);
+    }
+
+    public function GetCollaboraSeccompPolicy() : string {
+        $defaultString = '--o:security.seccomp=';
+        if ($this->GetCollaboraSeccompDisabledState() !== 'true') {
+            return $defaultString . 'true';
+        }
+        return $defaultString . 'false';
+    }
+
+    private function GetCollaboraSeccompDisabledState() : string {
+        $envVariableName = 'COLLABORA_SECCOMP_DISABLED';
+        $configName = 'collabora_seccomp_disabled';
+        $defaultValue = 'false';
         return $this->GetEnvironmentalVariableOrConfig($envVariableName, $configName, $defaultValue);
     }
 

@@ -314,6 +314,8 @@ class DockerActionManager
                     $replacements[1] = $this->configurationManager->GetNextcloudUploadLimit();
                 } elseif ($out[1] === 'NEXTCLOUD_MAX_TIME') {
                     $replacements[1] = $this->configurationManager->GetNextcloudMaxTime();
+                } elseif ($out[1] === 'TRUSTED_CACERTS_DIR') {
+                    $replacements[1] = $this->configurationManager->GetTrustedCacertsDir();
                 } elseif ($out[1] === 'ADDITIONAL_DIRECTORIES_BACKUP') {
                     if ($this->configurationManager->GetAdditionalBackupDirectoriesString() !== '') {
                         $replacements[1] = 'yes';
@@ -322,6 +324,10 @@ class DockerActionManager
                     }
                 } elseif ($out[1] === 'BORGBACKUP_HOST_LOCATION') {
                     $replacements[1] = $this->configurationManager->GetBorgBackupHostLocation();
+                } elseif ($out[1] === 'APACHE_MAX_SIZE') {
+                    $replacements[1] = $this->configurationManager->GetApacheMaxSize();
+                } elseif ($out[1] === 'COLLABORA_SECCOMP_POLICY') {
+                    $replacements[1] = $this->configurationManager->GetCollaboraSeccompPolicy();
                 } else {
                     $replacements[1] = $this->configurationManager->GetSecret($out[1]);
                 }

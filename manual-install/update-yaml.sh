@@ -63,7 +63,9 @@ sed -i 's|COLLABORA_DICTIONARIES=|COLLABORA_DICTIONARIES=de_DE en_GB en_US es_ES
 sed -i 's|NEXTCLOUD_DATADIR=|NEXTCLOUD_DATADIR=nextcloud_aio_nextcloud_data          # You can change this to e.g. "/mnt/ncdata" to map it to a location on your host. It needs to be adjusted before the first startup and never afterwards!|' sample.conf
 sed -i 's|NEXTCLOUD_MOUNT=|NEXTCLOUD_MOUNT=/mnt/          # This allows the Nextcloud container to access directories on the host. It must never be equal to the value of NEXTCLOUD_DATADIR!|' sample.conf
 sed -i 's|NEXTCLOUD_UPLOAD_LIMIT=|NEXTCLOUD_UPLOAD_LIMIT=10G          # This allows to change the upload limit of the Nextcloud container|' sample.conf
+sed -i 's|APACHE_MAX_SIZE=|APACHE_MAX_SIZE=10737418240          # This needs to be an integer and in sync with NEXTCLOUD_UPLOAD_LIMIT|' sample.conf
 sed -i 's|NEXTCLOUD_MAX_TIME=|NEXTCLOUD_MAX_TIME=3600          # This allows to change the upload time limit of the Nextcloud container|' sample.conf
+sed -i 's|TRUSTED_CACERTS_DIR=|TRUSTED_CACERTS_DIR=/path/to/my/cacerts          # Nextcloud container will trust all the Certification Authorities, whose certificates are included in the given directory.|' sample.conf
 sed -i 's|UPDATE_NEXTCLOUD_APPS=|UPDATE_NEXTCLOUD_APPS=no          # When setting to yes, it will automatically update all installed Nextcloud apps upon container startup on saturdays.|' sample.conf
 sed -i 's|APACHE_PORT=|APACHE_PORT=443          # Changing this to a different value than 443 will allow you to run it behind a reverse proxy.|' sample.conf
 sed -i 's|TALK_PORT=|TALK_PORT=3478          # This allows to adjust the port that the talk container is using.|' sample.conf
@@ -72,6 +74,7 @@ sed -i 's|AIO_URL=|AIO_URL=localhost          # Has no function but needs to be 
 sed -i 's|NC_DOMAIN=|NC_DOMAIN=yourdomain.com          # TODO! Needs to be changed to the domain that you want to use for Nextcloud.|' sample.conf
 sed -i 's|NEXTCLOUD_PASSWORD=|NEXTCLOUD_PASSWORD=          # TODO! This is the password of the initially created Nextcloud admin with username "admin".|' sample.conf
 sed -i 's|TIMEZONE=|TIMEZONE=Europe/Berlin          # TODO! This is the timezone that your containers will use.|' sample.conf
+sed -i 's|COLLABORA_SECCOMP_POLICY=|COLLABORA_SECCOMP_POLICY=--o:security.seccomp=true          # Changing the value to false allows to disable the seccomp feature of the Collabora container.|' sample.conf
 sed -i 's|=$|=          # TODO! This needs to be a unique and good password!|' sample.conf
 
 cat sample.conf
