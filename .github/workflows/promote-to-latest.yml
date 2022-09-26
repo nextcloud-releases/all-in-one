@@ -56,7 +56,7 @@ jobs:
           fi
           set +x
         fi
-        if [ "$AIO_NAME" != "aio-clamav" ] && [ "$AIO_NAME" != "aio-onlyoffice" ]; then
+        if [ "$AIO_NAME" != "aio-clamav" ]; then
           # arm64 
           docker pull nextcloud/$AIO_NAME\:beta-arm64
           docker tag nextcloud/$AIO_NAME\:beta-arm64 nextcloud/$AIO_NAME\:latest-arm64

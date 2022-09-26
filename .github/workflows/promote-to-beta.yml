@@ -42,7 +42,7 @@ jobs:
         docker pull nextcloud/$AIO_NAME\:develop
         docker tag nextcloud/$AIO_NAME\:develop nextcloud/$AIO_NAME\:beta
         docker push nextcloud/$AIO_NAME\:beta
-        if [ "$AIO_NAME" != "aio-clamav" ] && [ "$AIO_NAME" != "aio-onlyoffice" ]; then
+        if [ "$AIO_NAME" != "aio-clamav" ]; then
           # arm64 
           docker pull nextcloud/$AIO_NAME\:develop-arm64
           docker tag nextcloud/$AIO_NAME\:develop-arm64 nextcloud/$AIO_NAME\:beta-arm64

@@ -34,8 +34,6 @@ jobs:
         exclude:
           - platform: {arch: 'linux/arm64', tag: 'develop-arm64'}
             container: {name: 'aio-clamav', context: './Containers/clamav'}
-          - platform: {arch: 'linux/arm64', tag: 'develop-arm64'}
-            container: {name: 'aio-onlyoffice', context: './Containers/onlyoffice'}
 
     steps:
       - name: Check out the repo
