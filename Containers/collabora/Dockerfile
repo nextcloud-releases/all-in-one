@@ -1,5 +1,5 @@
 # From a file located probably somewhere here: https://github.com/CollaboraOnline/online/tree/master/docker
-FROM collabora/code:22.05.6.1.1
+FROM collabora/code:22.05.6.3.1
 
 USER root
 
@@ -9,9 +9,10 @@ RUN set -ex; \
     export DEBIAN_FRONTEND=noninteractive; \
     apt-get install -y --no-install-recommends \
         tzdata \
+        netcat \
     ; \
     rm -rf /var/lib/apt/lists/*
 
 USER 104
 
-HEALTHCHECK CMD curl -skfI localhost:9980 || exit 1
+HEALTHCHECK CMD nc -z localhost 9980 || exit 1

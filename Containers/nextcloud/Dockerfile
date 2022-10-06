@@ -1,5 +1,5 @@
 # From https://github.com/nextcloud/docker/blob/master/23/fpm-alpine/Dockerfile
-FROM php:8.0.23-fpm-alpine3.16
+FROM php:8.0.24-fpm-alpine3.16
 
 # Custom: change id of www-data user as it needs to be the same like on old installations
 RUN set -ex; \
@@ -107,7 +107,7 @@ RUN { \
 
 VOLUME /var/www/html
 
-ENV NEXTCLOUD_VERSION 24.0.5
+ENV NEXTCLOUD_VERSION 24.0.6
 
 RUN set -ex; \
     apk add --no-cache --virtual .fetch-deps \
@@ -252,4 +252,4 @@ RUN echo "root:$(openssl rand -base64 12)" | chpasswd
 USER www-data
 ENTRYPOINT ["/start.sh"]
 
-HEALTHCHECK CMD (nc -z localhost 9000 && curl -skI localhost:7867) || exit 1
+HEALTHCHECK CMD (nc -z localhost 9000 && nc -z localhost 7867) || exit 1
