@@ -3,8 +3,19 @@ name: Promote to latest
 on:
   workflow_dispatch:
 
+
+
 jobs:
+  get_time:
+    outputs:
+      output1: ${{ steps.date.outputs.date }}
+    steps:
+      - name: Set current date as env variable
+        id: date
+        run: echo "::set-output name=date::$(date +"%Y%m%d_%H%M%S")"
+
   promote_to_latest:
+    needs: get_time
     runs-on: ubuntu-latest
     name: Promote from beta to latest 
     
@@ -37,16 +48,14 @@ jobs:
       run: |
         set -x
         AIO_NAME=${{ matrix.name }}
-        DATE="$(date +"%Y%m%d_%H%M%S")"
+        DATE="${{needs.get_time.outputs.output1}}"
         set +x
         # x64
         docker pull nextcloud/$AIO_NAME\:beta
         docker tag nextcloud/$AIO_NAME\:beta nextcloud/$AIO_NAME\:latest
         docker push nextcloud/$AIO_NAME\:latest
-        if [ "$AIO_NAME" != "all-in-one" ]; then 
-          docker tag nextcloud/$AIO_NAME\:beta nextcloud/$AIO_NAME\:"$DATE"-latest
-          docker push nextcloud/$AIO_NAME\:"$DATE"-latest
-        fi
+        docker tag nextcloud/$AIO_NAME\:beta nextcloud/$AIO_NAME\:"$DATE"-latest
+        docker push nextcloud/$AIO_NAME\:"$DATE"-latest
         if [ "$AIO_NAME" = "aio-nextcloud" ]; then
           set -x
           PHP_VERSION="$(docker inspect nextcloud/aio-nextcloud:beta | grep PHP_VERSION | grep -oP '[0-8.]+' | sed 's|\.[0-9]\+$||')"
