@@ -3,12 +3,11 @@ name: Promote to latest
 on:
   workflow_dispatch:
 
-
-
 jobs:
   get_time:
+    runs-on: ubuntu-latest
     outputs:
-      - output1: ${{ steps.date.outputs.date }}
+      output1: ${{ steps.date.outputs.date }}
     steps:
       - name: Set current date as env variable
         id: date
