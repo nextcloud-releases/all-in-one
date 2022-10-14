@@ -8,7 +8,7 @@ on:
 jobs:
   get_time:
     outputs:
-      output1: ${{ steps.date.outputs.date }}
+      - output1: ${{ steps.date.outputs.date }}
     steps:
       - name: Set current date as env variable
         id: date
