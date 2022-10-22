@@ -50,7 +50,7 @@ jobs:
 
       - name: Set current date as env variable
         id: date
-        run: echo "::set-output name=date::$(date +"%Y%m%d")"
+        run: echo "date=$(date +"%Y%m%d")" >> $GITHUB_OUTPUT
         
 #      - name: Cache Docker layers
 #        uses: actions/cache@v3

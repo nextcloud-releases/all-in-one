@@ -11,7 +11,7 @@ jobs:
     steps:
       - name: Set current date as env variable
         id: date
-        run: echo "::set-output name=date::$(date +"%Y%m%d_%H%M%S")"
+        run: echo "date=$(date +"%Y%m%d_%H%M%S")" >> $GITHUB_OUTPUT
 
   promote_to_latest:
     needs: get_time
