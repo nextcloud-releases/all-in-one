@@ -50,7 +50,7 @@ jobs:
 
       - name: Set current date as env variable
         id: date
-        run: echo "::set-output name=date::$(date +"%Y%m%d")"
+        run: echo "date=$(date +"%Y%m%d")" >> $GITHUB_OUTPUT
         
 #      - name: Cache Docker layers
 #        uses: actions/cache@v3
@@ -59,6 +59,12 @@ jobs:
 #          key: buildx-${{ secrets.CACHE_ID }}-${{ github.ref_name }}-${{ github.sha }}
 #          restore-keys: |
 #            buildx-${{ secrets.CACHE_ID }}-${{ github.ref_name }}-
+
+      - name: Test output
+        run: |
+          if [ -z "${{ steps.date.outputs.date }}" ]; then
+            exit 1
+          fi
 
       - name: Build and push image
         uses: docker/build-push-action@v3
