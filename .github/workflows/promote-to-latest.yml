@@ -48,6 +48,9 @@ jobs:
         set -x
         AIO_NAME=${{ matrix.name }}
         DATE="${{needs.get_time.outputs.output1}}"
+        if [ -z "$DATE" ]; then
+          exit 1
+        fi
         set +x
         # x64
         docker pull nextcloud/$AIO_NAME\:beta

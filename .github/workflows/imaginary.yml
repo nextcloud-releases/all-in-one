@@ -60,6 +60,12 @@ jobs:
 #          restore-keys: |
 #            buildx-${{ secrets.CACHE_ID }}-${{ github.ref_name }}-
 
+      - name: Test output
+        run: |
+          if [ -z "${{ steps.date.outputs.date }}" ]; then
+            exit 1
+          fi
+
       - name: Build and push image
         uses: docker/build-push-action@v3
         with:
