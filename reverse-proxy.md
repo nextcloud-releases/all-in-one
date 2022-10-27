@@ -21,7 +21,7 @@ In order to run Nextcloud behind a reverse proxy, you need to specify the port t
 
 <summary>click here to expand</summary>
 
-**Disclaimer:** It might be possible that the config below is not working 100% correctly, yet. See e.g. https://github.com/nextcloud/all-in-one/issues/834. Improvements to it are very welcome!
+**Disclaimer:** It might be possible that the config below is not working 100% correctly, yet. Improvements to it are very welcome!
 
 Add this as a new Apache site config:
 
@@ -41,14 +41,14 @@ Add this as a new Apache site config:
 <VirtualHost *:443>
     ServerName <your-nc-domain>
 
-    # Reverse proxy
+    # Reverse proxy based on https://httpd.apache.org/docs/current/mod/mod_proxy_wstunnel.html
     RewriteEngine On
     ProxyPreserveHost On
+    AllowEncodedSlashes NoDecode
+    ProxyPass / http://localhost:11000/
     RewriteCond %{HTTP:Upgrade} websocket [NC]
     RewriteCond %{HTTP:Connection} upgrade [NC]
-    RewriteRule ^/(.*) "ws://localhost:11000/$1" [P,L]
-    ProxyPass / http://localhost:11000/
-    ProxyPassReverse / http://localhost:11000/
+    RewriteRule ^/?(.*) "ws://localhost:11000/$1" [P,QSA,B=?:;]
 
     # Enable h2, h2c and http1.1
     Protocols h2 h2c http/1.1
@@ -118,7 +118,7 @@ You can get AIO running using the ACME DNS-challenge. Here is how to do it.
     Of course you need to modify `<your-nc-domain>` to the domain on which you want to run Nextcloud. You also need to adjust `<provider>` and `<key>` to match your case. Also make sure to adjust the port 11000 to match the chosen APACHE_PORT. **Please note:** The above configuration will only work if your reverse proxy is running directly on the host that is running the docker daemon. If the reverse proxy is running in a docker container, you can use the `--network host` option (or `network_mode: host` for docker-compose) when starting the reverse proxy container in order to connect the reverse proxy container to the host network. If that is not an option for you, you can alternatively instead of `localhost` use the ip-address that is displayed after running the following command on the host OS: `ip a | grep "scope global" | head -1 | awk '{print $2}' | sed 's|/.*||'` (the command only works on Linux)
 1. Now continue with [point 2](#2-use-this-startup-command) but additionally, add `-e SKIP_DOMAIN_VALIDATION=true` to the docker run command which will disable the dommain validation (because it is known that the domain validation will not when using the DNS-challenge since no port is publicly opened.
 
-**Advice:** In order to make it work in your home network, you may add the internal ipv4-address of your reverse proxy as A DNS-record to your domain and disable the dns-rebind-protection in your router. Another way it to set up a local dns-server like a pi-hole and set up a custom dns-record for that domain that points to the internal ip-adddress of your reverse proxy. If both is not possible, you may add the domain to the hosts file which is needed then for any devices that shall use the server.
+**Advice:** In order to make it work in your home network, you may add the internal ipv4-address of your reverse proxy as A DNS-record to your domain and disable the dns-rebind-protection in your router. Another way it to set up a local dns-server like a pi-hole and set up a custom dns-record for that domain that points to the internal ip-adddress of your reverse proxy (see https://github.com/nextcloud/all-in-one#how-can-i-access-nextcloud-locally). If both is not possible, you may add the domain to the hosts file which is needed then for any devices that shall use the server.
 
 </details>
 
@@ -135,6 +135,96 @@ Although it does not seems like it is the case but from AIO perspective a Cloudf
 
 </details>
 
+### HaProxy
+
+<details>
+
+<summary>click here to expand</summary>
+
+**Disclaimer:** It might be possible that the config below is not working 100% correctly, yet. Improvements to it are very welcome!
+
+Here is an example HaProxy config:
+
+```
+global
+    chroot                      /var/haproxy
+    log                         /var/run/log audit debug
+    lua-prepend-path            /tmp/haproxy/lua/?.lua
+
+defaults
+    log     global
+    option redispatch -1
+    retries 3
+    default-server init-addr last,libc
+
+# Frontend: LetsEncrypt_443 ()
+frontend LetsEncrypt_443
+    bind 0.0.0.0:443 name 0.0.0.0:443 ssl prefer-client-ciphers ssl-min-ver TLSv1.2 ciphers ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-ECDSA-AES128-SHA256 ciphersuites TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256 crt-list /tmp/haproxy/ssl/605f6609f106d1.17683543.certlist 
+    mode http
+    option http-keep-alive
+    default_backend acme_challenge_backend
+    option forwardfor
+    # tuning options
+    timeout client 30s
+
+    # logging options
+    # ACL: find_acme_challenge
+    acl acl_605f6d4b6453d2.03059920 path_beg -i /.well-known/acme-challenge/
+    # ACL: Nextcloud
+    acl acl_60604e669c3ca4.13013327 hdr(host) -i <your-nc-domain>
+
+    # ACTION: redirect_acme_challenges
+    use_backend acme_challenge_backend if acl_605f6d4b6453d2.03059920
+    # ACTION: Nextcloud
+    use_backend Nextcloud if acl_60604e669c3ca4.13013327
+
+
+# Frontend: LetsEncrypt_80 ()
+frontend LetsEncrypt_80
+    bind 0.0.0.0:80 name 0.0.0.0:80 
+    mode tcp
+    default_backend acme_challenge_backend
+    # tuning options
+    timeout client 30s
+
+    # logging options
+    # ACL: find_acme_challenge
+    acl acl_605f6d4b6453d2.03059920 path_beg -i /.well-known/acme-challenge/
+
+    # ACTION: redirect_acme_challenges
+    use_backend acme_challenge_backend if acl_605f6d4b6453d2.03059920
+
+# Frontend (DISABLED): 1_HTTP_frontend ()
+
+# Frontend (DISABLED): 1_HTTPS_frontend ()
+
+# Frontend (DISABLED): 0_SNI_frontend ()
+
+# Backend: acme_challenge_backend (Added by Let's Encrypt plugin)
+backend acme_challenge_backend
+    # health checking is DISABLED
+    mode http
+    balance source
+    # stickiness
+    stick-table type ip size 50k expire 30m  
+    stick on src
+    # tuning options
+    timeout connect 30s
+    timeout server 30s
+    http-reuse safe
+    server acme_challenge_host 127.0.0.1:43580 
+
+# Backend: Nextcloud ()
+backend Nextcloud
+    mode http
+    balance source
+    server Nextcloud localhost:11000 
+```
+
+Of course you need to modify `<your-nc-domain>` to the domain on which you want to run Nextcloud. Also make sure to adjust the port 11000 to match the chosen APACHE_PORT. **Please note:** The above configuration will only work if your reverse proxy is running directly on the host that is running the docker daemon. If the reverse proxy is running in a docker container, you can use the `--network host` option (or `network_mode: host` for docker-compose) when starting the reverse proxy container in order to connect the reverse proxy container to the host network. If that is not an option for you, you can alternatively instead of `localhost` use the ip-address that is displayed after running the following command on the host OS: `ip a | grep "scope global" | head -1 | awk '{print $2}' | sed 's|/.*||'` (the command only works on Linux)
+
+</details>
+
 ### Nginx
 
 <details>
@@ -146,8 +236,11 @@ Although it does not seems like it is the case but from AIO perspective a Cloudf
 Add this to you nginx config:
 
 ```
-location / {
-        proxy_pass http://localhost:11000;
+server {
+    listen 443 ssl;
+    server_name <your-nc-domain>;
+    location / {
+        proxy_pass http://localhost:11000$request_uri;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header Host $host;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -158,8 +251,24 @@ location / {
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection $connection_upgrade;
     }
-```
+    ssl_certificate /etc/letsencrypt/live/<your-nc-domain>/fullchain.pem; # managed by certbot on host machine
+    ssl_certificate_key /etc/letsencrypt/live/<your-nc-domain>/privkey.pem; # managed by certbot on host machine
+}
 
+```
+and this to the http{...}-section in your nginx.conf:
+
+```
+    ##
+    # Connection header for WebSocket reverse proxy
+    ##
+    map $http_upgrade $connection_upgrade {
+        default upgrade;
+        ''      close;
+    }
+```
+(otherwise nginx will fail to start with a message saying the variable named connection_upgrade does not exist)
+    
 Of course you need to modify `<your-nc-domain>` to the domain on which you want to run Nextcloud. Also make sure to adjust the port 11000 to match the chosen APACHE_PORT. **Please note:** The above configuration will only work if your reverse proxy is running directly on the host that is running the docker daemon. If the reverse proxy is running in a docker container, you can use the `--network host` option (or `network_mode: host` for docker-compose) when starting the reverse proxy container in order to connect the reverse proxy container to the host network. If that is not an option for you, you can alternatively instead of `localhost` use the ip-address that is displayed after running the following command on the host OS: `ip a | grep "scope global" | head -1 | awk '{print $2}' | sed 's|/.*||'` (the command only works on Linux)
 
 **Advice:** You may have a look at [this](https://github.com/nextcloud/all-in-one/discussions/588#discussioncomment-2811152) for a more complete example.

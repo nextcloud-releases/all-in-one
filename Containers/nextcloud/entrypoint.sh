@@ -32,8 +32,8 @@ fi
 touch "$NEXTCLOUD_DATA_DIR/this-is-a-test-file" &>/dev/null
 if ! [ -f "$NEXTCLOUD_DATA_DIR/this-is-a-test-file" ]; then
     echo "The www-data user doesn't seem to have access rights in the datadir.
-Did you maybe change the datadir and did forget to apply the correct permissions?
-See https://github.com/nextcloud/all-in-one#how-to-change-the-default-location-of-nextclouds-datadir
+Most likely are the files located on a drive that does not follow linux permissions.
+Please adjust the permissions like mentioned below.
 The found permissions are:
 $(stat -c "%u:%g %a" "$NEXTCLOUD_DATA_DIR")
 (userID:groupID permissions)
@@ -279,6 +279,8 @@ if ! [ -f "$NEXTCLOUD_DATA_DIR/skip.update" ]; then
              bash /notify.sh "Your apps just got updated!" "$UPDATED_APPS"
         fi
     fi
+else
+    SKIP_UPDATE=1
 fi
 
 # Check if appdata is present
@@ -307,6 +309,8 @@ fi
 echo "Applying one-click-instance settings..."
 php /var/www/html/occ config:system:set one-click-instance --value=true --type=bool
 php /var/www/html/occ config:system:set one-click-instance.user-limit --value=100 --type=int
+php /var/www/html/occ config:system:set one-click-instance.link --value="https://nextcloud.com/all-in-one/"
+php /var/www/html/occ app:enable support
 
 # Adjusting log files to be stored on a volume
 echo "Adjusting log files..."
@@ -339,7 +343,7 @@ if ! [ -d "/var/www/html/custom_apps/notify_push" ]; then
     php /var/www/html/occ app:install notify_push
 elif [ "$(php /var/www/html/occ config:app:get notify_push enabled)" = "no" ]; then
     php /var/www/html/occ app:enable notify_push
-else
+elif [ "$SKIP_UPDATE" != 1 ]; then
     php /var/www/html/occ app:update notify_push
 fi
 php /var/www/html/occ config:system:set trusted_proxies 0 --value="127.0.0.1"
@@ -352,7 +356,7 @@ if [ "$COLLABORA_ENABLED" = 'yes' ]; then
         php /var/www/html/occ app:install richdocuments
     elif [ "$(php /var/www/html/occ config:app:get richdocuments enabled)" = "no" ]; then
         php /var/www/html/occ app:enable richdocuments
-    else
+    elif [ "$SKIP_UPDATE" != 1 ]; then
         php /var/www/html/occ app:update richdocuments
     fi
     php /var/www/html/occ config:app:set richdocuments wopi_url --value="https://$NC_DOMAIN/"
@@ -374,7 +378,7 @@ if [ "$ONLYOFFICE_ENABLED" = 'yes' ]; then
         php /var/www/html/occ app:install onlyoffice
     elif [ "$(php /var/www/html/occ config:app:get onlyoffice enabled)" = "no" ]; then
         php /var/www/html/occ app:enable onlyoffice
-    else
+    elif [ "$SKIP_UPDATE" != 1 ]; then
         php /var/www/html/occ app:update onlyoffice
     fi
     php /var/www/html/occ config:system:set onlyoffice jwt_secret --value="$ONLYOFFICE_SECRET"
@@ -393,15 +397,20 @@ if [ "$TALK_ENABLED" = 'yes' ]; then
         php /var/www/html/occ app:install spreed
     elif [ "$(php /var/www/html/occ config:app:get spreed enabled)" = "no" ]; then
         php /var/www/html/occ app:enable spreed
-    else
+    elif [ "$SKIP_UPDATE" != 1 ]; then
         php /var/www/html/occ app:update spreed
     fi
-    STUN_SERVERS="[\"$NC_DOMAIN:$TALK_PORT\"]"
-    TURN_SERVERS="[{\"server\":\"$NC_DOMAIN:$TALK_PORT\",\"secret\":\"$TURN_SECRET\",\"protocols\":\"udp,tcp\"}]"
-    SIGNALING_SERVERS="{\"servers\":[{\"server\":\"https://$NC_DOMAIN/standalone-signaling/\",\"verify\":true}],\"secret\":\"$SIGNALING_SECRET\"}"
-    php /var/www/html/occ config:app:set spreed stun_servers --value="$STUN_SERVERS" --output json
-    php /var/www/html/occ config:app:set spreed turn_servers --value="$TURN_SERVERS" --output json
-    php /var/www/html/occ config:app:set spreed signaling_servers --value="$SIGNALING_SERVERS" --output json
+    # Based on https://github.com/nextcloud/spreed/issues/960#issuecomment-416993435
+    if [ -z "$(php /var/www/html/occ talk:turn:list --output="plain")" ]; then
+        php /var/www/html/occ talk:turn:add "$NC_DOMAIN:$TALK_PORT" "udp,tcp" --secret="$TURN_SECRET"
+    fi
+    if php /var/www/html/occ talk:stun:list --output="plain" | grep -oP '[a-zA-Z.:0-9]+' | grep -q "^stun.nextcloud.com:443$"; then
+        php /var/www/html/occ talk:stun:add "$NC_DOMAIN:$TALK_PORT"
+        php /var/www/html/occ talk:stun:delete "stun.nextcloud.com:443"
+    fi
+    if ! php /var/www/html/occ talk:signaling:list --output="plain" | grep -q "https://$NC_DOMAIN/standalone-signaling/"; then
+        php /var/www/html/occ talk:signaling:add "https://$NC_DOMAIN/standalone-signaling/" "$SIGNALING_SECRET" --verify
+    fi
 else
     if [ -d "/var/www/html/custom_apps/spreed" ]; then
         php /var/www/html/occ app:remove spreed
@@ -418,7 +427,7 @@ if [ "$CLAMAV_ENABLED" = 'yes' ]; then
         php /var/www/html/occ app:install files_antivirus
     elif [ "$(php /var/www/html/occ config:app:get files_antivirus enabled)" = "no" ]; then
         php /var/www/html/occ app:enable files_antivirus
-    else
+    elif [ "$SKIP_UPDATE" != 1 ]; then
         php /var/www/html/occ app:update files_antivirus
     fi
     php /var/www/html/occ config:app:set files_antivirus av_mode --value="daemon"
@@ -454,21 +463,21 @@ if [ "$FULLTEXTSEARCH_ENABLED" = 'yes' ]; then
         php /var/www/html/occ app:install fulltextsearch
     elif [ "$(php /var/www/html/occ config:app:get fulltextsearch enabled)" = "no" ]; then
         php /var/www/html/occ app:enable fulltextsearch
-    else
+    elif [ "$SKIP_UPDATE" != 1 ]; then
         php /var/www/html/occ app:update fulltextsearch
     fi    
     if ! [ -d "/var/www/html/custom_apps/fulltextsearch_elasticsearch" ]; then
         php /var/www/html/occ app:install fulltextsearch_elasticsearch
     elif [ "$(php /var/www/html/occ config:app:get fulltextsearch_elasticsearch enabled)" = "no" ]; then
         php /var/www/html/occ app:enable fulltextsearch_elasticsearch
-    else
+    elif [ "$SKIP_UPDATE" != 1 ]; then
         php /var/www/html/occ app:update fulltextsearch_elasticsearch
     fi    
     if ! [ -d "/var/www/html/custom_apps/files_fulltextsearch" ]; then
         php /var/www/html/occ app:install files_fulltextsearch
     elif [ "$(php /var/www/html/occ config:app:get files_fulltextsearch enabled)" = "no" ]; then
         php /var/www/html/occ app:enable files_fulltextsearch
-    else
+    elif [ "$SKIP_UPDATE" != 1 ]; then
         php /var/www/html/occ app:update files_fulltextsearch
     fi
     php /var/www/html/occ fulltextsearch:configure '{"search_platform":"OCA\\FullTextSearch_Elasticsearch\\Platform\\ElasticSearchPlatform"}'

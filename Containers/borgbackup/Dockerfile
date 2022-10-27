@@ -1,10 +1,11 @@
-FROM debian:bullseye-20221004-slim
+FROM debian:bullseye-20221024-slim
 
 RUN set -ex; \
     \
+    echo "deb http://deb.debian.org/debian bullseye-backports main" >> /etc/apt/sources.list; \
     apt-get update; \
+    apt-get install -y --no-install-recommends borgbackup -t bullseye-backports; \
     apt-get install -y --no-install-recommends \
-        borgbackup \
         rsync \
         fuse \
         python3-llfuse \
