@@ -5,7 +5,7 @@ FROM docker:20.10.21-dind-alpine3.16 as dind
 FROM caddy:2.6.2-alpine as caddy
 
 # From https://github.com/docker-library/php/blob/master/8.0/bullseye/apache/Dockerfile
-FROM php:8.0.24-apache-bullseye
+FROM php:8.0.25-apache-bullseye
 
 EXPOSE 80
 EXPOSE 8080
@@ -52,7 +52,7 @@ RUN set -e && \
     cd ..; \
     rm -f /usr/local/bin/composer; \
     chmod 770 -R ./; \
-    chown www-data:www-data -R ./; \
+    chown www-data:www-data -R /var/www; \
     rm -r ./php/data; \
     rm -r ./php/session
 
@@ -76,8 +76,13 @@ RUN rm /etc/apache2/ports.conf; \
     sed -s -i -e "s/Include ports.conf//" /etc/apache2/apache2.conf; \
     sed -i "/^Listen /d" /etc/apache2/apache2.conf
 
-RUN a2dissite 000-default && \
+RUN set -ex; \
+    a2dissite 000-default && \
     a2dissite default-ssl && \
+    rm -f /etc/apache2/sites-enabled/000-default.conf && \
+    rm -f /etc/apache2/sites-enabled/default-ssl.conf && \
+    rm /etc/apache2/sites-available/000-default.conf && \
+    rm /etc/apache2/sites-available/default-ssl.conf && \
     a2ensite mastercontainer.conf
 
 RUN mkdir /var/log/supervisord; \
