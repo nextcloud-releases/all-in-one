@@ -52,6 +52,21 @@ The following instructions are especially meant for Linux. For macOS see [this](
 
     </details>
 
+    <details>
+    <summary>Explanation of the command</summary>
+
+    - `sudo docker run` This command spins up a new docker container. Docker commands can optionally be used without `sudo` if the user is added to the docker group (this is not the same as docker rootless, see FAQ below).
+    - `--name nextcloud-aio-mastercontainer` This is the name of the container. This line is not allowed to be changed, since mastercontainer updates would fail.
+    - `--restart always` This is the "restart policy". `always` means that the container should always get started with the Docker daemon. See the Docker documentation for further detail about restart policies: https://docs.docker.com/config/containers/start-containers-automatically/
+    - `--publish 80:80` This means that port 80 of the container should get published on the host using port 80. It is used for getting valid certificates for the AIO interface if you want to use port 8443. It is not needed if you run AIO behind a reverse proxy and can get removed in that case as you can simply use port 8080 for the AIO interface then.
+    - `--publish 8080:8080` This means that port 8080 of the container should get published on the host using port 8080. This port is used for the AIO interface and uses a self-signed certificate by default. You can also use a different host port if port 8080 is already used on your host, for example `--publish 8081:8080` (only the first port can be changed for the host, the second port is for the container and must remain at 8080).
+    - `--publish 8443:8443` This means that port 8443 of the container should get published on the host using port 8443. If you publish port 80 and 8443 to the public internet, you can access the AIO interface via this port with a valid certificate. It is not needed if you run AIO behind a reverse proxy and can get removed in that case as you can simply use port 8080 for the AIO interface then.
+    - `--volume nextcloud_aio_mastercontainer:/mnt/docker-aio-config` This means that the files that are created by the mastercontainer will be stored in a docker volume that is called `nextcloud_aio_mastercontainer`. This line is not allowed to be changed, since built-in backups would fail later on.
+    - `--volume /var/run/docker.sock:/var/run/docker.sock:ro` The docker socket is mounted into the container which is used for spinning up all the other containers and for further features. It needs to be adjusted on Windows/macOS and on docker rootless. See the applicable documentation on this. If you dislike this, see https://github.com/nextcloud/all-in-one/discussions/500#discussioncomment-2740767 and the whole thread for options.
+    - `nextcloud/all-in-one:latest` or `nextcloud/all-in-one:latest-arm64` This is the docker container image that is used. See https://github.com/nextcloud/all-in-one/discussions/490 for why there are different images for the different CPU architectures.
+    - Further options can be set using environment variables, for example `--env TALK_PORT=3478`. To see explanations and examples for further variables (like changing the location of Nextcloud's datadir or mounting some locations as external storage into the Nextcloud container), read through this readme and look at the docker-compose file: https://github.com/nextcloud/all-in-one/blob/main/docker-compose.yml
+    </details>
+
 3. After the initial startup, you should be able to open the Nextcloud AIO Interface now on port 8080 of this server.<br>
 E.g. `https://ip.address.of.this.server:8080`<br><br>
 If your firewall/router has port 80 and 8443 open and you point a domain to your server, you can get a valid certificate automatically by opening the Nextcloud AIO Interface via:<br>
@@ -137,6 +152,7 @@ No and it will not be added. Please use a dedicated domain for Nextcloud and set
 The recommended way is to set up a local dns-server like a pi-hole and set up a custom dns-record for that domain that points to the internal ip-adddress of your server that runs Nextcloud AIO. Below are some guides:
 - https://www.howtogeek.com/devops/how-to-run-your-own-dns-server-on-your-local-network/
 - https://howchoo.com/pi/pi-hole-setup together with https://docs.callitkarma.me/posts/PiHole-Local-DNS/
+- https://dockerlabs.collabnix.com/intermediate/networking/Configuring_DNS.html
 
 ### How to skip the domain validation?
 If you are completely sure that you've configured everything correctly and are not able to pass the domain validation, you may skip the domain validation by adding `-e SKIP_DOMAIN_VALIDATION=true` to the docker run command of the mastercontainer.
@@ -274,7 +290,7 @@ sudo borg list "/mnt/backup/borg"
 sudo borg delete --stats --progress "/mnt/backup/borg::20220223_174237-nextcloud-aio"
 
 # If borg 1.2.0 or higher is installed, you then need to run borg compact in order to clean up the freed space
-sudo borg version
+sudo borg --version
 # If version number of the command above is higher than 1.2.0 you need to run the command below:
 sudo borg compact "/mnt/backup/"
 
@@ -325,7 +341,7 @@ if ! [ -d "$DRIVE_MOUNTPOINT" ]; then
     exit 1
 fi
 
-if ! grep -q " $DRIVE_MOUNTPOINT " /etc/fstab; then
+if ! grep -q "$DRIVE_MOUNTPOINT" /etc/fstab; then
     echo "Could not find the drive mountpoint in the fstab file. Did you add it there?"
     exit 1
 fi
@@ -439,11 +455,17 @@ By default are uploads to Nextcloud limited to a max of 10G. You can adjust the 
 ### How to adjust the max execution time for Nextcloud?
 By default are uploads to Nextcloud limited to a max of 3600s. You can adjust the upload time limit by providing `-e NEXTCLOUD_MAX_TIME=3600` to the docker run command of the mastercontainer and customize the value to your fitting. It must be a number e.g. `3600`.
 
+### How to adjust the PHP memory limit for Nextcloud?
+By default is each PHP process in the Nextcloud container limited to a max of 512 MB. You can adjust the memory limit by providing `-e NEXTCLOUD_MEMORY_LIMIT=512M` to the docker run command of the mastercontainer and customize the value to your fitting. It must start with a number and end with `M` e.g. `1024M`.
+
 ### What can I do to fix the internal or reserved ip-address error?
 If you get an error during the domain validation which states that your ip-address is an internal or reserved ip-address, you can fix this by first making sure that your domain indeed has the correct public ip-address that points to the server and then adding `--add-host yourdomain.com:<public-ip-address>` to the initial docker run command which will allow the domain validation to work correctly. And so that you know: even if the `A` record of your domain should change over time, this is no problem since the mastercontainer will not make any attempt to access the chosen domain after the initial domain validation.
 
 ### How to run this with docker rootless?
 You can run AIO also with docker rootless. How to do this is documented here: [docker-rootless.md](https://github.com/nextcloud/all-in-one/blob/main/docker-rootless.md)
+
+### How to change the Nextcloud apps that are installed on the first startup?
+You might want to adjust the Nextcloud apps that are installed upon the first startup of the Nextcloud container. You can do so by adding `-e NEXTCLOUD_STARTUP_APPS=twofactor_totp deck tasks calendar contacts apporder` to the docker run command of the mastercontainer and customize the value to your fitting. It must be a string with small letters a-z, spaces and hyphens or '_'.
 
 ### Huge docker logs
 When your containers run for a few days without a restart, the container logs that you can view from the AIO interface can get really huge. You can limit the loge sizes by enabling logrotate for docker container logs. Feel free to enable this by following those instructions: https://sandro-keil.de/blog/logrotate-for-docker-container/
@@ -497,9 +519,9 @@ What are the requirements?
 ### How to trust user-defiend Certification Authorities (CA)?
 For some applications it might be necessary to enstablish a secured connection to a host / server which is using a certificated issued by a Certification Authority that is not trusted out of the box. An example could be configuring LDAPS against the Domain Controller (ActiveDirectory) of an organization
 
-You can make the Nextcloud container trust any Certification Authority by providing the environmental variable `TRUSTED_CACERTS_DIR` when starting the AIO-mastercontainer. The value of the variables should be set to the absolute path to a directory on the host, which contains one or more Certification Authority's certificate. You should use X.509 certificates, Base64 encoded. (Other formats may work but have not been tested!) All the certificates in the directory will be trusted.
+You can make the Nextcloud container trust any Certification Authority by providing the environmental variable `NEXTCLOUD_TRUSTED_CACERTS_DIR` when starting the AIO-mastercontainer. The value of the variables should be set to the absolute path to a directory on the host, which contains one or more Certification Authority's certificate. You should use X.509 certificates, Base64 encoded. (Other formats may work but have not been tested!) All the certificates in the directory will be trusted.
 
-When using `docker run`, the environmental variable can be set with `-e TRUSTED_CACERTS_DIR=/path/to/my/cacerts`.
+When using `docker run`, the environmental variable can be set with `-e NEXTCLOUD_TRUSTED_CACERTS_DIR=/path/to/my/cacerts`.
 
 In order for the value to be valid, the path should start with `/` and not end with '/' and point to an existing **directory**. Pointing the variable directly to a certificate **file** will not work and may also break things.
 

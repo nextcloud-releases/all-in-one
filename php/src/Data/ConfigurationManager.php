@@ -528,6 +528,13 @@ class ConfigurationManager
         return $this->GetEnvironmentalVariableOrConfig($envVariableName, $configName, $defaultValue);
     }
 
+    public function GetNextcloudMemoryLimit() : string {
+        $envVariableName = 'NEXTCLOUD_MEMORY_LIMIT';
+        $configName = 'nextcloud_memory_limit';
+        $defaultValue = '512M';
+        return $this->GetEnvironmentalVariableOrConfig($envVariableName, $configName, $defaultValue);
+    }
+
     public function GetApacheMaxSize() : int {
         $uploadLimit = (int)rtrim($this->GetNextcloudUploadLimit(), 'G');
         return $uploadLimit * 1024 * 1024 * 1024;
@@ -548,7 +555,7 @@ class ConfigurationManager
     }
 
     public function GetTrustedCacertsDir() : string {
-        $envVariableName = 'TRUSTED_CACERTS_DIR';
+        $envVariableName = 'NEXTCLOUD_TRUSTED_CACERTS_DIR';
         $configName = 'trusted_cacerts_dir';
         $defaultValue = '';
         return $this->GetEnvironmentalVariableOrConfig($envVariableName, $configName, $defaultValue);
@@ -698,6 +705,14 @@ class ConfigurationManager
             return true;
         }
         return false;
+    }
+
+    public function GetNextcloudStartupApps() : string {
+        $apps = getenv('NEXTCLOUD_STARTUP_APPS');
+        if (is_string($apps)) {
+            return trim($apps);
+        }
+        return 'twofactor_totp deck tasks calendar contacts apporder';
     }
 
     public function GetCollaboraDictionaries() : string {

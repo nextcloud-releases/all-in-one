@@ -120,6 +120,14 @@ It is set to '$NEXTCLOUD_MAX_TIME'."
         exit 1
     fi
 fi
+if [ -n "$NEXTCLOUD_MEMORY_LIMIT" ]; then
+    if ! echo "$NEXTCLOUD_MEMORY_LIMIT" | grep -q '^[0-9]\+M$'; then
+        echo "You've set NEXTCLOUD_MEMORY_LIMIT but not to an allowed value.
+The string must start with a number and end with 'M'.
+It is set to '$NEXTCLOUD_MEMORY_LIMIT'."
+        exit 1
+    fi
+fi
 if [ -n "$APACHE_PORT" ]; then
     if ! check_if_number "$APACHE_PORT"; then
         echo "You provided an Apache port but did not only use numbers.
@@ -161,11 +169,19 @@ It is set to '$DOCKER_SOCKET_PATH'."
         exit 1
     fi
 fi
-if [ -n "$TRUSTED_CACERTS_DIR" ]; then
-    if ! echo "$TRUSTED_CACERTS_DIR" | grep -q "^/" || echo "$TRUSTED_CACERTS_DIR" | grep -q "/$"; then
-        echo "You've set TRUSTED_CACERTS_DIR but not to an allowed value.
+if [ -n "$NEXTCLOUD_TRUSTED_CACERTS_DIR" ]; then
+    if ! echo "$NEXTCLOUD_TRUSTED_CACERTS_DIR" | grep -q "^/" || echo "$NEXTCLOUD_TRUSTED_CACERTS_DIR" | grep -q "/$"; then
+        echo "You've set NEXTCLOUD_TRUSTED_CACERTS_DIR but not to an allowed value.
 It should be an absolute path to a directory that starts with '/' but not end with '/'.
-It is set to '$TRUSTED_CACERTS_DIR '."
+It is set to '$NEXTCLOUD_TRUSTED_CACERTS_DIR '."
+        exit 1
+    fi
+fi
+if [ -n "$NEXTCLOUD_STARTUP_APPS" ]; then
+    if ! echo "$NEXTCLOUD_STARTUP_APPS" | grep -q "^[a-z _-]\+$"; then
+        echo "You've set NEXTCLOUD_STARTUP_APPS but not to an allowed value.
+It needs to be a string. Allowed are small letters a-z, spaces, hyphens and '_'.
+It is set to '$NEXTCLOUD_STARTUP_APPS'."
         exit 1
     fi
 fi
