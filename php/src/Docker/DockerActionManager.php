@@ -330,8 +330,12 @@ class DockerActionManager
                     $replacements[1] = $this->configurationManager->GetApacheMaxSize();
                 } elseif ($out[1] === 'COLLABORA_SECCOMP_POLICY') {
                     $replacements[1] = $this->configurationManager->GetCollaboraSeccompPolicy();
-                } elseif ($out[1] === '%NEXTCLOUD_STARTUP_APPS%') {
+                } elseif ($out[1] === 'NEXTCLOUD_STARTUP_APPS') {
                     $replacements[1] = $this->configurationManager->GetNextcloudStartupApps();
+                } elseif ($out[1] === 'NEXTCLOUD_ADDITIONAL_APKS') {
+                    $replacements[1] = $this->configurationManager->GetNextcloudAdditionalApks();
+                } elseif ($out[1] === 'NEXTCLOUD_ADDITIONAL_PHP_EXTENSIONS') {
+                    $replacements[1] = $this->configurationManager->GetNextcloudAdditionalPhpExtensions();
                 } else {
                     $replacements[1] = $this->configurationManager->GetSecret($out[1]);
                 }
