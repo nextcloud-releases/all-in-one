@@ -62,7 +62,7 @@ The following instructions are especially meant for Linux. For macOS see [this](
     - `--publish 8080:8080` This means that port 8080 of the container should get published on the host using port 8080. This port is used for the AIO interface and uses a self-signed certificate by default. You can also use a different host port if port 8080 is already used on your host, for example `--publish 8081:8080` (only the first port can be changed for the host, the second port is for the container and must remain at 8080).
     - `--publish 8443:8443` This means that port 8443 of the container should get published on the host using port 8443. If you publish port 80 and 8443 to the public internet, you can access the AIO interface via this port with a valid certificate. It is not needed if you run AIO behind a reverse proxy and can get removed in that case as you can simply use port 8080 for the AIO interface then.
     - `--volume nextcloud_aio_mastercontainer:/mnt/docker-aio-config` This means that the files that are created by the mastercontainer will be stored in a docker volume that is called `nextcloud_aio_mastercontainer`. This line is not allowed to be changed, since built-in backups would fail later on.
-    - `--volume /var/run/docker.sock:/var/run/docker.sock:ro` The docker socket is mounted into the container which is used for spinning up all the other containers and for further features. It needs to be adjusted on Windows/macOS and on docker rootless. See the applicable documentation on this. If you dislike this, see https://github.com/nextcloud/all-in-one/discussions/500#discussioncomment-2740767 and the whole thread for options.
+    - `--volume /var/run/docker.sock:/var/run/docker.sock:ro` The docker socket is mounted into the container which is used for spinning up all the other containers and for further features. It needs to be adjusted on Windows/macOS and on docker rootless. See the applicable documentation on this. If adjusting, don't forget to also set `DOCKER_SOCKET_PATH`! If you dislike this, see https://github.com/nextcloud/all-in-one/discussions/500#discussioncomment-2740767 and the whole thread for options.
     - `nextcloud/all-in-one:latest` or `nextcloud/all-in-one:latest-arm64` This is the docker container image that is used. See https://github.com/nextcloud/all-in-one/discussions/490 for why there are different images for the different CPU architectures.
     - Further options can be set using environment variables, for example `--env TALK_PORT=3478`. To see explanations and examples for further variables (like changing the location of Nextcloud's datadir or mounting some locations as external storage into the Nextcloud container), read through this readme and look at the docker-compose file: https://github.com/nextcloud/all-in-one/blob/main/docker-compose.yml
     </details>
@@ -537,3 +537,69 @@ In order for the value to be valid, the path should start with `/` and not end w
 
 ### How to disable Collabora's Seccomp feature?
 The Collabora container enables Seccomp by default, which is a security feature of the Linux kernel. On systems without this kernel feature enabled, you need to provide `-e COLLABORA_SECCOMP_DISABLED=true` to the initial docker run command in order to make it work.
+
+### How to enable automatic updates without creating a backup beforehand?
+If you have an external backup solution, you might want to enable automatic updates without creating a backup first. However note that doing this is not recommended since you will not be able to easily create and restore a backup from the AIO interface anymore and you need to make sure to shut down all the containers properly before creating the backup, e.g. by stopping them from the AIO interface first. 
+
+But anyhow, is here a guide that helps you automate the whole procedure:
+
+<details>
+<summary>Click here to expand</summary>
+
+```bash
+#!/bin/bash
+
+# Stop the containers
+docker exec -e STOP_CONTAINERS=1 nextcloud-aio-mastercontainer /daily-backup.sh
+
+# Below is optional if you run AIO in a VM which will shut down the VM afterwards
+# poweroff
+
+```
+
+</details>
+
+You can simply copy and past the script into a file e.g. named `shutdown-script.sh` e.g. here: `/root/shutdown-script.sh`. 
+
+Afterwards apply the correct permissions with `sudo chown root:root /root/shutdown-script.sh` and `sudo chmod 700 /root/shutdown-script.sh`. Then you can create a cronjob that runs e.g. runs the script at `04:00` each day like this: 
+1. Open the cronjob with `sudo crontab -u root -e` (and choose your editor of choice if not already done. I'd recommend nano). 
+1. Add the following new line to the crontab if not already present: `0 4 * * * /root/shutdown-script.sh` which will run the script at 04:00 each day. 
+1. save and close the crontab (when using nano are the shortcuts for this `Ctrl + o` -> `Enter` and close the editor with `Ctrl + x`).
+
+
+**After that is in place, you should schedule a backup from your backup solution that creates a backup after AIO is shut down properly. Hint: If your backup runs on the same host, make sure to at least back up all docker volumes and additionally Nextclouds datadir, if it is not stored in a docker volume.**
+
+**Afterwards, you can create a second script that automatically updates the containers:**
+
+<details>
+<summary>Click here to expand</summary>
+
+```bash
+#!/bin/bash
+
+# Run container update once
+if ! docker exec -e AUTOMATIC_UPDATES=1 nextcloud-aio-mastercontainer /daily-backup.sh; then
+    while docker ps --format "{{.Names}}" | grep -q "^nextcloud-aio-watchtower$"; do
+        echo "Waiting for watchtower to stop"
+        sleep 30
+    done
+
+    while ! docker ps --format "{{.Names}}" | grep -q "^nextcloud-aio-mastercontainer$"; do
+        echo "Waiting for Mastercontainer to start"
+        sleep 30
+    done
+
+    # Run container update another time to make sure that all containers are updated correctly.
+    docker exec -e AUTOMATIC_UPDATES=1 nextcloud-aio-mastercontainer /daily-backup.sh
+fi
+
+```
+
+</details>
+
+You can simply copy and past the script into a file e.g. named `automatic-updates.sh` e.g. here: `/root/automatic-updates.sh`.
+
+Afterwards apply the correct permissions with `sudo chown root:root /root/automatic-updates.sh` and `sudo chmod 700 /root/automatic-updates.sh`. Then you can create a cronjob that runs e.g. at `05:00` each day like this: 
+1. Open the cronjob with `sudo crontab -u root -e` (and choose your editor of choice if not already done. I'd recommend nano). 
+1. Add the following new line to the crontab if not already present: `0 5 * * * /root/automatic-updates.sh` which will run the script at 05:00 each day. 
+1. save and close the crontab (when using nano are the shortcuts for this `Ctrl + o` -> `Enter` and close the editor with `Ctrl + x`).
