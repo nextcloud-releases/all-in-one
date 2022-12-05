@@ -1,5 +1,5 @@
 # From https://github.com/nextcloud/docker/blob/master/23/fpm-alpine/Dockerfile
-FROM php:8.0.25-fpm-alpine3.16
+FROM php:8.0.26-fpm-alpine3.16
 
 # Custom: change id of www-data user as it needs to be the same like on old installations
 RUN set -ex; \
@@ -209,7 +209,8 @@ RUN set -ex; \
     sed -i 's/^pm.max_children =.*/pm.max_children = 80/' /usr/local/etc/php-fpm.d/www.conf; \
     sed -i 's/^pm.start_servers =.*/pm.start_servers = 2/' /usr/local/etc/php-fpm.d/www.conf; \
     sed -i 's/^pm.min_spare_servers =.*/pm.min_spare_servers = 1/' /usr/local/etc/php-fpm.d/www.conf; \
-    sed -i 's/^pm.max_spare_servers =.*/pm.max_spare_servers = 3/' /usr/local/etc/php-fpm.d/www.conf
+    sed -i 's/^pm.max_spare_servers =.*/pm.max_spare_servers = 3/' /usr/local/etc/php-fpm.d/www.conf; \
+    sed -i 's|access.log = /proc/self/fd/2|access.log = /proc/self/fd/1|' /usr/local/etc/php-fpm.d/docker.conf
 
 RUN set -ex; \
     rm -rf /tmp/nextcloud-aio && \
