@@ -66,7 +66,7 @@ if [ "$BORG_MODE" = backup ]; then
 
     # Test that nothing is empty
     for directory in "${VOLUME_DIRS[@]}"; do
-        if [ -z "$(ls -A "$directory")" ]; then
+        if [ -z "$(ls -A "$directory")" ] && [ "$directory" != "/nextcloud_aio_volumes/nextcloud_aio_elasticsearch" ]; then
             echo "$directory is empty which is not allowed."
             exit 1
         fi
@@ -258,13 +258,14 @@ if [ "$BORG_MODE" = restore ]; then
 
     # Restore everything except the configuration file
     if ! rsync --stats --archive --human-readable -vv --delete \
-    --exclude "nextcloud_aio_mastercontainer/session/"** \
+    --exclude "nextcloud_aio_apache/caddy/"** \
+    --exclude "nextcloud_aio_elasticsearch" \
+    --exclude "nextcloud_aio_mastercontainer/caddy/"** \
     --exclude "nextcloud_aio_mastercontainer/certs/"** \
+    --exclude "nextcloud_aio_mastercontainer/data/configuration.json" \
     --exclude "nextcloud_aio_mastercontainer/data/daily_backup_running" \
     --exclude "nextcloud_aio_mastercontainer/data/session_date_file" \
-    --exclude "nextcloud_aio_mastercontainer/data/configuration.json" \
-    --exclude "nextcloud_aio_apache/caddy/"** \
-    --exclude "nextcloud_aio_mastercontainer/caddy/"** \
+    --exclude "nextcloud_aio_mastercontainer/session/"** \
     /tmp/borg/nextcloud_aio_volumes/ /nextcloud_aio_volumes; then
         echo "Something failed while restoring from backup."
         umount /tmp/borg
@@ -336,6 +337,9 @@ if [ "$BORG_MODE" = restore ]; then
     # Add file to Nextcloud container so that it performs a fingerprint update the next time
     touch "/nextcloud_aio_volumes/nextcloud_aio_nextcloud_data/fingerprint.update"
     chmod 777 "/nextcloud_aio_volumes/nextcloud_aio_nextcloud_data/fingerprint.update"
+
+    # Delete redis cache
+    rm -f "/mnt/redis/dump.rdb"
 fi
 
 # Do the Backup check

@@ -176,6 +176,7 @@ if ! [ -f "$NEXTCLOUD_DATA_DIR/skip.update" ]; then
                 rsync -rlD --include "/$dir/" --exclude '/*' /usr/src/nextcloud/ /var/www/html/
             fi
         done
+        rsync -rlD --delete -vv --include '/config/' --exclude '/*' --exclude '/config/CAN_INSTALL' --exclude '/config/config.sample.php' --exclude '/config/config.php' /usr/src/nextcloud/ /var/www/html/
         rsync -rlD --include '/version.php' --exclude '/*' /usr/src/nextcloud/ /var/www/html/
         echo "Initializing finished"
 
@@ -280,8 +281,13 @@ if ! [ -f "$NEXTCLOUD_DATA_DIR/skip.update" ]; then
                         if [ "${APPSTORAGE[$app]}" != "no" ]; then
                             echo "Enabling $app..."
                             if ! php /var/www/html/occ app:enable "$app" >/dev/null; then
-                                echo "$app could not get enabled. Probably because it is not compatible with the new Nextcloud version."
-                                bash /notify.sh "Could not enable the $app after the Nextcloud update!" "Feel free to look at the Nextcloud update logs and force-enable the app again from the app-store UI."
+                                echo "The $app app could not get enabled. Probably because it is not compatible with the new Nextcloud version."
+                                if [ "$app" = apporder ]; then
+                                    CUSTOM_HINT="The apporder app was deprecated. A possible replacement is the side_menu app, aka 'Custom menu'."
+                                else
+                                    CUSTOM_HINT="Most likely because it is not compatible with the new Nextcloud version."
+                                fi
+                                bash /notify.sh "Could not enable the $app app after the Nextcloud update!" "$CUSTOM_HINT Feel free to look at the Nextcloud update logs and force-enable the app again from the app-store UI."
                                 continue
                             fi
                             # Only restore the group settings, if the app was enabled (and is thus compatible with the new NC version)
