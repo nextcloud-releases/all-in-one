@@ -79,6 +79,14 @@ if [ -f "$NEXTCLOUD_DATA_DIR/update.failed" ]; then
     exit 1
 fi
 
+# Do not start the container if the install failed
+if [ -f "$NEXTCLOUD_DATA_DIR/install.failed" ]; then
+    echo "The initial Nextcloud installation failed."
+    echo "Please reset AIO properly and try again. For further clues what went wrong, check the logs above."
+    echo "See https://github.com/nextcloud/all-in-one#how-to-properly-reset-the-instance"
+    exit 1
+fi
+
 # Skip any update if Nextcloud was just restored
 if ! [ -f "$NEXTCLOUD_DATA_DIR/skip.update" ]; then
     if version_greater "$image_version" "$installed_version"; then
@@ -176,7 +184,7 @@ if ! [ -f "$NEXTCLOUD_DATA_DIR/skip.update" ]; then
                 rsync -rlD --include "/$dir/" --exclude '/*' /usr/src/nextcloud/ /var/www/html/
             fi
         done
-        rsync -rlD --delete -vv --include '/config/' --exclude '/*' --exclude '/config/CAN_INSTALL' --exclude '/config/config.sample.php' --exclude '/config/config.php' /usr/src/nextcloud/ /var/www/html/
+        rsync -rlD --delete --include '/config/' --exclude '/*' --exclude '/config/CAN_INSTALL' --exclude '/config/config.sample.php' --exclude '/config/config.php' /usr/src/nextcloud/ /var/www/html/
         rsync -rlD --include '/version.php' --exclude '/*' /usr/src/nextcloud/ /var/www/html/
         echo "Initializing finished"
 
@@ -203,6 +211,7 @@ if ! [ -f "$NEXTCLOUD_DATA_DIR/skip.update" ]; then
             done
             if [ "$try" -gt "$max_retries" ]; then
                 echo "installing of nextcloud failed!"
+                touch "$NEXTCLOUD_DATA_DIR/install.failed"
                 exit 1
             fi
 
