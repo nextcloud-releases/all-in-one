@@ -5,11 +5,11 @@ sed -i 's|","location":"|:|g' /tmp/containers.json
 sed -i 's|","writeable":false|:ro"|g' /tmp/containers.json
 sed -i 's|","writeable":true|:rw"|g' /tmp/containers.json
 OUTPUT="$(cat /tmp/containers.json)"
-OUTPUT="$(echo "$OUTPUT" | jq 'del(.production[].internalPorts)')"
-OUTPUT="$(echo "$OUTPUT" | jq 'del(.production[].secrets)')"
-OUTPUT="$(echo "$OUTPUT" | jq 'del(.production[] | select(.identifier == "nextcloud-aio-watchtower"))')"
-OUTPUT="$(echo "$OUTPUT" | jq 'del(.production[] | select(.identifier == "nextcloud-aio-domaincheck"))')"
-OUTPUT="$(echo "$OUTPUT" | jq 'del(.production[] | select(.identifier == "nextcloud-aio-borgbackup"))')"
+OUTPUT="$(echo "$OUTPUT" | jq 'del(.services[].internal_port)')"
+OUTPUT="$(echo "$OUTPUT" | jq 'del(.services[].secrets)')"
+OUTPUT="$(echo "$OUTPUT" | jq 'del(.services[] | select(.container_name == "nextcloud-aio-watchtower"))')"
+OUTPUT="$(echo "$OUTPUT" | jq 'del(.services[] | select(.container_name == "nextcloud-aio-domaincheck"))')"
+OUTPUT="$(echo "$OUTPUT" | jq 'del(.services[] | select(.container_name == "nextcloud-aio-borgbackup"))')"
 
 snap install yq
 mkdir -p ./manual-install
@@ -17,16 +17,9 @@ echo "$OUTPUT" | yq -P > ./manual-install/containers.yml
 
 cd manual-install || exit
 sed -i "s|'||g" containers.yml
-sed -i 's|production:|services:|' containers.yml
-sed -i 's|- identifier:|  container_name:|' containers.yml
-sed -i 's|restartPolicy:|restart:|' containers.yml
-sed -i 's|environmentVariables:|environment:|' containers.yml
-sed -i '/displayName:/d' containers.yml
-sed -i 's|maxShutdownTime:|stop_grace_period:|' containers.yml
+sed -i '/display_name:/d' containers.yml
 sed -i '/stop_grace_period:/s/$/s/' containers.yml
-sed -i 's|containerName:|image:|' containers.yml
 sed -i '/: \[\]/d' containers.yml
-sed -i 's|dependsOn:|depends_on:|' containers.yml
 sed -i 's|- name: |- |' containers.yml
 
 TCP="$(grep -oP '[%A-Z0-9_]+/tcp' containers.yml | sort -u)"
@@ -46,6 +39,7 @@ do
 done
 
 rm -f sample.conf
+echo 'IMAGE_TAG=latest          # Version of docker images, should be latest or latest-arm64. Note: latest-arm64 has no clamav support' >> sample.conf
 VARIABLES="$(grep -oP '%[A-Z_a-z0-6]+%' containers.yml | sort -u)"
 mapfile -t VARIABLES <<< "$VARIABLES"
 for variable in "${VARIABLES[@]}"
@@ -57,6 +51,7 @@ do
 done
 
 sed -i 's|_ENABLED=|_ENABLED=no          # Setting this to "yes" enables the option in Nextcloud automatically.|' sample.conf
+sed -i 's|CLAMAV_ENABLED=no.*|CLAMAV_ENABLED=no          # Setting this to "yes" enables the option in Nextcloud automatically. Note: latest-arm64 has no clamav support|' sample.conf
 sed -i 's|TALK_ENABLED=no|TALK_ENABLED=yes|' sample.conf
 sed -i 's|COLLABORA_ENABLED=no|COLLABORA_ENABLED=yes|' sample.conf
 sed -i 's|COLLABORA_DICTIONARIES=|COLLABORA_DICTIONARIES="de_DE en_GB en_US es_ES fr_FR it nl pt_BR pt_PT ru"        # You can change this in order to enable other dictionaries for collabora|' sample.conf
@@ -92,6 +87,11 @@ do
     if [ "$name" != "nextcloud-aio-apache" ]; then
         OUTPUT="$(echo "$OUTPUT" | sed "/  $name:/i\ ")"
     fi
+    if ! echo "$name" | grep "apache$" && ! echo "$name" | grep "database$" && ! echo "$name" | grep "nextcloud$" && ! echo "$name" | grep "redis$"; then
+        sed -i '/container_name/d' containers.yml
+        SLIM_NAME="${name##nextcloud-aio-}"
+        OUTPUT="$(echo "$OUTPUT" | sed "/container_name: $name$/a\ \ \ \ profiles:\ \[\"$SLIM_NAME\"\]")"
+    fi
 done
 
 OUTPUT="$(echo "$OUTPUT" | sed "/restart: /a\ \ \ \ networks:\n\ \ \ \ \ \ - nextcloud-aio")"
@@ -102,6 +102,7 @@ echo "" >> containers.yml
 echo "$OUTPUT" >> containers.yml
 
 sed -i '/container_name/d' containers.yml
+sed -i 's|^ $||' containers.yml
 
 VOLUMES="$(grep -oP 'nextcloud_aio_[a-z_]+' containers.yml | sort -u)"
 mapfile -t VOLUMES <<< "$VOLUMES"
@@ -122,12 +123,6 @@ networks:
 NETWORK
 
 cat containers.yml > latest.yml
-sed -i '/image:/s/$/:latest/' latest.yml
-
-cat containers.yml > latest-arm64.yml
-sed -i '/image:/s/$/:latest-arm64/' latest-arm64.yml
-sed -i '/  nextcloud-aio-clamav:/,/^ $/d' latest-arm64.yml
-sed -i '/nextcloud[-_]aio[-_]clamav/d' latest-arm64.yml
-sed -i '/CLAMAV_ENABLED/d' latest-arm64.yml
+sed -i "/image:/s/$/:\${IMAGE_TAG}/" latest.yml
 
 rm containers.yml

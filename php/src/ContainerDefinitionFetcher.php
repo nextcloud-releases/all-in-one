@@ -5,7 +5,6 @@ namespace AIO;
 use AIO\Container\Container;
 use AIO\Container\ContainerEnvironmentVariables;
 use AIO\Container\ContainerPorts;
-use AIO\Container\ContainerInternalPorts;
 use AIO\Container\ContainerVolume;
 use AIO\Container\ContainerVolumes;
 use AIO\Container\State\RunningState;
@@ -48,28 +47,28 @@ class ContainerDefinitionFetcher
         $data = json_decode(file_get_contents(__DIR__ . '/../containers.json'), true);
 
         $containers = [];
-        foreach ($data['production'] as $entry) {
-            if ($entry['identifier'] === 'nextcloud-aio-clamav') {
+        foreach ($data['services'] as $entry) {
+            if ($entry['container_name'] === 'nextcloud-aio-clamav') {
                 if (!$this->configurationManager->isClamavEnabled()) {
                     continue;
                 }
-            } elseif ($entry['identifier'] === 'nextcloud-aio-onlyoffice') {
+            } elseif ($entry['container_name'] === 'nextcloud-aio-onlyoffice') {
                 if (!$this->configurationManager->isOnlyofficeEnabled()) {
                     continue;
                 }
-            } elseif ($entry['identifier'] === 'nextcloud-aio-collabora') {
+            } elseif ($entry['container_name'] === 'nextcloud-aio-collabora') {
                 if (!$this->configurationManager->isCollaboraEnabled()) {
                     continue;
                 }
-            } elseif ($entry['identifier'] === 'nextcloud-aio-talk') {
+            } elseif ($entry['container_name'] === 'nextcloud-aio-talk') {
                 if (!$this->configurationManager->isTalkEnabled()) {
                     continue;
                 }
-            } elseif ($entry['identifier'] === 'nextcloud-aio-imaginary') {
+            } elseif ($entry['container_name'] === 'nextcloud-aio-imaginary') {
                 if (!$this->configurationManager->isImaginaryEnabled()) {
                     continue;
                 }
-            } elseif ($entry['identifier'] === 'nextcloud-aio-fulltextsearch') {
+            } elseif ($entry['container_name'] === 'nextcloud-aio-fulltextsearch') {
                 if (!$this->configurationManager->isFulltextsearchEnabled()) {
                     continue;
                 }
@@ -87,51 +86,14 @@ class ContainerDefinitionFetcher
                 $ports->AddPort($port);
             }
 
-            $internalPorts = new ContainerInternalPorts();
-            foreach ($entry['internalPorts'] as $internalPort) {
-                if($internalPort === '%APACHE_PORT%') {
-                    $internalPort = $this->configurationManager->GetApachePort();
-                } elseif($internalPort === '%TALK_PORT%') {
-                    $internalPort = $this->configurationManager->GetTalkPort();
-                }
-                $internalPorts->AddInternalPort($internalPort);
+            if($entry['internal_port'] === '%APACHE_PORT%') {
+                $entry['internal_port'] = $this->configurationManager->GetApachePort();
+            } elseif($entry['internal_port'] === '%TALK_PORT%') {
+                $entry['internal_port'] = $this->configurationManager->GetTalkPort();
             }
 
             $volumes = new ContainerVolumes();
             foreach ($entry['volumes'] as $value) {
-                if($value['name'] === '%BORGBACKUP_HOST_LOCATION%') {
-                    $value['name'] = $this->configurationManager->GetBorgBackupHostLocation();
-                    if($value['name'] === '') {
-                        continue;
-                    }
-                }
-                if($value['name'] === '%NEXTCLOUD_MOUNT%') {
-                    $value['name'] = $this->configurationManager->GetNextcloudMount();
-                    if($value['name'] === '') {
-                        continue;
-                    }
-                } elseif ($value['name'] === '%NEXTCLOUD_DATADIR%') {
-                    $value['name'] = $this->configurationManager->GetNextcloudDatadirMount();
-                    if ($value['name'] === '') {
-                        continue;
-                    }
-                } elseif ($value['name'] === '%DOCKER_SOCKET_PATH%') {
-                    $value['name'] = $this->configurationManager->GetDockerSocketPath();
-                    if($value['name'] === '') {
-                        continue;
-                    }
-                } elseif ($value['name'] === '%NEXTCLOUD_TRUSTED_CACERTS_DIR%') {
-                    $value['name'] = $this->configurationManager->GetTrustedCacertsDir();
-                    if($value['name'] === '') {
-                        continue;
-                    }
-                }
-                if ($value['location'] === '%NEXTCLOUD_MOUNT%') {
-                    $value['location'] = $this->configurationManager->GetNextcloudMount();
-                    if($value['location'] === '') {
-                        continue;
-                    }
-                }
                 $volumes->AddVolume(
                     new ContainerVolume(
                         $value['name'],
@@ -142,7 +104,7 @@ class ContainerDefinitionFetcher
             }
 
             $dependsOn = [];
-            foreach ($entry['dependsOn'] as $value) {
+            foreach ($entry['depends_on'] as $value) {
                 if ($value === 'nextcloud-aio-clamav') {
                     if (!$this->configurationManager->isClamavEnabled()) {
                         continue;
@@ -172,18 +134,18 @@ class ContainerDefinitionFetcher
             }
             
             $variables = new ContainerEnvironmentVariables();
-            foreach ($entry['environmentVariables'] as $value) {
+            foreach ($entry['environment'] as $value) {
                 $variables->AddVariable($value);
             }
 
             $containers[] = new Container(
-                $entry['identifier'],
-                $entry['displayName'],
-                $entry['containerName'],
-                $entry['restartPolicy'],
-                $entry['maxShutdownTime'],
+                $entry['container_name'],
+                $entry['display_name'],
+                $entry['image'],
+                $entry['restart'],
+                $entry['stop_grace_period'],
                 $ports,
-                $internalPorts,
+                $entry['internal_port'],
                 $volumes,
                 $variables,
                 $dependsOn,
