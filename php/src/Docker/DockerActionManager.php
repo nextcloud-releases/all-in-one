@@ -124,8 +124,15 @@ class DockerActionManager
         }
 
         $containerName = $container->GetIdentifier();
-        if ($container->GetInternalPort() !== "") {
-            $connection = @fsockopen($containerName, (int)$container->GetInternalPort(), $errno, $errstr, 0.1);
+        $internalPort = $container->GetInternalPort();
+        if($internalPort === '%APACHE_PORT%') {
+            $internalPort = $this->configurationManager->GetApachePort();
+        } elseif($internalPort === '%TALK_PORT%') {
+            $internalPort = $this->configurationManager->GetTalkPort();
+        }
+        
+        if ($internalPort !== "" && $internalPort !== 'host') {
+            $connection = @fsockopen($containerName, (int)$internalPort, $errno, $errstr, 0.1);
             if ($connection) {
                 fclose($connection);
                 return new RunningState();
@@ -215,17 +222,16 @@ class DockerActionManager
             $volumes[] = $volumeEntry;
         }
 
-        $exposedPorts = [];
-        foreach($container->GetPorts()->GetPorts() as $port) {
-            $exposedPorts[$port] = null;
-        }
-
         $requestBody = [
             'Image' => $this->BuildImageName($container),
         ];
 
         if(count($volumes) > 0) {
             $requestBody['HostConfig']['Binds'] = $volumes;
+        }
+
+        foreach($container->GetSecrets() as $secret) {
+            $this->configurationManager->GetAndGenerateSecret($secret);
         }
 
         $envs = $container->GetEnvironmentVariables()->GetVariables();
@@ -335,7 +341,11 @@ class DockerActionManager
                 } elseif ($out[1] === 'NEXTCLOUD_ADDITIONAL_PHP_EXTENSIONS') {
                     $replacements[1] = $this->configurationManager->GetNextcloudAdditionalPhpExtensions();
                 } else {
-                    $replacements[1] = $this->configurationManager->GetSecret($out[1]);
+                    $secret = $this->configurationManager->GetSecret($out[1]);
+                    if ($secret === "") {
+                        throw new \Exception("The secret " . $out[1] . " is empty. Cannot substitute its value. Pleas check if it is defined in secrets of containers.json.");
+                    }
+                    $replacements[1] = $secret;
                 }
 
                 $envs[$key] = preg_replace($patterns, $replacements, $env);
@@ -347,25 +357,40 @@ class DockerActionManager
         }
 
         $requestBody['HostConfig']['RestartPolicy']['Name'] = $container->GetRestartPolicy();
+ 
+        $exposedPorts = [];
+        if ($container->GetInternalPort() !== 'host') {
+            foreach($container->GetPorts()->GetPorts() as $value) {
+                $exposedPorts[$value->port] = null;
+            }
+        }
 
         if(count($exposedPorts) > 0) {
-            $requestBody['ExposedPorts'] = $exposedPorts;
-            foreach ($container->GetPorts()->GetPorts() as $port) {
-                $portNumber = explode("/", $port);
-                if ($this->configurationManager->GetApachePort() === $portNumber[0] && $this->configurationManager->GetApacheIPBinding() !== '') {
-                    $requestBody['HostConfig']['PortBindings'][$port] = [
-                        [
-                        'HostPort' => $portNumber[0],
-                        'HostIp' => $this->configurationManager->GetApacheIPBinding(),
-                        ]
-                    ];
-                } else {
-                    $requestBody['HostConfig']['PortBindings'][$port] = [
-                        [
-                        'HostPort' => $portNumber[0],
-                        ]
-                    ];
+            foreach ($container->GetPorts()->GetPorts() as $value) {
+                $port = $value->port;
+                if($port === '%APACHE_PORT%') {
+                    $port = $this->configurationManager->GetApachePort();
+                } elseif($port === '%TALK_PORT%') {
+                    $port = $this->configurationManager->GetTalkPort();
                 }
+                
+                $ipBinding = $value->ipBinding;
+                if($ipBinding === '%APACHE_IP_BINDING%') {
+                    $ipBinding = $this->configurationManager->GetApacheIPBinding();
+                }
+                if ($ipBinding === '') {
+                    $ipBinding = '0.0.0.0';
+                }
+
+                $protocol = $value->protocol;
+                $portWithProtocol = $port . '/' . $protocol;
+                $requestBody['ExposedPorts'][$portWithProtocol] = null;
+                $requestBody['HostConfig']['PortBindings'][$port] = [
+                    [
+                    'HostPort' => $port,
+                    'HostIp' => $ipBinding,
+                    ]
+                ];
             }
         }
 
@@ -566,7 +591,6 @@ class DockerActionManager
                 true
             );
 
-            // get the id from the response
             $id = $response['Id'];
 
             // start the exec
@@ -606,34 +630,39 @@ class DockerActionManager
         }
     }
 
-    private function ConnectContainerIdToNetwork(string $id) : void
+    private function ConnectContainerIdToNetwork(string $id, string $internalPort) : void
     {
-        $url = $this->BuildApiUrl('networks/create');
-        try {
-            $this->guzzleClient->request(
-                'POST',
-                $url,
-                [
-                    'json' => [
-                        'Name' => 'nextcloud-aio',
-                        'CheckDuplicate' => true,
-                        'Driver' => 'bridge',
-                        'Internal' => false,
-                        'Options' => [
-                            'com.docker.network.bridge.enable_icc' => 'true'
+        if ($internalPort === 'host') {
+            $network = 'host';
+        } else {
+            $network = 'nextcloud-aio';
+            $url = $this->BuildApiUrl('networks/create');
+            try {
+                $this->guzzleClient->request(
+                    'POST',
+                    $url,
+                    [
+                        'json' => [
+                            'Name' => 'nextcloud-aio',
+                            'CheckDuplicate' => true,
+                            'Driver' => 'bridge',
+                            'Internal' => false,
+                            'Options' => [
+                                'com.docker.network.bridge.enable_icc' => 'true'
+                            ]
                         ]
                     ]
-                ]
-            );
-        } catch (RequestException $e) {
-            // 409 is undocumented and gets thrown if the network already exists.
-            if ($e->getCode() !== 409) {
-                throw $e;
+                );
+            } catch (RequestException $e) {
+                // 409 is undocumented and gets thrown if the network already exists.
+                if ($e->getCode() !== 409) {
+                    throw $e;
+                }
             }
         }
 
         $url = $this->BuildApiUrl(
-            sprintf('networks/%s/connect', 'nextcloud-aio')
+            sprintf('networks/%s/connect', $network)
         );
         try {
             $this->guzzleClient->request(
@@ -655,12 +684,12 @@ class DockerActionManager
 
     public function ConnectMasterContainerToNetwork() : void
     {
-        $this->ConnectContainerIdToNetwork('nextcloud-aio-mastercontainer');
+        $this->ConnectContainerIdToNetwork('nextcloud-aio-mastercontainer', '');
     }
 
     public function ConnectContainerToNetwork(Container $container) : void
     {
-      $this->ConnectContainerIdToNetwork($container->GetIdentifier());
+      $this->ConnectContainerIdToNetwork($container->GetIdentifier(), $container->GetInternalPort());
     }
 
     public function StopContainer(Container $container) : void {

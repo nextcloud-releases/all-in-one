@@ -1,4 +1,4 @@
-# From https://github.com/docker-library/postgres/blob/master/13/alpine/Dockerfile
+# From https://github.com/docker-library/postgres/blob/master/14/alpine/Dockerfile
 FROM postgres:14.6-alpine
 
 RUN apk add --update --no-cache bash openssl shadow netcat-openbsd grep mawk
@@ -32,4 +32,4 @@ RUN echo "root:$(openssl rand -base64 12)" | chpasswd
 USER postgres
 ENTRYPOINT ["start.sh"]
 
-HEALTHCHECK CMD psql -d "postgresql://$POSTGRES_USER:$POSTGRES_PASSWORD@localhost:5432/$POSTGRES_DB" -c "select now()" || exit 1
+HEALTHCHECK CMD (test -f "/mnt/data/backup-is-running" && exit 0) && psql -d "postgresql://$POSTGRES_USER:$POSTGRES_PASSWORD@localhost:5432/$POSTGRES_DB" -c "select now()" || exit 1

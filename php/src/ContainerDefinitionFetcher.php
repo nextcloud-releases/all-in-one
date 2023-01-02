@@ -4,6 +4,7 @@ namespace AIO;
 
 use AIO\Container\Container;
 use AIO\Container\ContainerEnvironmentVariables;
+use AIO\Container\ContainerPort;
 use AIO\Container\ContainerPorts;
 use AIO\Container\ContainerVolume;
 use AIO\Container\ContainerVolumes;
@@ -75,62 +76,55 @@ class ContainerDefinitionFetcher
             }
 
             $ports = new ContainerPorts();
-            foreach ($entry['ports'] as $port) {
-                if($port === '%APACHE_PORT%/tcp') {
-                    $port = $this->configurationManager->GetApachePort() . '/tcp';
-                } elseif($port === '%TALK_PORT%/tcp') {
-                    $port = $this->configurationManager->GetTalkPort() . '/tcp';
-                } elseif($port === '%TALK_PORT%/udp') {
-                    $port = $this->configurationManager->GetTalkPort() . '/udp';
-                }
-                $ports->AddPort($port);
-            }
-
-            if($entry['internal_port'] === '%APACHE_PORT%') {
-                $entry['internal_port'] = $this->configurationManager->GetApachePort();
-            } elseif($entry['internal_port'] === '%TALK_PORT%') {
-                $entry['internal_port'] = $this->configurationManager->GetTalkPort();
+            foreach ($entry['ports'] as $value) {
+                $ports->AddPort(
+                    new ContainerPort(
+                        $value['port_number'],
+                        $value['ip_binding'],
+                        $value['protocol']
+                    )
+                );
             }
 
             $volumes = new ContainerVolumes();
             foreach ($entry['volumes'] as $value) {
-                if($value['name'] === '%BORGBACKUP_HOST_LOCATION%') {
-                    $value['name'] = $this->configurationManager->GetBorgBackupHostLocation();
-                    if($value['name'] === '') {
+                if($value['source'] === '%BORGBACKUP_HOST_LOCATION%') {
+                    $value['source'] = $this->configurationManager->GetBorgBackupHostLocation();
+                    if($value['source'] === '') {
                         continue;
                     }
                 }
-                if($value['name'] === '%NEXTCLOUD_MOUNT%') {
-                    $value['name'] = $this->configurationManager->GetNextcloudMount();
-                    if($value['name'] === '') {
+                if($value['source'] === '%NEXTCLOUD_MOUNT%') {
+                    $value['source'] = $this->configurationManager->GetNextcloudMount();
+                    if($value['source'] === '') {
                         continue;
                     }
-                } elseif ($value['name'] === '%NEXTCLOUD_DATADIR%') {
-                    $value['name'] = $this->configurationManager->GetNextcloudDatadirMount();
-                    if ($value['name'] === '') {
+                } elseif ($value['source'] === '%NEXTCLOUD_DATADIR%') {
+                    $value['source'] = $this->configurationManager->GetNextcloudDatadirMount();
+                    if ($value['source'] === '') {
                         continue;
                     }
-                } elseif ($value['name'] === '%DOCKER_SOCKET_PATH%') {
-                    $value['name'] = $this->configurationManager->GetDockerSocketPath();
-                    if($value['name'] === '') {
+                } elseif ($value['source'] === '%DOCKER_SOCKET_PATH%') {
+                    $value['source'] = $this->configurationManager->GetDockerSocketPath();
+                    if($value['source'] === '') {
                         continue;
                     }
-                } elseif ($value['name'] === '%NEXTCLOUD_TRUSTED_CACERTS_DIR%') {
-                    $value['name'] = $this->configurationManager->GetTrustedCacertsDir();
-                    if($value['name'] === '') {
+                } elseif ($value['source'] === '%NEXTCLOUD_TRUSTED_CACERTS_DIR%') {
+                    $value['source'] = $this->configurationManager->GetTrustedCacertsDir();
+                    if($value['source'] === '') {
                         continue;
                     }
                 }
-                if ($value['location'] === '%NEXTCLOUD_MOUNT%') {
-                    $value['location'] = $this->configurationManager->GetNextcloudMount();
-                    if($value['location'] === '') {
+                if ($value['destination'] === '%NEXTCLOUD_MOUNT%') {
+                    $value['destination'] = $this->configurationManager->GetNextcloudMount();
+                    if($value['destination'] === '') {
                         continue;
                     }
                 }
                 $volumes->AddVolume(
                     new ContainerVolume(
-                        $value['name'],
-                        $value['location'],
+                        $value['source'],
+                        $value['destination'],
                         $value['writeable']
                     )
                 );
