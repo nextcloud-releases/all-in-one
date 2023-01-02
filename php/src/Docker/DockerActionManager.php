@@ -361,31 +361,21 @@ class DockerActionManager
         $exposedPorts = [];
         if ($container->GetInternalPort() !== 'host') {
             foreach($container->GetPorts()->GetPorts() as $value) {
-                $exposedPorts[$value->port] = null;
+                $portWithProtocol = $value->port . '/' . $value->protocol;
+                $exposedPorts[$portWithProtocol] = null;
             }
+        } else {
+            $requestBody['HostConfig']['NetworkMode'] = 'host';
         }
 
         if(count($exposedPorts) > 0) {
+            $requestBody['ExposedPorts'] = $exposedPorts;
             foreach ($container->GetPorts()->GetPorts() as $value) {
                 $port = $value->port;
-                if($port === '%APACHE_PORT%') {
-                    $port = $this->configurationManager->GetApachePort();
-                } elseif($port === '%TALK_PORT%') {
-                    $port = $this->configurationManager->GetTalkPort();
-                }
-                
                 $ipBinding = $value->ipBinding;
-                if($ipBinding === '%APACHE_IP_BINDING%') {
-                    $ipBinding = $this->configurationManager->GetApacheIPBinding();
-                }
-                if ($ipBinding === '') {
-                    $ipBinding = '0.0.0.0';
-                }
-
                 $protocol = $value->protocol;
                 $portWithProtocol = $port . '/' . $protocol;
-                $requestBody['ExposedPorts'][$portWithProtocol] = null;
-                $requestBody['HostConfig']['PortBindings'][$port] = [
+                $requestBody['HostConfig']['PortBindings'][$portWithProtocol] = [
                     [
                     'HostPort' => $port,
                     'HostIp' => $ipBinding,
@@ -633,31 +623,31 @@ class DockerActionManager
     private function ConnectContainerIdToNetwork(string $id, string $internalPort) : void
     {
         if ($internalPort === 'host') {
-            $network = 'host';
-        } else {
-            $network = 'nextcloud-aio';
-            $url = $this->BuildApiUrl('networks/create');
-            try {
-                $this->guzzleClient->request(
-                    'POST',
-                    $url,
-                    [
-                        'json' => [
-                            'Name' => 'nextcloud-aio',
-                            'CheckDuplicate' => true,
-                            'Driver' => 'bridge',
-                            'Internal' => false,
-                            'Options' => [
-                                'com.docker.network.bridge.enable_icc' => 'true'
-                            ]
+            return;
+        }
+
+        $network = 'nextcloud-aio';
+        $url = $this->BuildApiUrl('networks/create');
+        try {
+            $this->guzzleClient->request(
+                'POST',
+                $url,
+                [
+                    'json' => [
+                        'Name' => 'nextcloud-aio',
+                        'CheckDuplicate' => true,
+                        'Driver' => 'bridge',
+                        'Internal' => false,
+                        'Options' => [
+                            'com.docker.network.bridge.enable_icc' => 'true'
                         ]
                     ]
-                );
-            } catch (RequestException $e) {
-                // 409 is undocumented and gets thrown if the network already exists.
-                if ($e->getCode() !== 409) {
-                    throw $e;
-                }
+                ]
+            );
+        } catch (RequestException $e) {
+            // 409 is undocumented and gets thrown if the network already exists.
+            if ($e->getCode() !== 409) {
+                throw $e;
             }
         }
 
