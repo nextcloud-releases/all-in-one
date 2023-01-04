@@ -236,8 +236,16 @@ class DockerActionManager
 
         $envs = $container->GetEnvironmentVariables()->GetVariables();
         foreach($envs as $key => $env) {
-            $patterns = ['/%(.*)%/'];
+            // TODO: This whole block below is a hack and needs to get reworked in order to support multiple substitutions per line by default for all envs
+            if (str_starts_with($env, 'extra_params=')) {
+                $env = str_replace('%COLLABORA_SECCOMP_POLICY%', $this->configurationManager->GetCollaboraSeccompPolicy(), $env);
+                $env = str_replace('%NC_DOMAIN%', $this->configurationManager->GetDomain(), $env);
+                $envs[$key] = $env;
+                continue;
+            }
 
+            // Original implementation
+            $patterns = ['/%(.*)%/'];
 
             if(preg_match($patterns[0], $env, $out) === 1) {
                 $replacements = array();
@@ -384,10 +392,21 @@ class DockerActionManager
             }
         }
 
+        $devices = [];
+        foreach($container->GetDevices() as $device) {
+            if ($device === '/dev/dri' && ! $this->configurationManager->isDriDeviceEnabled()) {
+                continue;
+            }
+            $devices[] = ["PathOnHost" => $device, "PathInContainer" => $device, "CgroupPermissions" => "rwm"];
+        }
+
+        if (count($devices) > 0) {
+            $requestBody['HostConfig']['Devices'] = $devices;
+        }
+
         // Special things for the backup container which should not be exposed in the containers.json
         if ($container->GetIdentifier() === 'nextcloud-aio-borgbackup') {
             $requestBody['HostConfig']['CapAdd'] = ["SYS_ADMIN"];
-            $requestBody['HostConfig']['Devices'] = [["PathOnHost" => "/dev/fuse", "PathInContainer" => "/dev/fuse", "CgroupPermissions" => "rwm"]];
             $requestBody['HostConfig']['SecurityOpt'] = ["apparmor:unconfined"];
             
             // Additional backup directories
@@ -404,6 +423,10 @@ class DockerActionManager
             if(count($mounts) > 0) {
                 $requestBody['HostConfig']['Mounts'] = $mounts;
             }
+        // Special things for the talk container which should not be exposed in the containers.json
+        } elseif ($container->GetIdentifier() === 'nextcloud-aio-talk') {
+            // This is needed due to a bug in libwebsockets which cannot handle unlimited ulimits
+            $requestBody['HostConfig']['Ulimits'] = [["Name" => "nofile", "Hard" => 200000, "Soft" => 200000]];
         }
 
         $url = $this->BuildApiUrl('containers/create?name=' . $container->GetIdentifier());

@@ -735,7 +735,7 @@ class ConfigurationManager
         if (is_string($apps)) {
             return trim($apps);
         }
-        return 'deck tasks calendar contacts';
+        return 'deck twofactor_totp tasks calendar contacts';
     }
 
     public function GetCollaboraDictionaries() : string {
@@ -789,6 +789,21 @@ class ConfigurationManager
             return false;
         } else {
             return true;
+        }
+    }
+
+    private function GetEnabledDriDevice() : string {
+        $envVariableName = 'NEXTCLOUD_ENABLE_DRI_DEVICE';
+        $configName = 'nextcloud_enable_dri_device';
+        $defaultValue = '';
+        return $this->GetEnvironmentalVariableOrConfig($envVariableName, $configName, $defaultValue);
+    }
+
+    public function isDriDeviceEnabled() : bool {
+        if ($this->GetEnabledDriDevice() === 'true') {
+            return true;
+        } else {
+            return false;
         }
     }
 }
