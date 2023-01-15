@@ -12,16 +12,13 @@ Included are:
 - Fulltextsearch
 
 ## How to use this?
-The following instructions are especially meant for Linux. For macOS see [this](#how-to-run-aio-on-macos), for Windows see [this](#how-to-run-aio-on-windows).
-1. Install Docker on your Linux installation using:
-    ```
-    curl -fsSL get.docker.com | sudo sh
-    ```
+The following instructions are especially meant for Linux. For macOS see [this](#how-to-run-aio-on-macos), for Windows see [this](#how-to-run-aio-on-windows). Also, the instructions are meant for installations without a reverse proxy already being in place. If you want to run AIO behind a reverse proxy, see the [reverse proxy documentation](https://github.com/nextcloud/all-in-one/blob/main/reverse-proxy.md).
+1. Install Docker on your Linux installation by following the official documentation: https://docs.docker.com/engine/install/#server. The easiest way is installing it by **using the convenience script** (`curl -fsSL get.docker.com | sudo sh`).
 1. If you need ipv6 support, you should enable it by following https://docs.docker.com/config/daemon/ipv6/.
 2. Run the command below in order to start the container:<br><br>
     (For people that cannot use ports 80 and/or 443 on this server, please follow the [reverse proxy documentation](https://github.com/nextcloud/all-in-one/blob/main/reverse-proxy.md) because port 443 is used by this project and opened on the host by default even though it does not look like this is the case. Otherwise please run the command below!)
     ```
-    # For x64 CPUs:
+    # For x64 CPUs and without reverse proxy already in place:
     sudo docker run \
     --sig-proxy=false \
     --name nextcloud-aio-mastercontainer \
@@ -37,7 +34,7 @@ The following instructions are especially meant for Linux. For macOS see [this](
     <summary>Command for arm64 CPUs like the Raspberry Pi 4</summary>
 
     ```
-    # For arm64 CPUs:
+    # For arm64 CPUs and without reverse proxy already in place:
     sudo docker run \
     --sig-proxy=false \
     --name nextcloud-aio-mastercontainer \
@@ -56,6 +53,7 @@ The following instructions are especially meant for Linux. For macOS see [this](
     <summary>Explanation of the command</summary>
 
     - `sudo docker run` This command spins up a new docker container. Docker commands can optionally be used without `sudo` if the user is added to the docker group (this is not the same as docker rootless, see FAQ below).
+    - `--sig-proxy=false` This option allows to exit the container shell that gets attached automatically when using `docker run` by using `[CTRL] + [C]` without shutting down the container.
     - `--name nextcloud-aio-mastercontainer` This is the name of the container. This line is not allowed to be changed, since mastercontainer updates would fail.
     - `--restart always` This is the "restart policy". `always` means that the container should always get started with the Docker daemon. See the Docker documentation for further detail about restart policies: https://docs.docker.com/config/containers/start-containers-automatically/
     - `--publish 80:80` This means that port 80 of the container should get published on the host using port 80. It is used for getting valid certificates for the AIO interface if you want to use port 8443. It is not needed if you run AIO behind a reverse proxy and can get removed in that case as you can simply use port 8080 for the AIO interface then.
@@ -64,7 +62,7 @@ The following instructions are especially meant for Linux. For macOS see [this](
     - `--volume nextcloud_aio_mastercontainer:/mnt/docker-aio-config` This means that the files that are created by the mastercontainer will be stored in a docker volume that is called `nextcloud_aio_mastercontainer`. This line is not allowed to be changed, since built-in backups would fail later on.
     - `--volume /var/run/docker.sock:/var/run/docker.sock:ro` The docker socket is mounted into the container which is used for spinning up all the other containers and for further features. It needs to be adjusted on Windows/macOS and on docker rootless. See the applicable documentation on this. If adjusting, don't forget to also set `DOCKER_SOCKET_PATH`! If you dislike this, see https://github.com/nextcloud/all-in-one/discussions/500#discussioncomment-2740767 and the whole thread for options.
     - `nextcloud/all-in-one:latest` or `nextcloud/all-in-one:latest-arm64` This is the docker container image that is used. See https://github.com/nextcloud/all-in-one/discussions/490 for why there are different images for the different CPU architectures.
-    - Further options can be set using environment variables, for example `--env TALK_PORT=3478`. To see explanations and examples for further variables (like changing the location of Nextcloud's datadir or mounting some locations as external storage into the Nextcloud container), read through this readme and look at the docker-compose file: https://github.com/nextcloud/all-in-one/blob/main/docker-compose.yml
+    - Further options can be set using environment variables, for example `-e NEXTCLOUD_DATADIR="/mnt/ncdata"` (This is an example for Linux. See [this](https://github.com/nextcloud/all-in-one#how-to-change-the-default-location-of-nextclouds-datadir) for other OS' and for an explanation of what this value does. This specific one needs to be specified upon the first startup if you want to change it to a specific path instead of the default Docker volume). To see explanations and examples for further variables (like changing the location of Nextcloud's datadir or mounting some locations as external storage into the Nextcloud container), read through this readme and look at the docker-compose file: https://github.com/nextcloud/all-in-one/blob/main/docker-compose.yml
     </details>
 
 3. After the initial startup, you should be able to open the Nextcloud AIO Interface now on port 8080 of this server.<br>
@@ -127,8 +125,13 @@ Also, you may be interested in adjusting Nextcloud's Datadir to store the files 
 ### How to run AIO with Portainer?
 The easiest way to run it with Portainer on Linux is to use Portainer's stacks feature and use [this docker-compose file](./docker-compose.yml) in order to start AIO correctly. 
 
-### How to run Nextcloud behind a Cloudflare Argo Tunnel?
-Although it does not seems like it is the case but from AIO perspective a Cloudflare Argo Tunnel works like a reverse proxy. So please follow the [reverse proxy documentation](./reverse-proxy.md) where is documented how to make it run behind a Cloudflare Argo Tunnel.
+### Notes on Cloudflare (proxy/tunnel)
+- Make sure to [disable Cloudflares Rocket Loader feature](https://help.nextcloud.com/t/login-page-not-working-solved/149417/8) as otherwise Nextcloud's login prompt will not be shown.
+- Cloudflare only supports uploading files up to 100 MB in the free plan, if you try to upload bigger files you will get an error (413 - Payload Too Large). If you need to upload bigger files, you need to disable the proxy option in your DNS settings, or you must use another proxy than Cloudflare tunnels. Both options will disable Cloudflare DDoS protection.
+- It is very likely that the in AIO included collabora (Nextcloud Office) does not work out of the box behind Cloudflare. You need to follow https://github.com/nextcloud/all-in-one/discussions/1358 in order to resolve this yourself. There is unfortunately no secure way to automate this for you.
+
+### How to run Nextcloud behind a Cloudflare Tunnel?
+Although it does not seems like it is the case but from AIO perspective a Cloudflare Tunnel works like a reverse proxy. So please follow the [reverse proxy documentation](./reverse-proxy.md) where is documented how to make it run behind a Cloudflare Tunnel.
 
 ### How to get Nextcloud running using the ACME DNS-challenge?
 You can install AIO in reverse proxy mode where is also documented how to get it running using the ACME DNS-challenge for getting a valid certificate for AIO. See the [reverse proxy documentation](./reverse-proxy.md). (Meant is the `Caddy with ACME DNS-challenge` section).
@@ -143,7 +146,7 @@ No and they will not be. If you want to run it locally, without opening Nextclou
 No and it will not be added. If you only want to run it locally, you may have a look at the following documentation: [local-instance.md](./local-instance.md)
 
 ### Are other ports than then default 443 for Nextcloud supported?
-No and they will not be. Please use a dedicated domain for Nextcloud and set it up correctly by following the [reverse proxy documentation](./reverse-proxy.md). If port 443 and/or 80 is blocked for you, you may use the ACME DNS-challenge or a Cloudflare Argo Tunnel.
+No and they will not be. Please use a dedicated domain for Nextcloud and set it up correctly by following the [reverse proxy documentation](./reverse-proxy.md). If port 443 and/or 80 is blocked for you, you may use the ACME DNS-challenge or a Cloudflare Tunnel.
 
 ### Can I run Nextcloud in a subdirectory on my domain?
 No and it will not be added. Please use a dedicated domain for Nextcloud and set it up correctly by following the [reverse proxy documentation](./reverse-proxy.md).

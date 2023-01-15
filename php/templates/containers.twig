@@ -11,12 +11,12 @@
         <form method="POST" action="/api/auth/logout">
             <input type="hidden" name="{{csrf.keys.name}}" value="{{csrf.name}}">
             <input type="hidden" name="{{csrf.keys.value}}" value="{{csrf.value}}">
-            <input class="button" type="submit" value="Log out" />
+            <input class="button" type="submit" id="logout" value="Log out" />
         </form>
     </header>
 
     <div class="content">
-        <h1>Nextcloud AIO v4.1.0</h1>
+        <h1>Nextcloud AIO v4.2.0</h1>
 
         {# Add 2nd tab warning #}
         <script type="text/javascript" src="second-tab-warning.js"></script>

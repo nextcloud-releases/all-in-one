@@ -124,16 +124,18 @@ You can get AIO running using the ACME DNS-challenge. Here is how to do it.
 
 </details>
 
-### Cloudflare Argo Tunnel
+### Cloudflare Tunnel
 
 <details>
 
 <summary>click here to expand</summary>
 
-Although it does not seems like it is the case but from AIO perspective a Cloudflare Argo Tunnel works like a reverse proxy. Here is how to make it work:
+Although it does not seems like it is the case but from AIO perspective a Cloudflare Tunnel works like a reverse proxy. Here is how to make it work:
 
-1. Install the Cloudflare Argo Tunnel on the same machine where AIO will be running on and point the Argo Tunnel with the domain that you want to use for AIO to `http://localhost:11000`. If the Argo Tunnel is running on a different machine, you can alternatively instead of `localhost` use the ip-address that is displayed after running the following command on the host OS: `ip a | grep "scope global" | head -1 | awk '{print $2}' | sed 's|/.*||'` (the command only works on Linux)
-1. Now continue with [point 2](#2-use-this-startup-command) but additionally, add `-e SKIP_DOMAIN_VALIDATION=true` to the docker run command which will disable the dommain validation (because it is known that the domain validation will not work behind a Cloudflare Argo Tunnel). So you need to ensure yourself that you've configured everything correctly.
+1. Install the Cloudflare Tunnel on the same machine where AIO will be running on and point the Tunnel with the domain that you want to use for AIO to `http://localhost:11000`. If the Tunnel is running on a different machine, you can alternatively instead of `localhost` use the ip-address that is displayed after running the following command on the host OS: `ip a | grep "scope global" | head -1 | awk '{print $2}' | sed 's|/.*||'` (the command only works on Linux)
+1. Now continue with [point 2](#2-use-this-startup-command) but additionally, add `-e SKIP_DOMAIN_VALIDATION=true` to the docker run command which will disable the dommain validation (because it is known that the domain validation will not work behind a Cloudflare Tunnel). So you need to ensure yourself that you've configured everything correctly.
+
+**Advice:** Make sure to [disable Cloudflares Rocket Loader feature](https://help.nextcloud.com/t/login-page-not-working-solved/149417/8) as otherwise Nextcloud's login prompt will not be shown.
 
 </details>
 
@@ -257,8 +259,8 @@ server {
     server_name <your-nc-domain>;
 
     location / {
-        resolver localhost;
-        proxy_pass http://localhost:11000$request_uri;
+        resolver localhost; # Note: you need to set a valid dns resolver here or use 127.0.0.1 / [::1] instead of localhost in the line below. See https://stackoverflow.com/a/49642310 for a better explanation
+        proxy_pass http://localhost:11000$request_uri; # Note: you need to change localhost to 127.0.0.1 or [::1], if you don't use a valid dns resolver in the line above
 
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
@@ -353,49 +355,65 @@ Of course you need to modify `<your-nc-domain>` to the domain on which you want 
 <summary>click here to expand</summary>
 
 **Disclaimer:** It might be possible that the config below is not working 100% correctly, yet. Improvements to it are very welcome!
+    
+The examples below define the dynamic configuration in YAML files. If you rather prefer TOML, use a YAML to TOML converter. 
 
-1. Add a `nextcloud.toml` to the Treafik rules folder with the following content:
+1. Add a `nextcloud.yml` to the Treafik rules folder with the following content
 
-    ```toml
-    [http.routers]
-        [http.routers.nc-rtr]
-            entryPoints = ["https"]
-            rule = "Host(<your-nc-domain>)"
-            service = "nc-svc"
-            middlewares = ["chain-no-auth"]
-            [http.routers.nc-rtr.tls]
-                certresolver = "le"
+    ```yml
+    http:
+        routers:
+            nextcloud:
+                rule: "Host(<your-nextcloud-domain>)"
+                entrypoints:
+                    - "https"
+                service: nextcloud
+                middlewares:
+                    - nextcloud-chain
+                tls:
+                    certresolver: "le"
 
-    [http.services]
-        [http.services.nc-svc]
-            [http.services.nc-svc.loadBalancer]
-                passHostHeader = true
-                [[http.services.nc-svc.loadBalancer.servers]]
-                    url = "http://localhost:11000"
+        services:
+            nextcloud:
+                loadBalancer:
+                    servers:
+                        - url: "http://localhost:11000"
     ```
 
-2. Add to the bottom of the `middlewares.toml` file in the Treafik rules folder the following content:
+2. Add to the bottom of the `middlewares.yml` file in the Treafik rules folder the following content:
 
-    ```toml
-    [http.middlewares.nc-middlewares-secure-headers]
-        [http.middlewares.nc-middlewares-secure-headers.headers]
-            hostsProxyHeaders = ["X-Forwarded-Host"]
-            sslRedirect = true
-            referrerPolicy = "same-origin"
-            X-Robots-Tag = "none"
+    ```yml
+    http:
+        middlewares:
+            nextcloud-secure-headers:
+                headers:
+                    hostsProxyHeaders:
+                        - "X-Forwarded-Host"
+                    referrerPolicy: "same-origin"
+                    customResponseHeaders:
+                        X-Robots-Tag: "none"
+
+            https-redirect:
+                redirectscheme:
+                    scheme: https
     ```
 
-3. Add to the bottom of the `middleware-chains.toml` file in the Traefik rules folder the following content:
+3. Add to the bottom of the `middleware-chains.yml` file in the Traefik rules folder the following content:
 
-    ```toml
-    [http.middlewares.chain-nc]
-        [http.middlewares.chain-nc.chain]
-            middlewares = [ "middlewares-rate-limit", "nc-middlewares-secure-headers"]
+    ```yml
+    http:
+        middlewares:
+            nextcloud-chain:
+                chain:
+                    middlewares:
+                        # - ... (e.g. rate limiting middleware)
+                        - "https-redirect"
+                        - "nextcloud-secure-headers"
     ```
 
 ---
 
-Of course you need to modify `<your-nc-domain>` in the nextcloud.toml to the domain on which you want to run Nextcloud. Also make sure to adjust the port 11000 to match the chosen APACHE_PORT. **Please note:** The above configuration will only work if your reverse proxy is running directly on the host that is running the docker daemon. If the reverse proxy is running in a docker container, you can use the `--network host` option (or `network_mode: host` for docker-compose) when starting the reverse proxy container in order to connect the reverse proxy container to the host network. If that is not an option for you, you can alternatively instead of `localhost` use the ip-address that is displayed after running the following command on the host OS: `ip a | grep "scope global" | head -1 | awk '{print $2}' | sed 's|/.*||'` (the command only works on Linux)
+Of course you need to modify `<your-nextcloud-domain>` in the nextcloud.toml to the domain on which you want to run Nextcloud. Also make sure to adjust the port 11000 to match the chosen APACHE_PORT. **Please note:** The above configuration will only work if your reverse proxy is running directly on the host that is running the docker daemon. If the reverse proxy is running in a docker container, you can use the `--network host` option (or `network_mode: host` for docker-compose) when starting the reverse proxy container in order to connect the reverse proxy container to the host network. If that is not an option for you, you can alternatively instead of `localhost` use the ip-address that is displayed after running the following command on the host OS: `ip a | grep "scope global" | head -1 | awk '{print $2}' | sed 's|/.*||'` (the command only works on Linux)
 
 </details>
 
