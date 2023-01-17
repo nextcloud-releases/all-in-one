@@ -122,13 +122,19 @@ docker volume create ^
 
 Also, you may be interested in adjusting Nextcloud's Datadir to store the files on the host system. See [this documentation](https://github.com/nextcloud/all-in-one#how-to-change-the-default-location-of-nextclouds-datadir) on how to do it.
 
+⚠️ **Please note:** Almost all commands in this project's documentation use `sudo docker ...`. Since `sudo` is not available on Windows, you simply remove `sudo` from the commands and they should work.  
+
 ### How to run AIO with Portainer?
 The easiest way to run it with Portainer on Linux is to use Portainer's stacks feature and use [this docker-compose file](./docker-compose.yml) in order to start AIO correctly. 
 
 ### Notes on Cloudflare (proxy/tunnel)
+- It is known that the domain validation may not work correctly behind Cloudflare. You can simply skip it in that case by following: https://github.com/nextcloud/all-in-one#how-to-skip-the-domain-validation
 - Make sure to [disable Cloudflares Rocket Loader feature](https://help.nextcloud.com/t/login-page-not-working-solved/149417/8) as otherwise Nextcloud's login prompt will not be shown.
 - Cloudflare only supports uploading files up to 100 MB in the free plan, if you try to upload bigger files you will get an error (413 - Payload Too Large). If you need to upload bigger files, you need to disable the proxy option in your DNS settings, or you must use another proxy than Cloudflare tunnels. Both options will disable Cloudflare DDoS protection.
 - It is very likely that the in AIO included collabora (Nextcloud Office) does not work out of the box behind Cloudflare. You need to follow https://github.com/nextcloud/all-in-one/discussions/1358 in order to resolve this yourself. There is unfortunately no secure way to automate this for you.
+- If you get an error in Nextcloud's admin overview that the HSTS header is not set correctly, you might need to enable it in Cloudflare manually.
+- If you are using AIO's built-in Reverse Proxy and don't use your own, then may the certificate issuing possibly not work out-of-the-box because Cloudflare might block the attempt. In that case you need to disable the Proxy feature at least temporarily in order to make it work. See https://github.com/nextcloud/all-in-one/discussions/1101.
+- The built-in High performance backend for Nextcloud Talk will potentially not work out-of-the-box since it needs a separate port (by default 3478 or as chosen) available on the same domain. If you still want to use the feature, you will need to adjust and test your settings in `https://yourdomain.com/settings/admin/talk`.
 
 ### How to run Nextcloud behind a Cloudflare Tunnel?
 Although it does not seems like it is the case but from AIO perspective a Cloudflare Tunnel works like a reverse proxy. So please follow the [reverse proxy documentation](./reverse-proxy.md) where is documented how to make it run behind a Cloudflare Tunnel.
@@ -489,7 +495,7 @@ You can run AIO also with docker rootless. How to do this is documented here: [d
 ### How to change the Nextcloud apps that are installed on the first startup?
 You might want to adjust the Nextcloud apps that are installed upon the first startup of the Nextcloud container. You can do so by adding `-e NEXTCLOUD_STARTUP_APPS="deck twofactor_totp tasks calendar contacts"` to the docker run command of the mastercontainer and customize the value to your fitting. It must be a string with small letters a-z, spaces and hyphens or '_'. You can disable shipped and by default enabled apps by adding a hyphen in front of the appid. E.g. `-contactsinteraction`.
 
-### How to add packets permanently to the Nextcloud container?
+### How to add OS packages permanently to the Nextcloud container?
 Some Nextcloud apps require additional external dependencies that must be bundled within Nextcloud container in order to work correctly. As we cannot put each and every dependency for all apps into the container - as this would make the project very fast unmaintainable - there is an official way how you can add additional dependencies into the Nextcloud container. However note that doing this is disrecommended since we do not test Nextcloud apps that require external dependencies. 
 
 You can do so by adding `-e NEXTCLOUD_ADDITIONAL_APKS="imagemagick dependency2 dependency3"` to the docker run command of the mastercontainer and customize the value to your fitting. It must be a string with small letters a-z, digits 0-9, spaces, dots and hyphens or '_'. You can find available packages here: https://pkgs.alpinelinux.org/packages?name=&branch=v3.16&repo=&arch=&maintainer=. By default added is `imagemagick`. If you want to keep that, you need to specify it as well.
@@ -503,7 +509,7 @@ You can do so by adding `-e NEXTCLOUD_ADDITIONAL_PHP_EXTENSIONS="imagick extensi
 The [facerecognition app](https://apps.nextcloud.com/apps/facerecognition) requires the pdlib PHP extension to be installed. Unfortunately, it is not available on PECL nor via PHP core, so there is no way to add this into AIO currently. However you can vote up [this issue](https://github.com/goodspb/pdlib/issues/56) to bring it to PECL and there is the [recognize app](https://apps.nextcloud.com/apps/recognize) that also allows to do face-recognition.
 
 ### How to enable hardware-transcoding for Nextcloud?
-The [memories app](https://apps.nextcloud.com/apps/memories) allows to enable hardware transcoding for videos. In order to use that, you need to add `-e NEXTCLOUD_ENABLE_DRI_DEVICE=true` to the docker run command of the mastercontainer which will mount the `/dev/dri` device into the container (⚠️ Attention: this only works if the device is present on the host!). Additionally, you need to add required packets to the Nextcloud container by using [this feature](https://github.com/nextcloud/all-in-one#how-to-add-packets-permanently-to-the-nextcloud-container) and adding the required Alpine packages that are documented [here](https://github.com/pulsejet/memories/wiki/QSV-Transcoding).
+The [memories app](https://apps.nextcloud.com/apps/memories) allows to enable hardware transcoding for videos. In order to use that, you need to add `-e NEXTCLOUD_ENABLE_DRI_DEVICE=true` to the docker run command of the mastercontainer which will mount the `/dev/dri` device into the container (⚠️ Attention: this only works if the device is present on the host!). Additionally, you need to add required packets to the Nextcloud container by using [this feature](https://github.com/nextcloud/all-in-one#how-to-add-os-packages-permanently-to-the-nextcloud-container) and adding the required Alpine packages that are documented [here](https://github.com/pulsejet/memories/wiki/QSV-Transcoding).
 
 ### Huge docker logs
 When your containers run for a few days without a restart, the container logs that you can view from the AIO interface can get really huge. You can limit the loge sizes by enabling logrotate for docker container logs. Feel free to enable this by following those instructions: https://sandro-keil.de/blog/logrotate-for-docker-container/
