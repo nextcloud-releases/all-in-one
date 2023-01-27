@@ -43,7 +43,7 @@ jobs:
         uses: docker/setup-qemu-action@v2
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v2
         with:
           # Needed since on newer versions 'application/vnd.oci.image.index.v1+json' is used which the update check does not check for
           # TODO upgrade at some point in the future, maybe 2024?
