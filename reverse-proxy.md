@@ -56,7 +56,7 @@ Add this as a new Apache site config:
     Protocols h2 h2c http/1.1
     
     # Solves slow upload speeds caused by http2
-    H2WindowSize 1048576
+    H2WindowSize 5242880
 
     # SSL
     SSLEngine on
@@ -258,9 +258,6 @@ server {
 
     listen 443 ssl http2;
     listen [::]:443 ssl http2; # comment to disable IPv6
-    
-    # Solves slow upload speeds caused by http2
-    http2_body_preread_size 1048576;
 
     server_name <your-nc-domain>;
 
@@ -268,9 +265,17 @@ server {
         resolver localhost; # Note: you need to set a valid dns resolver here or use 127.0.0.1 / [::1] instead of localhost in the line below. See https://stackoverflow.com/a/49642310 for a better explanation
         proxy_pass http://localhost:11000$request_uri; # Note: you need to change localhost to 127.0.0.1 or [::1], if you don't use a valid dns resolver in the line above
 
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Port $server_port;
+        proxy_set_header Early-Data $ssl_early_data;
+        proxy_set_header X-Forwarded-Scheme $scheme;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header Accept-Encoding "";
+        proxy_set_header Host $host;
+    
+        client_body_buffer_size 512k;
+        proxy_read_timeout 86400s;
         client_max_body_size 0;
 
         # Websocket
@@ -282,6 +287,7 @@ server {
     ssl_certificate /etc/letsencrypt/live/<your-nc-domain>/fullchain.pem;   # managed by certbot on host machine
     ssl_certificate_key /etc/letsencrypt/live/<your-nc-domain>/privkey.pem; # managed by certbot on host machine
 
+    ssl_early_data on;
     ssl_session_timeout 1d;
     ssl_session_cache shared:MozSSL:10m; # about 40000 sessions
     ssl_session_tickets off;
@@ -322,13 +328,19 @@ Apart from that, there is this: [manual-install](https://github.com/nextcloud/al
 
 See these screenshots for a working config:
 
-![image](https://user-images.githubusercontent.com/75573284/169556183-2999a733-de42-4008-af09-d4151719a474.png)
+![grafik](https://user-images.githubusercontent.com/75573284/213889707-b7841ca0-3ea7-4321-acf6-50e1c1649442.png)
 
-![image](https://user-images.githubusercontent.com/75573284/169555356-71f32be5-99b5-43ea-8aa7-632c8ef8fad3.png)
+![grafik](https://user-images.githubusercontent.com/75573284/213889724-1ab32264-3e0c-4d83-b067-9fe9d1672fb2.png)
 
-![image](https://user-images.githubusercontent.com/75573284/169557664-52db8713-f0ef-42ac-a161-de40280232a3.png)
+![grafik](https://user-images.githubusercontent.com/75573284/213889797-42642302-b079-4378-a4a6-079f4f67058c.png)
 
-![image](https://user-images.githubusercontent.com/75573284/169555441-dd9a42f5-aea5-4082-8e26-7adcfa4e6cfa.png)
+![grafik](https://user-images.githubusercontent.com/75573284/213889746-87dbe8c5-4d1f-492f-b251-bbf82f1510d0.png)
+
+```
+client_body_buffer_size 512k;
+proxy_read_timeout 86400s;
+client_max_body_size 0;
+```
 
 Of course you need to modify `<your-nc-domain>` to the domain on which you want to run Nextcloud. Also change `<you>@<your-mail-provider-domain>` to a mail address of yours. Also make sure to adjust the port 11000 to match the chosen APACHE_PORT. **Please note:** The above configuration will only work if your reverse proxy is running directly on the host that is running the docker daemon. If the reverse proxy is running in a docker container, you can use the `--network host` option (or `network_mode: host` for docker-compose) when starting the reverse proxy container in order to connect the reverse proxy container to the host network. If that is not an option for you, you can alternatively instead of `localhost` use the ip-address that is displayed after running the following command on the host OS: `ip a | grep "scope global" | head -1 | awk '{print $2}' | sed 's|/.*||'` (the command only works on Linux)
 
@@ -348,7 +360,7 @@ See these screenshots for a working config:
 
 ![image](https://user-images.githubusercontent.com/89748315/192525606-48cab54b-866e-4964-90a8-15e71bd362fb.png)
 
-![image](https://user-images.githubusercontent.com/89748315/192525681-c06f3b39-f510-458e-b1f2-6b2cd995e24c.png)
+![image](https://user-images.githubusercontent.com/70434961/213193789-fa936edc-e307-4e6a-9a53-ae26d1bf2f42.jpg)
 
 Of course you need to modify `<your-nc-domain>` to the domain on which you want to run Nextcloud. Also make sure to adjust the port 11000 to match the chosen APACHE_PORT. **Please note:** The above configuration will only work if your reverse proxy is running directly on the host that is running the docker daemon. If the reverse proxy is running in a docker container, you can use the `--network host` option (or `network_mode: host` for docker-compose) when starting the reverse proxy container in order to connect the reverse proxy container to the host network. If that is not an option for you, you can alternatively instead of `localhost` use the ip-address that is displayed after running the following command on the host OS: `ip a | grep "scope global" | head -1 | awk '{print $2}' | sed 's|/.*||'` (the command only works on Linux)
 
@@ -362,9 +374,34 @@ Of course you need to modify `<your-nc-domain>` to the domain on which you want 
 
 **Disclaimer:** It might be possible that the config below is not working 100% correctly, yet. Improvements to it are very welcome!
 
+Traefik's building blocks (router, service, middlewares) need to be defined using dynamic configuration similar to [this](https://doc.traefik.io/traefik/providers/file/#configuration-examples) official Traefik configuration example. Using **docker labels _won't work_** because of the nature of the project.
+
 The examples below define the dynamic configuration in YAML files. If you rather prefer TOML, use a YAML to TOML converter.
 
-1. Add a `nextcloud.yml` to the Treafik rules folder with the following content
+1. In Traefik's static configuration define a [file provider](https://doc.traefik.io/traefik/providers/file/) for dynamic providers:
+
+    ```yml
+    # STATIC CONFIGURATION
+   
+    entryPoints:
+        https:
+            address: ":443" # Create an entrypoint called "https" that uses port 443
+    
+    certificatesResolvers:
+        # Define "letsencrypt" certificate resolver
+        letsencrypt:
+            acme:
+                storage: /letsencrypt/acme.json # Defines the path where certificates should be stored
+                email: <your-email-address> # Where LE sends notification about certificates expiring
+                tlschallenge: true
+   
+    providers:
+        file:
+            directory: "/path/to/dynamic/conf" # Adjust the path according your needs.
+            watch: true
+    ```
+
+1. Declare the router, service and middlewares for Nextcloud in `/path/to/dynamic/conf/nextcloud.yml`:
 
     ```yml
     http:
@@ -377,19 +414,14 @@ The examples below define the dynamic configuration in YAML files. If you rather
                 middlewares:
                     - nextcloud-chain
                 tls:
-                    certresolver: "le"
+                    certresolver: "letsencrypt"
 
         services:
             nextcloud:
                 loadBalancer:
                     servers:
-                        - url: "http://localhost:11000"
-    ```
+                        - url: "http://localhost:11000" # Use the host's IP address if Traefik runs outside the host network
 
-2. Add to the bottom of the `middlewares.yml` file in the Treafik rules folder the following content:
-
-    ```yml
-    http:
         middlewares:
             nextcloud-secure-headers:
                 headers:
@@ -401,25 +433,21 @@ The examples below define the dynamic configuration in YAML files. If you rather
 
             https-redirect:
                 redirectscheme:
-                    scheme: https
-    ```
-
-3. Add to the bottom of the `middleware-chains.yml` file in the Traefik rules folder the following content:
-
-    ```yml
-    http:
-        middlewares:
+                    scheme: https 
+   
             nextcloud-chain:
                 chain:
                     middlewares:
                         # - ... (e.g. rate limiting middleware)
-                        - "https-redirect"
-                        - "nextcloud-secure-headers"
+                        - https-redirect
+                        - nextcloud-secure-headers
     ```
 
 ---
 
-Of course you need to modify `<your-nextcloud-domain>` in the nextcloud.toml to the domain on which you want to run Nextcloud. Also make sure to adjust the port 11000 to match the chosen APACHE_PORT. **Please note:** The above configuration will only work if your reverse proxy is running directly on the host that is running the docker daemon. If the reverse proxy is running in a docker container, you can use the `--network host` option (or `network_mode: host` for docker-compose) when starting the reverse proxy container in order to connect the reverse proxy container to the host network. If that is not an option for you, you can alternatively instead of `localhost` use the ip-address that is displayed after running the following command on the host OS: `ip a | grep "scope global" | head -1 | awk '{print $2}' | sed 's|/.*||'` (the command only works on Linux)
+Of course you need to modify `<your-nextcloud-domain>` in the `nextcloud.yml` to the domain on which you want to run Nextcloud. Also make sure to adjust the port `11000` to match the chosen `APACHE_PORT`. 
+    
+**Please note:** The above configuration will only work if your reverse proxy is running directly on the host that is running the docker daemon. If the reverse proxy is running in a docker container, you can use the `--network host` option (or `network_mode: host` for docker-compose) when starting the reverse proxy container in order to connect the reverse proxy container to the host network. If that is not an option for you, you can alternatively instead of `localhost` use the ip-address that is displayed after running the following command on the host OS: `ip a | grep "scope global" | head -1 | awk '{print $2}' | sed 's|/.*||'` (the command only works on Linux)
 
 </details>
 
@@ -491,7 +519,11 @@ docker run ^
 nextcloud/all-in-one:latest
 ```
 
+Also, you may be interested in adjusting Nextcloud's Datadir to store the files on the host system. See [this documentation](https://github.com/nextcloud/all-in-one#how-to-change-the-default-location-of-nextclouds-datadir) on how to do it.
+
 </details>
+
+On Synology DSM see https://github.com/nextcloud/all-in-one#how-to-run-aio-on-synology-dsm
 
 ### Inspiration for a docker-compose file
 
