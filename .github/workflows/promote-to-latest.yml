@@ -72,11 +72,8 @@ jobs:
             if [ -n "$PHP_VERSION" ]; then
                 # multiarch
                 docker buildx imagetools create --tag nextcloud/$AIO_NAME\:php"$PHP_VERSION"-latest nextcloud/$AIO_NAME\:beta
-                
                 # arm64
-                if [ "$AIO_NAME" != "aio-clamav" ]; then
-                    docker buildx imagetools create --tag nextcloud/$AIO_NAME\:php"$PHP_VERSION"-latest-arm64 nextcloud/$AIO_NAME\:beta-arm64
-                fi
+                docker buildx imagetools create --tag nextcloud/$AIO_NAME\:php"$PHP_VERSION"-latest-arm64 nextcloud/$AIO_NAME\:beta-arm64
             fi
             set +x
         fi
