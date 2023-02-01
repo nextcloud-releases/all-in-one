@@ -68,7 +68,7 @@ jobs:
             set -x
             docker pull nextcloud/$AIO_NAME\:beta
             PHP_VERSION="$(docker inspect nextcloud/$AIO_NAME\:beta | grep PHP_VERSION | grep -oP '[0-8.]+' | sed 's|\.[0-9]\+$||')"
-            docker image remove nextcloud/$AIO_NAME\:beta
+            docker image remove --force nextcloud/$AIO_NAME\:beta
             if [ -n "$PHP_VERSION" ]; then
                 # multiarch
                 docker buildx imagetools create --tag nextcloud/$AIO_NAME\:php"$PHP_VERSION"-latest nextcloud/$AIO_NAME\:beta
