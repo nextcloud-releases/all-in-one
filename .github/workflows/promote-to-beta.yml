@@ -48,7 +48,7 @@ jobs:
             # arm64
             docker buildx imagetools create --tag nextcloud/$AIO_NAME\:beta-arm64 nextcloud/$AIO_NAME\:develop-arm64
             
-        elif [ "$AIO_NAME" == "aio-clamav" ]; then
+        else
             # amd64
             docker buildx imagetools create --tag nextcloud/$AIO_NAME\:beta nextcloud/$AIO_NAME\:develop
         fi
