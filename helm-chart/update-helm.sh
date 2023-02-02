@@ -26,6 +26,8 @@ sed -i "s|\${IMAGE_TAG}|$DOCKER_TAG\${IMAGE_TAG}|" latest.yml
 sed -i "s|\${APACHE_IP_BINDING}|$APACHE_IP_BINDING|" latest.yml
 sed -i "s|\${APACHE_PORT}:\${APACHE_PORT}/|$APACHE_PORT:$APACHE_PORT/|" latest.yml
 sed -i "s|\${TALK_PORT}:\${TALK_PORT}/|$TALK_PORT:$TALK_PORT/|g" latest.yml
+sed -i "s|- \${APACHE_PORT}|- $APACHE_PORT|" latest.yml
+sed -i "s|- \${TALK_PORT}|- $TALK_PORT|" latest.yml
 sed -i "s|\${NEXTCLOUD_DATADIR}|$NEXTCLOUD_DATADIR|" latest.yml
 sed -i "/NEXTCLOUD_DATADIR/d" latest.yml
 sed -i "/\${NEXTCLOUD_MOUNT}/d" latest.yml
@@ -49,12 +51,24 @@ cat << EOL > /tmp/initcontainers
             - "777"
           volumeMountsInitContainer:
 EOL
+cat << EOL > /tmp/initcontainers.database
+        - name: init-volumes
+          image: alpine
+          command:
+            - chown
+            - 999:999
+          volumeMountsInitContainer:
+EOL
 # shellcheck disable=SC1083
 DEPLOYMENTS="$(find ./ -name '*deployment.yaml')"
 mapfile -t DEPLOYMENTS <<< "$DEPLOYMENTS"
 for variable in "${DEPLOYMENTS[@]}"; do
     if grep -q volumeMounts "$variable"; then
-        sed -i "/^    spec:/r /tmp/initcontainers" "$variable"
+        if ! echo "$variable" | grep -q database; then
+            sed -i "/^    spec:/r /tmp/initcontainers" "$variable"
+        else
+            sed -i "/^    spec:/r /tmp/initcontainers.database" "$variable"
+        fi
         volumeNames="$(grep -A1 mountPath "$variable" | grep -v mountPath | sed 's|.*name: ||' | sed '/^--$/d')"
         mapfile -t volumeNames <<< "$volumeNames"
         for volumeName in "${volumeNames[@]}"; do
@@ -62,6 +76,15 @@ for variable in "${DEPLOYMENTS[@]}"; do
             sed -i "/volumeMountsInitContainer:/a\ \ \ \ \ \ \ \ \ \ \ \ - name: $volumeName\n\ \ \ \ \ \ \ \ \ \ \ \ \ \ mountPath: /$volumeName" "$variable"
         done
         sed -i "s|volumeMountsInitContainer|volumeMounts|" "$variable"
+        if grep -q claimName "$variable"; then
+            claimNames="$(grep claimName "$variable")"
+            mapfile -t claimNames <<< "$claimNames"
+            for claimName in "${claimNames[@]}"; do
+                if grep -A1 "^$claimName$" "$variable" | grep -q "readOnly: true"; then
+                    sed -i "/^$claimName$/{n;d}" "$variable"
+                fi
+            done
+        fi
     fi
 done
 # shellcheck disable=SC1083
