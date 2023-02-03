@@ -17,9 +17,6 @@
           "protocol": "tcp"
         }
       ],
-      "expose": [
-        "%APACHE_PORT%"
-      ],
       "internal_port": "%APACHE_PORT%",
       "environment": [
         "NC_DOMAIN=%NC_DOMAIN%",
@@ -235,7 +232,7 @@
         }
       ],
       "expose": [
-        "%TALK_PORT%"
+        "8081"
       ],
       "internal_port": "%TALK_PORT%",
       "environment": [
