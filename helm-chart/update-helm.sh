@@ -73,8 +73,11 @@ for variable in "${DEPLOYMENTS[@]}"; do
         volumeNames="$(grep -A1 mountPath "$variable" | grep -v mountPath | sed 's|.*name: ||' | sed '/^--$/d')"
         mapfile -t volumeNames <<< "$volumeNames"
         for volumeName in "${volumeNames[@]}"; do
-            sed -i "/^.*volumeMountsInitContainer:/i\ \ \ \ \ \ \ \ \ \ \ \ - /$volumeName" "$variable"
-            sed -i "/volumeMountsInitContainer:/a\ \ \ \ \ \ \ \ \ \ \ \ - name: $volumeName\n\ \ \ \ \ \ \ \ \ \ \ \ \ \ mountPath: /$volumeName" "$variable"
+            # The Nextcloud container runs as root user and sets the correct permissions automatically for the data-dir if the www-data user cannot write to it
+            if [ "$volumeName" != "nextcloud-aio-nextcloud-data" ]; then
+                sed -i "/^.*volumeMountsInitContainer:/i\ \ \ \ \ \ \ \ \ \ \ \ - /$volumeName" "$variable"
+                sed -i "/volumeMountsInitContainer:/a\ \ \ \ \ \ \ \ \ \ \ \ - name: $volumeName\n\ \ \ \ \ \ \ \ \ \ \ \ \ \ mountPath: /$volumeName" "$variable"
+            fi
         done
         sed -i "s|volumeMountsInitContainer|volumeMounts|" "$variable"
         if grep -q claimName "$variable"; then
@@ -110,6 +113,22 @@ find ./ -name '*talk*' -exec sed -i "s|$TALK_PORT|{{ .Values.TALK_PORT }}|" \{} 
 find ./ -name '*apache-service.yaml' -exec sed -i "/^spec:/a\ \ type: LoadBalancer" \{} \;
 # shellcheck disable=SC1083
 find ./ -name '*talk-service.yaml' -exec sed -i "/^spec:/a\ \ type: LoadBalancer" \{} \;
+echo '---' > /tmp/talk-service.copy
+# shellcheck disable=SC1083
+find ./ -name '*talk-service.yaml' -exec cat \{} \; >> /tmp/talk-service.copy
+sed -i 's|name: nextcloud-aio-talk|name: nextcloud-aio-talk-public|' /tmp/talk-service.copy
+# shellcheck disable=SC1083
+INTERNAL_TALK_PORTS="$(find ./ -name '*talk-deployment.yaml' -exec grep -oP 'containerPort: [0-9]+' \{} \;)"
+mapfile -t INTERNAL_TALK_PORTS <<< "$INTERNAL_TALK_PORTS"
+for port in "${INTERNAL_TALK_PORTS[@]}"; do
+    port="$(echo "$port" | grep -oP '[0-9]+')"
+    sed -i "/$port/d" /tmp/talk-service.copy
+done
+echo '---' >>  /tmp/talk-service.copy
+# shellcheck disable=SC1083
+find ./ -name '*talk-service.yaml' -exec grep -v '{{ .Values.*}}\|protocol: UDP\|type: LoadBalancer' \{} \; >> /tmp/talk-service.copy
+# shellcheck disable=SC1083
+find ./ -name '*talk-service.yaml' -exec mv /tmp/talk-service.copy \{} \;
 # shellcheck disable=SC1083
 find ./ -name '*.yaml' -exec sed -i "s|'{{|\"{{|g;s|}}'|}}\"|g" \{} \; 
 # shellcheck disable=SC1083
@@ -153,6 +172,7 @@ sed -i '/^NEXTCLOUD_DATADIR/d' /tmp/sample.conf
 sed -i '/^APACHE_IP_BINDING/d' /tmp/sample.conf
 sed -i '/^NEXTCLOUD_MOUNT/d' /tmp/sample.conf
 sed -i '/_ENABLED.*/s/ yes / "yes" /' /tmp/sample.conf
+sed -i '/_ENABLED.*/s/ no / "no" /' /tmp/sample.conf
 sed -i 's|^NEXTCLOUD_TRUSTED_CACERTS_DIR: .*|NEXTCLOUD_TRUSTED_CACERTS_DIR:        # Setting this to any value allows to automatically import root certificates into the Nextcloud container|' /tmp/sample.conf
 # shellcheck disable=SC2129
 echo 'STORAGE_CLASS:        # By setting this, you can adjust the storage class for your volumes' >> /tmp/sample.conf

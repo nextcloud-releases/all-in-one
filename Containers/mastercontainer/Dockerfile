@@ -2,7 +2,7 @@
 FROM docker:20.10.23-dind as dind
 
 # Caddy is a requirement
-FROM caddy:2.6.2-alpine as caddy
+FROM caddy:2.6.3-alpine as caddy
 
 # From https://github.com/docker-library/php/blob/master/8.1/alpine3.17/fpm/Dockerfile
 FROM php:8.1.15-fpm-alpine3.17
@@ -58,6 +58,9 @@ RUN set -ex; \
     )"; \
     apk add --virtual .nextcloud-aio-rundeps $runDeps; \
     apk del .build-deps; \
+    grep -q '^pm = dynamic' /usr/local/etc/php-fpm.d/www.conf; \
+    sed -i 's/^pm = dynamic/pm = ondemand/' /usr/local/etc/php-fpm.d/www.conf; \
+    sed -i 's/^pm.max_children =.*/pm.max_children = 80/' /usr/local/etc/php-fpm.d/www.conf; \
     sed -i 's|access.log = /proc/self/fd/2|access.log = /proc/self/fd/1|' /usr/local/etc/php-fpm.d/docker.conf
 
 COPY --from=caddy /usr/bin/caddy /usr/bin/
