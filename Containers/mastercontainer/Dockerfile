@@ -18,16 +18,13 @@ EXPOSE 80
 EXPOSE 8080
 EXPOSE 8443
 
-RUN mkdir -p /mnt/docker-aio-config/;
-
-VOLUME /mnt/docker-aio-config/
-
 RUN mkdir -p /var/www/docker-aio;
 
 WORKDIR /var/www/docker-aio
 
 RUN set -ex; \
     apk add --no-cache \
+        util-linux-misc \
         ca-certificates \
         wget \
         tzdata \

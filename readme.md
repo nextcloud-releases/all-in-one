@@ -18,8 +18,7 @@ The following instructions are meant for installations without a web server or r
     curl -fsSL get.docker.com | sudo sh
     ```
 1. If you need ipv6 support, you should enable it by following https://docs.docker.com/config/daemon/ipv6/.
-2. Run the command below in order to start the container:<br><br>
-    (For people that cannot use ports 80 and/or 443 on this server e.g. because it is already taken by a different web server, please follow the [reverse proxy documentation](https://github.com/nextcloud/all-in-one/blob/main/reverse-proxy.md) because port 443 is used by this project and opened on the host by default even though it does not look like this is the case. Otherwise please run the command below!)
+2. Run the command below in order to start the container:
     ```
     # For Linux and without a web server or reverse proxy (like Apache, Nginx and else) already in place:
     sudo docker run \
@@ -48,6 +47,8 @@ The following instructions are meant for installations without a web server or r
     - `nextcloud/all-in-one:latest` This is the docker container image that is used.
     - Further options can be set using environment variables, for example `-e NEXTCLOUD_DATADIR="/mnt/ncdata"` (This is an example for Linux. See [this](https://github.com/nextcloud/all-in-one#how-to-change-the-default-location-of-nextclouds-datadir) for other OS' and for an explanation of what this value does. This specific one needs to be specified upon the first startup if you want to change it to a specific path instead of the default Docker volume). To see explanations and examples for further variables (like changing the location of Nextcloud's datadir or mounting some locations as external storage into the Nextcloud container), read through this readme and look at the docker-compose file: https://github.com/nextcloud/all-in-one/blob/main/docker-compose.yml
     </details>
+
+    Note: You may be interested in adjusting Nextcloud’s datadir to store the files in a different location than the default docker volume. See [this documentation](https://github.com/nextcloud/all-in-one#how-to-change-the-default-location-of-nextclouds-datadir) on how to do it.
 
 3. After the initial startup, you should be able to open the Nextcloud AIO Interface now on port 8080 of this server.<br>
 E.g. `https://ip.address.of.this.server:8080`<br><br>
@@ -141,7 +142,7 @@ Although it does not seems like it is the case but from AIO perspective a Cloudf
 In general recommended VPS are those that are KVM/non-virtualized as Docker should work best on them.
 
 ### Note on storage options
-- SD-cards are discrecommended for AIO since they cripple the performance and they are not meant for many write operations which is needed for the database and other parts
+- SD-cards are disrecommended for AIO since they cripple the performance and they are not meant for many write operations which is needed for the database and other parts
 - SSD storage is recommended
 - HDD storage should work as well but is of course much slower than SSD storage
 
@@ -166,6 +167,7 @@ No and it will not be added. Please use a dedicated domain for Nextcloud and set
 ### How can I access Nextcloud locally?
 The recommended way is to set up a local dns-server like a pi-hole and set up a custom dns-record for that domain that points to the internal ip-adddress of your server that runs Nextcloud AIO. Below are some guides:
 - https://www.howtogeek.com/devops/how-to-run-your-own-dns-server-on-your-local-network/
+- https://help.nextcloud.com/t/need-help-to-configure-internal-access/156075/6
 - https://howchoo.com/pi/pi-hole-setup together with https://docs.callitkarma.me/posts/PiHole-Local-DNS/
 - https://dockerlabs.collabnix.com/intermediate/networking/Configuring_DNS.html
 
@@ -418,7 +420,7 @@ Afterwards apply the correct permissions with `sudo chown root:root /root/backup
 ### How to stop/start/update containers or trigger the daily backup from a script externally?
 You can do so by running the `/daily-backup.sh` script that is stored in the mastercontainer. It accepts the following environmental varilables:
 - `AUTOMATIC_UPDATES` if set to `1`, it will automatically stop the containers, update them and start them including the mastercontainer. If the mastercontainer gets updated, this script's execution will stop as soon as the mastercontainer gets stopped. You can then wait until it is started again and run the script with this flag again in order to update all containers correctly afterwards.
-- `DAILY_BACKUP` if set to `1`, it will automatically stop the containers and create a backup. If you want to start them again afterwards, you may have a look at the `START_CONTAINERS` option. Please be aware that this option is non-blocking if `START_CONTAINERS` and `AUTOMATIC_UPDATES` is not enabled at the same time which means that the backup check is not done when the process is finished since it only start the borgbackup container with the correct configuration.
+- `DAILY_BACKUP` if set to `1`, it will automatically stop the containers and create a backup. If you want to start them again afterwards, you may have a look at the `START_CONTAINERS` option.
 - `START_CONTAINERS` if set to `1`, it will automatically start the containers without updating them.
 - `STOP_CONTAINERS` if set to `1`, it will automatically stop the containers.
 - `CHECK_BACKUP` if set to `1`, it will start the backup check. This is not allowed to be enabled at the same time like `DAILY_BACKUP`. Please be aware that this option is non-blocking which means that the backup check is not done when the process is finished since it only start the borgbackup container with the correct configuration.

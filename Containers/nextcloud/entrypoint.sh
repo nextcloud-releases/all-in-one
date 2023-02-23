@@ -215,19 +215,21 @@ if ! [ -f "$NEXTCLOUD_DATA_DIR/skip.update" ]; then
             # Try to force generation of appdata dir:
             php /var/www/html/occ maintenance:repair
 
-            max_retries=10
-            try=0
-            while [ -z "$(find "$NEXTCLOUD_DATA_DIR/" -maxdepth 1 -mindepth 1 -type d -name "appdata_*")" ] && [ "$try" -lt "$max_retries" ]; do
-                echo "Waiting for appdata to become available..."
-                try=$((try+1))
-                sleep 10s
-            done
+            if [ -z "$OBJECTSTORE_S3_BUCKET" ] && [ -z "$OBJECTSTORE_SWIFT_URL" ]; then
+                max_retries=10
+                try=0
+                while [ -z "$(find "$NEXTCLOUD_DATA_DIR/" -maxdepth 1 -mindepth 1 -type d -name "appdata_*")" ] && [ "$try" -lt "$max_retries" ]; do
+                    echo "Waiting for appdata to become available..."
+                    try=$((try+1))
+                    sleep 10s
+                done
 
-            if [ "$try" -ge "$max_retries" ]; then
-                echo "Installation of Nextcloud failed!"
-                echo "Install errors: $(cat /var/www/html/data/nextcloud.log)"
-                touch "$NEXTCLOUD_DATA_DIR/install.failed"
-                exit 1
+                if [ "$try" -ge "$max_retries" ]; then
+                    echo "Installation of Nextcloud failed!"
+                    echo "Install errors: $(cat /var/www/html/data/nextcloud.log)"
+                    touch "$NEXTCLOUD_DATA_DIR/install.failed"
+                    exit 1
+                fi
             fi
 
             # unset admin password
@@ -357,18 +359,18 @@ else
     SKIP_UPDATE=1
 fi
 
-# Check if appdata is present
-# If not, something broke (e.g. changing ncdatadir after aio was first started)
-if [ -z "$(find "$NEXTCLOUD_DATA_DIR/" -maxdepth 1 -mindepth 1 -type d -name "appdata_*")" ]; then
-    echo "Appdata is not present. Did you maybe change the datadir after aio was first started?"
-    echo "See https://github.com/nextcloud/all-in-one#how-to-change-the-default-location-of-nextclouds-datadir"
-    echo "In the datadir was found:"
-    ls -la "$NEXTCLOUD_DATA_DIR/"
-    exit 1
-fi
-
-# Configure tempdirectory
 if [ -z "$OBJECTSTORE_S3_BUCKET" ] && [ -z "$OBJECTSTORE_SWIFT_URL" ]; then
+    # Check if appdata is present
+    # If not, something broke (e.g. changing ncdatadir after aio was first started)
+    if [ -z "$(find "$NEXTCLOUD_DATA_DIR/" -maxdepth 1 -mindepth 1 -type d -name "appdata_*")" ]; then
+        echo "Appdata is not present. Did you maybe change the datadir after aio was first started?"
+        echo "See https://github.com/nextcloud/all-in-one#how-to-change-the-default-location-of-nextclouds-datadir"
+        echo "In the datadir was found:"
+        ls -la "$NEXTCLOUD_DATA_DIR/"
+        exit 1
+    fi
+
+    # Configure tempdirectory
     mkdir -p "$NEXTCLOUD_DATA_DIR/tmp/"
     if ! grep -q upload_tmp_dir /usr/local/etc/php/conf.d/nextcloud.ini; then
         echo "upload_tmp_dir = $NEXTCLOUD_DATA_DIR/tmp/" >> /usr/local/etc/php/conf.d/nextcloud.ini
@@ -439,10 +441,10 @@ if [ "$COLLABORA_ENABLED" = 'yes' ]; then
     php /var/www/html/occ config:system:set allow_local_remote_servers --type=bool --value=true
     # Make collabora more save
     COLLABORA_IPv4_ADDRESS="$(echo "<?php echo gethostbyname('$NC_DOMAIN');" | php | head -1)"
-    COLLABORA_IPv6_Address="<?php \$record = dns_get_record('$NC_DOMAIN', DNS_AAAA);"
+    COLLABORA_IPv6_ADDRESS="<?php \$record = dns_get_record('$NC_DOMAIN', DNS_AAAA);"
     # shellcheck disable=SC2016
-    COLLABORA_IPv6_Address+='if (!empty($record)) {echo $record[0]["ipv6"];}'
-    COLLABORA_IPv6_Address="$(echo "$COLLABORA_IPv6_Address" | php | head -1)"
+    COLLABORA_IPv6_ADDRESS+='if (!empty($record)) {echo $record[0]["ipv6"];}'
+    COLLABORA_IPv6_ADDRESS="$(echo "$COLLABORA_IPv6_ADDRESS" | php | head -1)"
     COLLABORA_ALLOW_LIST="$(php /var/www/html/occ config:app:get richdocuments wopi_allowlist)"
     if [ -n "$COLLABORA_IPv4_ADDRESS" ]; then
         if ! echo "$COLLABORA_ALLOW_LIST" | grep -q "$COLLABORA_IPv4_ADDRESS"; then
