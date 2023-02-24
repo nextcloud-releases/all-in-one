@@ -51,6 +51,5 @@ jobs:
             
         else
             # amd64
-            docker manifest create nextcloud/$AIO_NAME\:beta -a nextcloud/$AIO_NAME\:develop
-            docker manifest push nextcloud/$AIO_NAME\:beta
+            docker buildx imagetools create --tag nextcloud/$AIO_NAME\:beta nextcloud/$AIO_NAME\:develop
         fi
