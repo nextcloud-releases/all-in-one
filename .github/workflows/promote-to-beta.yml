@@ -46,7 +46,7 @@ jobs:
             docker manifest push nextcloud/$AIO_NAME\:beta
             
             # arm64
-            docker manifest create nextcloud/$AIO_NAME\:beta-arm64 -a nextcloud/$AIO_NAME\:develop-arm64
+            docker manifest create nextcloud/$AIO_NAME\:beta-arm64 -a nextcloud/$AIO_NAME\:develop -a nextcloud/$AIO_NAME\:develop-arm64
             docker manifest push nextcloud/$AIO_NAME\:beta-arm64
             
         else
