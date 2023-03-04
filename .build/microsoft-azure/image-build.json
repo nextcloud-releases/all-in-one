@@ -4,7 +4,7 @@
     "location": "<region>",
     "dependsOn": [],
     "tags": {
-        "imagebuilderTemplate": "ubuntu1804",
+        "imagebuilderTemplate": "ubunt2204",
         "userIdentity": "enabled"
     },
     "identity": {
