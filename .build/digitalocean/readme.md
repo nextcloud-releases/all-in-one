@@ -2,4 +2,4 @@ The Digital Ocean build was created following https://marketplace.digitalocean.c
 
 You can go here: https://github.com/nextcloud-releases/all-in-one/actions/workflows/publish-to-digitalocean.yml to create a new image.
 
-Then open the DO web interface and submit your new image to the marketplace.
+Then open the DO [web interface](https://cloud.digitalocean.com/vendorportal) and submit your new image to the marketplace.
