@@ -6,31 +6,26 @@
     "tags": {
         "imagebuilderTemplate": "ubuntu1804",
         "userIdentity": "enabled"
-            },
-        "identity": {
-            "type": "UserAssigned",
-                    "userAssignedIdentities": {
-                    "<imgBuilderId>": {}
-                        
-                }
-                },
+    },
+    "identity": {
+        "type": "UserAssigned",
+        "userAssignedIdentities": {
+            "<imgBuilderId>": {}   
+        }
+    },
     "properties": {
-
         "buildTimeoutInMinutes" : 80,
-        
         "vmProfile": 
             {
-            "vmSize": "Standard_D1_v2",
-            "osDiskSizeGB": 50
+                "vmSize": "Standard_D1_v2",
+                "osDiskSizeGB": 50
             },
-
         "source": {
             "type": "PlatformImage",
-                "publisher": "Canonical",
-                "offer": "UbuntuServer",
-                "sku": "18.04-LTS",
-                "version": "latest"
-            
+            "publisher": "Canonical",
+            "offer": "UbuntuServer",
+            "sku": "22.04-LTS",
+            "version": "latest"
         },
         "customize": [
             {
@@ -38,7 +33,6 @@
                 "name": "RunScriptFromSource",
                 "scriptUri": "https://raw.githubusercontent.com/nextcloud-releases/all-in-one/main/.build/ova/build.sh"
             }
-
         ],
         "distribute": 
             [
@@ -52,5 +46,5 @@
                     }
                 }
             ]
-        }
     }
+}
