@@ -42,6 +42,7 @@ EOF
 # Cleanup
 export DEBIAN_FRONTEND=noninteractive
 export NEEDRESTART_SUSPEND=1
+export NEEDRESTART_MODE=a
 sudo apt-get -y update
 sudo apt-get install unattended-upgrades -y
 sudo apt-get -o Dpkg::Options::="--force-confold" upgrade -q -y --force-yes
