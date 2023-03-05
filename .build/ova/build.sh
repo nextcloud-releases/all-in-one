@@ -41,11 +41,9 @@ EOF
 
 # Cleanup
 export DEBIAN_FRONTEND=noninteractive
-export NEEDRESTART_SUSPEND=1
-export NEEDRESTART_MODE=a
 sudo apt-get -y update
 sudo apt-get install unattended-upgrades -y
-sudo apt-get -o Dpkg::Options::="--force-confold" upgrade -q -y --force-yes
+sudo -E NEEDRESTART_MODE=a apt-get -o Dpkg::Options::="--force-confold" upgrade -q -y --force-yes
 sudo apt-get -y autoremove
 sudo apt-get -y autoclean
 sudo rm -rf /tmp/* /var/tmp/*
