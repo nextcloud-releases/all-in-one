@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -ex
+set -x
 
 #
 # 1. Pre-requirements
