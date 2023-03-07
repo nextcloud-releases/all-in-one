@@ -445,7 +445,7 @@ You can configure the Nextcloud container to use a specific directory on your ho
 - An example for Linux is `-e NEXTCLOUD_DATADIR="/mnt/ncdata"`.
 - On macOS it might be `-e NEXTCLOUD_DATADIR="/var/nextcloud-data"`
 - For Synology it may be `-e NEXTCLOUD_DATADIR="/volume1/docker/nextcloud/data"`. 
-- On Windows it might be `-e NEXTCLOUD_DATADIR="/run/desktop/mnt/host/c/ncdata"`. (This path is equivalent to `C:\backup` on your Windows host so you need to translate the path accordingly. Hint: the path that you enter needs to start with `/run/desktop/mnt/host/`. Append to that the exact location on your windows host, e.g. `c/ncdata` which is equivalent to `C:\ncdata`.)
+- On Windows it might be `-e NEXTCLOUD_DATADIR="/run/desktop/mnt/host/c/ncdata"`. (This path is equivalent to `C:\ncdata` on your Windows host so you need to translate the path accordingly. Hint: the path that you enter needs to start with `/run/desktop/mnt/host/`. Append to that the exact location on your windows host, e.g. `c/ncdata` which is equivalent to `C:\ncdata`.)
 - Another option is to provide a specific volume name here with: `-e NEXTCLOUD_DATADIR="nextcloud_aio_nextcloud_datadir"`. This volume needs to be created beforehand manually by you in order to be able to use it. e.g. with:
     ```
     docker volume create ^
@@ -459,7 +459,7 @@ You can configure the Nextcloud container to use a specific directory on your ho
 ### Can I use a CIFS/SMB share as Nextcloud's datadir?
 
 Sure. Add this to the `/etc/fstab` file: <br>
-`<your-storage-host-and-subpath> <your-mount-dir> cifs rw,credentials=<your-credentials-file>,uid=33,gid=0,file_mode=0770,dir_mode=0770 0 0`<br>
+`<your-storage-host-and-subpath> <your-mount-dir> cifs rw,mfsymlinks,seal,credentials=<your-credentials-file>,uid=33,gid=0,file_mode=0770,dir_mode=0770 0 0`<br>
 (Of course you need to modify `<your-storage-host-and-subpath>`, `<your-mount-dir>` and `<your-credentials-file>` for your specific case.)
 
 One example could look like this:<br>
