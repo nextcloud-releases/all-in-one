@@ -3,7 +3,7 @@
 set -ex
 
 # Install docker
-curl -fsSL get.docker.com | sudo sh
+curl -fsSL https://get.docker.com | sudo sh
 
 # Adjust permissions
 sudo mkdir -p /mnt/ncdata
