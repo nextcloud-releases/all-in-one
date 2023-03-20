@@ -34,7 +34,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Setup Go
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v4
 
       # https://github.com/WordPress/openverse-api/blob/f0c44d571249a2631eef5a13ea0d56702210daf3/.github/workflows/build_imaginary.yml#L47
       - name: Update modules # https://github.com/h2non/imaginary/issues/387
