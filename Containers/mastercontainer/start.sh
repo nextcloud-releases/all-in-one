@@ -79,7 +79,8 @@ fi
 # Check if startup command was executed correctly
 if ! sudo -u www-data docker ps --format "{{.Names}}" | grep -q "^nextcloud-aio-mastercontainer$"; then
     echo "It seems like you did not give the mastercontainer the correct name? (The 'nextcloud-aio-mastercontainer' container was not found.)
-Using a different name is not supported since mastercontainer updates will not work in that case!"
+Using a different name is not supported since mastercontainer updates will not work in that case!
+If you are on docker swarm and try to run AIO, see https://github.com/nextcloud/all-in-one#can-i-run-this-with-docker-swarm"
     exit 1
 elif ! sudo -u www-data docker volume ls --format "{{.Name}}" | grep -q "^nextcloud_aio_mastercontainer$"; then
     echo "It seems like you did not give the mastercontainer volume the correct name? (The 'nextcloud_aio_mastercontainer' volume was not found.)
@@ -223,7 +224,8 @@ curl https://nextcloud.com &>/dev/null
 if [ "$?" = 6 ]; then
     echo "Could not resolve the host nextcloud.com."
     echo "Most likely the DNS resolving does not work."
-    echo "You should be able to fix this by adding the '--dns=\"ip.address.of.dns.server\"' option to the docker run command."
+    echo "You should be able to fix this by following https://dockerlabs.collabnix.com/intermediate/networking/Configuring_DNS.html"
+    echo "Apart from that, there has been this: https://github.com/nextcloud/all-in-one/discussions/2065"
     exit 1
 fi
 

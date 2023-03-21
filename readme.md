@@ -15,7 +15,7 @@ Included are:
 The following instructions are meant for installations without a web server or reverse proxy (like Apache, Nginx and else) already being in place. If you want to run AIO behind a web server or reverse proxy (like Apache, Nginx and else), see the [reverse proxy documentation](https://github.com/nextcloud/all-in-one/blob/main/reverse-proxy.md). Also, the instructions below are especially meant for Linux. For macOS see [this](#how-to-run-aio-on-macos), for Windows see [this](#how-to-run-aio-on-windows) and for Synology see [this](#how-to-run-aio-on-synology-dsm).
 1. Install Docker on your Linux installation by following the official documentation: https://docs.docker.com/engine/install/#server. The easiest way is installing it by **using the convenience script**:  
     ```sh
-    curl -fsSL get.docker.com | sudo sh
+    curl -fsSL https://get.docker.com | sudo sh
     ```
 1. If you need ipv6 support, you should enable it by following https://docs.docker.com/config/daemon/ipv6/.
 2. Run the command below in order to start the container:
@@ -115,7 +115,7 @@ You'll also need to adjust Synology's firewall, see below:
 <details>
 <summary>Click here to expand</summary>
 
-The Synology DSM is vulnerable to attacks with it's open ports and login interfaces, which is why a firewall setup is always recommended. If a firewall is activated it is necessary to have exceptions for ports 80,443, the subnet of the docker bridge which includes the nextcloud containers, your public static IP (if you don't use DDNS) and if applicable your NC-Talk ports 3478 TCP+UDP:
+The Synology DSM is vulnerable to attacks with it's open ports and login interfaces, which is why a firewall setup is always recommended. If a firewall is activated it is necessary to have exceptions for ports 80,443, the subnet of the docker bridge which includes the Nextcloud containers, your public static IP (if you don't use DDNS) and if applicable your NC-Talk ports 3478 TCP+UDP:
 
 ![Screenshot 2023-01-19 at 14 13 48](https://user-images.githubusercontent.com/70434961/213677995-71a9f364-e5d2-49e5-831e-4579f217c95c.png)
 
@@ -131,10 +131,11 @@ The easiest way to run it with Portainer on Linux is to use Portainer's stacks f
 - It is known that the domain validation may not work correctly behind Cloudflare. You can simply skip it in that case by following: https://github.com/nextcloud/all-in-one#how-to-skip-the-domain-validation
 - Make sure to [disable Cloudflares Rocket Loader feature](https://help.nextcloud.com/t/login-page-not-working-solved/149417/8) as otherwise Nextcloud's login prompt will not be shown.
 - Cloudflare only supports uploading files up to 100 MB in the free plan, if you try to upload bigger files you will get an error (413 - Payload Too Large) if no chunking is used (e.g. for public uploads in the web, or if chunks are configured to be bigger than 100 MB in the clients or the web). If you need to upload bigger files, you need to disable the proxy option in your DNS settings, or you must use another proxy than Cloudflare tunnels. Both options will disable Cloudflare DDoS protection.
+- Cloudflare only allows a max timeout of 100s for requests which is not configurable. This means that any server-side processing e.g. for assembling chunks for big files during upload that take longer than 100s will simply not work. See https://github.com/nextcloud/server/issues/19223. If you need to upload big files reliably, you need to disable the proxy option in your DNS settings, or you must use another proxy than Cloudflare tunnels. Both options will disable Cloudflare DDoS protection.
 - It is known that the in AIO included collabora (Nextcloud Office) does not work out of the box behind Cloudflare. To make it work, you need to add all [Cloudflare IP-ranges](https://www.cloudflare.com/ips/) to the wopi-allowlist in `https://yourdomain.com/settings/admin/richdocuments`
+- The built-in High performance backend for Nextcloud Talk will potentially not work out-of-the-box since it needs a separate port (by default 3478 or as chosen) available on the same domain. If you still want to use the feature, you will need to adjust and test your settings in `https://yourdomain.com/settings/admin/talk`.
 - If you get an error in Nextcloud's admin overview that the HSTS header is not set correctly, you might need to enable it in Cloudflare manually.
 - If you are using AIO's built-in Reverse Proxy and don't use your own, then may the certificate issuing possibly not work out-of-the-box because Cloudflare might block the attempt. In that case you need to disable the Proxy feature at least temporarily in order to make it work. See https://github.com/nextcloud/all-in-one/discussions/1101.
-- The built-in High performance backend for Nextcloud Talk will potentially not work out-of-the-box since it needs a separate port (by default 3478 or as chosen) available on the same domain. If you still want to use the feature, you will need to adjust and test your settings in `https://yourdomain.com/settings/admin/talk`.
 
 ### How to run Nextcloud behind a Cloudflare Tunnel?
 Although it does not seems like it is the case but from AIO perspective a Cloudflare Tunnel works like a reverse proxy. So please follow the [reverse proxy documentation](./reverse-proxy.md) where is documented how to make it run behind a Cloudflare Tunnel.
@@ -163,7 +164,7 @@ No and they will not be. If you want to run it locally, without opening Nextclou
 ### Can I use an ip-address for Nextcloud instead of a domain?
 No and it will not be added. If you only want to run it locally, you may have a look at the following documentation: [local-instance.md](./local-instance.md)
 
-### Are other ports than then default 443 for Nextcloud supported?
+### Are other ports than the default 443 for Nextcloud supported?
 No and they will not be. Please use a dedicated domain for Nextcloud and set it up correctly by following the [reverse proxy documentation](./reverse-proxy.md). If port 443 and/or 80 is blocked for you, you may use the ACME DNS-challenge or a Cloudflare Tunnel.
 
 ### Can I run Nextcloud in a subdirectory on my domain?
