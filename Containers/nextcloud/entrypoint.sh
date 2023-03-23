@@ -39,7 +39,10 @@ $(stat -c "%u:%g %a" "$NEXTCLOUD_DATA_DIR")
 (userID:groupID permissions)
 but they should be:
 33:0 750
-(userID:groupID permissions)"
+(userID:groupID permissions)
+Also make sure that the parent directories on the host of the directory that you've chosen as datadir are publicly readable with e.g. 'sudo chmod +r /mnt' (adjust the command accordingly to your case) and the same for all subdirectories.
+Additionally, if you want to use a Fuse-mount as datadir, set 'allow_other' as additional mount option.
+For SMB/CIFS mounts as datadir, see https://github.com/nextcloud/all-in-one#can-i-use-a-cifssmb-share-as-nextclouds-datadir"
     exit 1
 fi
 rm "$NEXTCLOUD_DATA_DIR/this-is-a-test-file"
@@ -529,7 +532,8 @@ if [ "$TALK_ENABLED" = 'yes' ]; then
     if [ -z "$(php /var/www/html/occ talk:turn:list --output="plain")" ]; then
         php /var/www/html/occ talk:turn:add turn "$NC_DOMAIN:$TALK_PORT" "udp,tcp" --secret="$TURN_SECRET"
     fi
-    if php /var/www/html/occ talk:stun:list --output="plain" | grep -oP '[a-zA-Z.:0-9]+' | grep -q "^stun.nextcloud.com:443$"; then
+    STUN_SERVER="$(php /var/www/html/occ talk:stun:list --output="plain")"
+    if [ -z "$STUN_SERVER" ] || echo "$STUN_SERVER" | grep -oP '[a-zA-Z.:0-9]+' | grep -q "^stun.nextcloud.com:443$"; then
         php /var/www/html/occ talk:stun:add "$NC_DOMAIN:$TALK_PORT"
         php /var/www/html/occ talk:stun:delete "stun.nextcloud.com:443"
     fi
