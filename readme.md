@@ -239,6 +239,7 @@ Here is how to reset the AIO instance properly:
 1. Delete the docker network with `sudo docker network rm nextcloud-aio`
 1. Check which volumes are dangling with `sudo docker volume ls --filter "dangling=true"`
 1. Now remove all these dangling volumes: `sudo docker volume prune` (on Windows you might need to remove some volumes afterwards manually with `docker volume rm nextcloud_aio_backupdir`, `docker volume rm nextcloud_aio_nextcloud_datadir`). Also if you've configured `NEXTCLOUD_DATADIR` to a path on your host instead of the default volume, you need to clean that up as well.
+1. Make sure that no volumes are remaining with `sudo docker volume ls --format {{.Name}`. If no `nextcloud-aio` volumes are listed, you can proceed with the steps below. If there should be some, you will need to stop them with `sudo docker volume rm <volume_name>` until no one is listed anymore.
 1. Optional: You can remove all docker images with `sudo docker image prune -a`.
 1. And you are done! Now feel free to start over with the recommended docker run command!
 
@@ -464,7 +465,7 @@ Sure. Add this to the `/etc/fstab` file: <br>
 (Of course you need to modify `<your-storage-host-and-subpath>`, `<your-mount-dir>` and `<your-credentials-file>` for your specific case.)
 
 One example could look like this:<br>
-`//your-storage-host/subpath /mnt/storagebox cifs rw,credentials=/etc/storage-credentials,uid=33,gid=0,file_mode=0770,dir_mode=0770 0 0`<br>
+`//your-storage-host/subpath /mnt/storagebox cifs rw,mfsymlinks,seal,credentials=/etc/storage-credentials,uid=33,gid=0,file_mode=0770,dir_mode=0770 0 0`<br>
 and add into `/etc/storage-credentials`:
 ```
 username=<smb/cifs username>
@@ -515,7 +516,7 @@ You can run AIO also with docker rootless. How to do this is documented here: [d
 No. Since Podman is not 100% compatible with the Docker API, you cannot use Podman instead of Docker (since that would add yet another platform where the maintaner would need to test on). However you can use and follow the [manual-install documentation](./manual-install/) to get AIO's containers running with Podman or use Docker rootless, as described in the above section.
 
 ### How to change the Nextcloud apps that are installed on the first startup?
-You might want to adjust the Nextcloud apps that are installed upon the first startup of the Nextcloud container. You can do so by adding `-e NEXTCLOUD_STARTUP_APPS="deck twofactor_totp tasks calendar contacts"` to the docker run command of the mastercontainer and customize the value to your fitting. It must be a string with small letters a-z, spaces and hyphens or '_'. You can disable shipped and by default enabled apps by adding a hyphen in front of the appid. E.g. `-contactsinteraction`.
+You might want to adjust the Nextcloud apps that are installed upon the first startup of the Nextcloud container. You can do so by adding `-e NEXTCLOUD_STARTUP_APPS="deck twofactor_totp tasks calendar contacts"` to the docker run command of the mastercontainer and customize the value to your fitting. It must be a string with small letters a-z, 0-9, spaces and hyphens or '_'. You can disable shipped and by default enabled apps by adding a hyphen in front of the appid. E.g. `-contactsinteraction`.
 
 ### How to add OS packages permanently to the Nextcloud container?
 Some Nextcloud apps require additional external dependencies that must be bundled within Nextcloud container in order to work correctly. As we cannot put each and every dependency for all apps into the container - as this would make the project very fast unmaintainable - there is an official way how you can add additional dependencies into the Nextcloud container. However note that doing this is disrecommended since we do not test Nextcloud apps that require external dependencies. 

@@ -95,10 +95,10 @@ fi
 # Check for other options
 if [ -n "$NEXTCLOUD_DATADIR" ]; then
     if [ "$NEXTCLOUD_DATADIR" = "nextcloud_aio_nextcloud_datadir" ]; then
-        echo "NEXTCLOUD_DATADIR is set to $NEXTCLOUD_DATADIR"
+        sleep 1
     elif ! echo "$NEXTCLOUD_DATADIR" | grep -q "^/" || [ "$NEXTCLOUD_DATADIR" = "/" ]; then
         echo "You've set NEXTCLOUD_DATADIR but not to an allowed value.
-The string must start with '/' and must not be equal to '/'.
+The string must start with '/' and must not be equal to '/'. Also allowed is 'nextcloud_aio_nextcloud_datadir'.
 It is set to '$NEXTCLOUD_DATADIR'."
         exit 1
     fi
@@ -194,9 +194,9 @@ It is set to '$NEXTCLOUD_TRUSTED_CACERTS_DIR '."
     fi
 fi
 if [ -n "$NEXTCLOUD_STARTUP_APPS" ]; then
-    if ! echo "$NEXTCLOUD_STARTUP_APPS" | grep -q "^[a-z _-]\+$"; then
+    if ! echo "$NEXTCLOUD_STARTUP_APPS" | grep -q "^[a-z0-9 _-]\+$"; then
         echo "You've set NEXTCLOUD_STARTUP_APPS but not to an allowed value.
-It needs to be a string. Allowed are small letters a-z, spaces, hyphens and '_'.
+It needs to be a string. Allowed are small letters a-z, 0-9, spaces, hyphens and '_'.
 It is set to '$NEXTCLOUD_STARTUP_APPS'."
         exit 1
     fi

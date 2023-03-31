@@ -1,3 +1,4 @@
+{{- if eq .Values.CLAMAV_ENABLED "yes" }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -5,13 +6,13 @@ metadata:
     kompose.cmd: kompose convert -c -f latest.yml
     kompose.version: 1.28.0 (c4137012e)
   labels:
-    io.kompose.service: nextcloud-aio-redis
-  name: nextcloud-aio-redis
+    io.kompose.service: nextcloud-aio-clamav
+  name: nextcloud-aio-clamav
 spec:
   replicas: 1
   selector:
     matchLabels:
-      io.kompose.service: nextcloud-aio-redis
+      io.kompose.service: nextcloud-aio-clamav
   template:
     metadata:
       annotations:
@@ -19,7 +20,7 @@ spec:
         kompose.version: 1.28.0 (c4137012e)
       labels:
         io.kompose.network/nextcloud-aio: "true"
-        io.kompose.service: nextcloud-aio-redis
+        io.kompose.service: nextcloud-aio-clamav
     spec:
       initContainers:
         - name: init-volumes
@@ -27,24 +28,25 @@ spec:
           command:
             - chmod
             - "777"
-            - /nextcloud-aio-redis
+            - /nextcloud-aio-clamav
           volumeMounts:
-            - name: nextcloud-aio-redis
-              mountPath: /nextcloud-aio-redis
+            - name: nextcloud-aio-clamav
+              mountPath: /nextcloud-aio-clamav
       containers:
         - env:
-            - name: REDIS_HOST_PASSWORD
-              value: "{{ .Values.REDIS_PASSWORD }}"
+            - name: CLAMD_STARTUP_TIMEOUT
+              value: "90"
             - name: TZ
               value: "{{ .Values.TIMEZONE }}"
-          image: nextcloud/aio-redis:20230315_112022-latest
-          name: nextcloud-aio-redis
+          image: nextcloud/aio-clamav:20230330_075307-latest
+          name: nextcloud-aio-clamav
           ports:
-            - containerPort: 6379
+            - containerPort: 3310
           volumeMounts:
-            - mountPath: /data
-              name: nextcloud-aio-redis
+            - mountPath: /var/lib/clamav
+              name: nextcloud-aio-clamav
       volumes:
-        - name: nextcloud-aio-redis
+        - name: nextcloud-aio-clamav
           persistentVolumeClaim:
-            claimName: nextcloud-aio-redis
+            claimName: nextcloud-aio-clamav
+{{- end }}

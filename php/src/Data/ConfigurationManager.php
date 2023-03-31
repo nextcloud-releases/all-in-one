@@ -268,11 +268,10 @@ class ConfigurationManager
             $port = $this->GetApachePort();
 
             if (!filter_var($dnsRecordIP, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
-                $errorMessage = "It seems like the ip-address is set to an internal or reserved ip-address. This is not supported. (It was found to be set to '" . $dnsRecordIP . "')";
                 if ($port === '443') {
-                    throw new InvalidSettingConfigurationException($errorMessage);
+                    throw new InvalidSettingConfigurationException("It seems like the ip-address is set to an internal or reserved ip-address. This is not supported. (It was found to be set to '" . $dnsRecordIP . "')");
                 } else {
-                    error_log($errorMessage);
+                    error_log("It seems like the ip-address of " . $domain . " is set to an internal or reserved ip-address. (It was found to be set to '" . $dnsRecordIP . "')");
                 }
             }
 
@@ -664,7 +663,7 @@ class ConfigurationManager
             // Trim all unwanted chars on both sites
             $entry = trim($entry);
             if ($entry !== "") {
-                if (!preg_match("#^/[0-1a-zA-Z/-_]+$#", $entry) && !preg_match("#^[0-1a-zA-Z_-]+$#", $entry)) {
+                if (!preg_match("#^/[.0-1a-zA-Z/-_]+$#", $entry) && !preg_match("#^[.0-1a-zA-Z_-]+$#", $entry)) {
                     throw new InvalidSettingConfigurationException("You entered unallowed characters! Problematic is " . $entry);
                 }
                 $validDirectories .= rtrim($entry, '/') . PHP_EOL;
@@ -734,14 +733,6 @@ class ConfigurationManager
 
     public function shouldDomainValidationBeSkipped() : bool {
         if (getenv('SKIP_DOMAIN_VALIDATION') !== false) {
-            return true;
-        }
-        return false;
-    }
-
-    public function shouldDataDirectoryPermissionCheckGetSkipped() : bool {
-        $datadir = $this->GetNextcloudDatadirMount();
-        if ($datadir === 'nextcloud_aio_nextcloud_datadir' || str_starts_with($datadir, '/run/desktop/mnt/host/')) {
             return true;
         }
         return false;
