@@ -234,6 +234,11 @@ class ConfigurationManager
      * @throws InvalidSettingConfigurationException
      */
     public function SetDomain(string $domain) : void {
+        // Validate that at least one dot is contained
+        if (strpos($domain, '.') === false) {
+            throw new InvalidSettingConfigurationException("Domain must contain at least one dot!");
+        }
+
         // Validate domain
         if (!filter_var($domain, FILTER_VALIDATE_DOMAIN, FILTER_FLAG_HOSTNAME)) {
             throw new InvalidSettingConfigurationException("Domain is not a valid domain!");
@@ -675,6 +680,14 @@ class ConfigurationManager
         } else {
             file_put_contents(DataConst::GetAdditionalBackupDirectoriesFile(), $validDirectories);
         }
+    }
+
+    public function shouldLatestMajorGetInstalled() : bool {
+        $config = $this->GetConfig();
+        if(!isset($config['install_latest_major'])) {
+            $config['install_latest_major'] = '';
+        }
+        return $config['install_latest_major'] !== '';
     }
 
     public function GetAdditionalBackupDirectoriesString() : string {
