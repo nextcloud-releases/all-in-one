@@ -27,32 +27,21 @@ RUN set -ex; \
     apk add --no-cache --virtual .build-deps \
         $PHPIZE_DEPS \
         autoconf \
-        libtool \
         freetype-dev \
+        gmp-dev \
         icu-dev \
+        imagemagick-dev \
         libevent-dev \
         libjpeg-turbo-dev \
         libmcrypt-dev \
-        libpng-dev \
         libmemcached-dev \
+        libpng-dev \
+        libwebp-dev \
         libxml2-dev \
         libzip-dev \
         openldap-dev \
         pcre-dev \
         postgresql-dev \
-        libwebp-dev \
-        gmp-dev \
-        lcms2-dev \
-        fontconfig-dev \
-        freetype-dev \
-        ghostscript-dev \
-        tiff-dev \
-        zlib-dev \
-        imagemagick-dev \
-        libheif-dev \
-        librsvg-dev \
-        libxext-dev \
-        ghostscript-fonts \
     ; \
     \
     docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp; \
@@ -61,13 +50,14 @@ RUN set -ex; \
         bcmath \
         exif \
         gd \
+        gmp \
         intl \
         ldap \
         opcache \
         pcntl \
         pdo_pgsql \
+        sysvsem \
         zip \
-        gmp \
     ; \
     \
 # pecl will claim success even if one install fails, so we need to perform each install separately
@@ -215,12 +205,7 @@ RUN set -ex; \
         mawk \
         sudo \
         grep \
-        coreutils \
-        libjpeg \
-        librsvg \
-        libheif \
-        libpng \
-        ghostscript-fonts;
+        coreutils;
 
 RUN set -ex; \
     grep -q '^pm = dynamic' /usr/local/etc/php-fpm.d/www.conf; \
@@ -263,6 +248,11 @@ RUN set -ex; \
     chown www-data:www-data /mnt/ncdata;
 
 VOLUME /mnt/ncdata
+
+RUN set -ex; \
+    mkdir -p /nc-updater; \
+    chown -R www-data:www-data /nc-updater; \
+    chmod -R 770 /nc-updater
 
 # Give root a random password
 RUN echo "root:$(openssl rand -base64 12)" | chpasswd
