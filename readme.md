@@ -138,7 +138,7 @@ The easiest way to run it with Portainer on Linux is to use Portainer's stacks f
 - If you are using AIO's built-in Reverse Proxy and don't use your own, then may the certificate issuing possibly not work out-of-the-box because Cloudflare might block the attempt. In that case you need to disable the Proxy feature at least temporarily in order to make it work. See https://github.com/nextcloud/all-in-one/discussions/1101.
 
 ### How to run Nextcloud behind a Cloudflare Tunnel?
-Although it does not seems like it is the case but from AIO perspective a Cloudflare Tunnel works like a reverse proxy. So please follow the [reverse proxy documentation](./reverse-proxy.md) where is documented how to make it run behind a Cloudflare Tunnel.
+Although it does not seems like it is the case but from AIO perspective a Cloudflare Tunnel works like a reverse proxy. So please follow the [reverse proxy documentation](./reverse-proxy.md) where is documented how to make it run behind a Cloudflare Tunnel. Also see https://github.com/dani-garcia/vaultwarden/wiki/Running-a-private-vaultwarden-instance-with-Let%27s-Encrypt-certs#cloudflare-setup for additional docs on this topic.
 
 ### Disrecommended VPS providers
 - Stratos VPS crash/freeze/make errors when they reach an extremely low PID limit, which is very quickly reached by AIO, see [here](https://github.com/nextcloud/all-in-one/discussions/1747#discussioncomment-4716164), Strato does normally not increase this limit.
@@ -153,7 +153,7 @@ In general recommended VPS are those that are KVM/non-virtualized as Docker shou
 - HDD storage should work as well but is of course much slower than SSD storage
 
 ### How to get Nextcloud running using the ACME DNS-challenge?
-You can install AIO in reverse proxy mode where is also documented how to get it running using the ACME DNS-challenge for getting a valid certificate for AIO. See the [reverse proxy documentation](./reverse-proxy.md). (Meant is the `Caddy with ACME DNS-challenge` section).
+You can install AIO in reverse proxy mode where is also documented how to get it running using the ACME DNS-challenge for getting a valid certificate for AIO. See the [reverse proxy documentation](./reverse-proxy.md). (Meant is the `Caddy with ACME DNS-challenge` section). Also see https://github.com/dani-garcia/vaultwarden/wiki/Running-a-private-vaultwarden-instance-with-Let%27s-Encrypt-certs#getting-a-custom-caddy-build for additional docs on this topic.
 
 ### How to run Nextcloud locally?
 If you do not want to open Nextcloud to the public internet, you may have a look at the following documentation how to set it up locally: [local-instance.md](./local-instance.md)
@@ -238,8 +238,9 @@ Here is how to reset the AIO instance properly:
 1. Now remove all these stopped containers with `sudo docker container prune`
 1. Delete the docker network with `sudo docker network rm nextcloud-aio`
 1. Check which volumes are dangling with `sudo docker volume ls --filter "dangling=true"`
-1. Now remove all these dangling volumes: `sudo docker volume prune` (on Windows you might need to remove some volumes afterwards manually with `docker volume rm nextcloud_aio_backupdir`, `docker volume rm nextcloud_aio_nextcloud_datadir`). Also if you've configured `NEXTCLOUD_DATADIR` to a path on your host instead of the default volume, you need to clean that up as well.
-1. Make sure that no volumes are remaining with `sudo docker volume ls --format {{.Name}`. If no `nextcloud-aio` volumes are listed, you can proceed with the steps below. If there should be some, you will need to stop them with `sudo docker volume rm <volume_name>` until no one is listed anymore.
+1. Now remove all these dangling volumes: `sudo docker volume prune` (on Windows you might need to remove some volumes afterwards manually with `docker volume rm nextcloud_aio_backupdir`, `docker volume rm nextcloud_aio_nextcloud_datadir`). 
+1. If you've configured `NEXTCLOUD_DATADIR` to a path on your host instead of the default volume, you need to clean that up as well. (E.g. by simply deleting the directory).
+1. Make sure that no volumes are remaining with `sudo docker volume ls --format {{.Name}}`. If no `nextcloud-aio` volumes are listed, you can proceed with the steps below. If there should be some, you will need to stop them with `sudo docker volume rm <volume_name>` until no one is listed anymore.
 1. Optional: You can remove all docker images with `sudo docker image prune -a`.
 1. And you are done! Now feel free to start over with the recommended docker run command!
 
@@ -326,7 +327,7 @@ sudo borg delete --stats --progress "/mnt/backup/borg::20220223_174237-nextcloud
 # If borg 1.2.0 or higher is installed, you then need to run borg compact in order to clean up the freed space
 sudo borg --version
 # If version number of the command above is higher than 1.2.0 you need to run the command below:
-sudo borg compact "/mnt/backup/"
+sudo borg compact "/mnt/backup/borg"
 
 ```
 
