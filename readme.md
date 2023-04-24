@@ -1,15 +1,77 @@
-# Nextcloud All In One
-Nextcloud AIO stands for Nextcloud All In One and provides easy deployment and maintenance with most features included in this one Nextcloud instance. 
+# Nextcloud All-in-One
+Nextcloud AIO stands for Nextcloud All-in-One and provides easy deployment and maintenance with most features included in this one Nextcloud instance. 
 
 Included are:
 - Nextcloud
 - Nextcloud Office
 - High performance backend for Nextcloud Files
-- High performance backend for Nextcloud Talk
+- High performance backend for Nextcloud Talk and TURN-server
 - Backup solution (based on [BorgBackup](https://github.com/borgbackup/borg#what-is-borgbackup))
 - Imaginary (for previews of heic, heif, illustrator, pdf, svg, tiff and webp)
 - ClamAV (Antivirus backend for Nextcloud)
 - Fulltextsearch
+<details><summary>And much more:</summary>
+
+- Simple web interface included that enables easy installation and maintenance
+- [Easy updates included](https://github.com/nextcloud/all-in-one#how-to-update-the-containers)
+- Update and backup notifications included
+- Daily backups can get enabled from the AIO interface which also allows to update all containers, Nextcloud and its apps afterwards automatically
+- Instance restore from backup archive via the AIO interface included (you only need the archive and the password in order to restore the whole instance on a new AIO instance)
+- APCU as local cache
+- Redis as distributed cache and for file locking
+- Postgresql as database
+- PHP-FPM with performance-optimized config
+- A+ security in Nextcloud security scan
+- Ready to be used behind existing [Reverse proxies](https://github.com/nextcloud/all-in-one/blob/main/reverse-proxy.md)
+- Can be used behind [Cloudflare Tunnel](https://github.com/nextcloud/all-in-one#how-to-run-nextcloud-behind-a-cloudflare-tunnel)
+- Ready for big file uploads up to 10 GB on public links, [adjustable](https://github.com/nextcloud/all-in-one#how-to-adjust-the-upload-limit-for-nextcloud) (logged in users can upload much bigger files using the webinterface or the mobile/desktop clients since chunking is used in that case)
+- PHP and web server timeouts set to 3600s, [adjustable](https://github.com/nextcloud/all-in-one#how-to-adjust-the-max-execution-time-for-nextcloud) (important for big file uploads)
+- Defaults to a max of 512 MB RAM per PHP process, [adjustable](https://github.com/nextcloud/all-in-one#how-to-adjust-the-php-memory-limit-for-nextcloud)
+- Automatic TLS included (by using Let's Encrypt)
+- HTTP/2 and HTTP/3 enabled
+- "Pretty URLs" for Nextcloud are enabled by default (removes the index.php from all links)
+- Video previews work out of the box and when Imaginary is enabled, many recent image formats as well!
+- Only one domain and not multiple domains are required for everything to work (usually you would need to have one domain for each service which is much more complex)
+- [Adjustable location](https://github.com/nextcloud/all-in-one#how-to-change-the-default-location-of-nextclouds-datadir) of Nextcloud's datadir (e.g. good for easy file-sharing with host system on Windows and MacOS)
+- By default confined (good for security) but can [allow access to additional storages](https://github.com/nextcloud/all-in-one#how-to-allow-the-nextcloud-container-to-access-directories-on-the-host) in order to enable the usage of the local external storage feature
+- Possibility included to [adjust default installed Nextcloud apps](https://github.com/nextcloud/all-in-one#how-to-change-the-nextcloud-apps-that-are-installed-on-the-first-startup)
+- Nextcloud installation is not read only - that means you can apply patches if you should need them (instead of having to wait for the next release for them getting applied)
+- `ffmpeg`, `smbclient` and `nodejs` are included by default
+- Possibility included to [permanently add additional OS packages into the Nextcloud container](https://github.com/nextcloud/all-in-one#how-to-change-the-nextcloud-apps-that-are-installed-on-the-first-startup) without having to build your own Docker image
+- Possibility included to [permanently add additional PHP extensions into the Nextcloud container](https://github.com/nextcloud/all-in-one#how-to-add-php-extensions-permanently-to-the-nextcloud-container) without having to build your own Docker image
+- Possibility included to [pass the needed device for hardware transcoding](https://github.com/nextcloud/all-in-one#how-to-enable-hardware-transcoding-for-nextcloud) to the Nextcloud containe
+- Possibility included to [store all docker related files on a separate drive](https://github.com/nextcloud/all-in-one#how-to-store-the-filesinstallation-on-a-separate-drive)
+- [LDAP can be used as user backend for Nextcloud](https://github.com/nextcloud/all-in-one/tree/main#ldap)
+- Migration from any former Nextcloud installation to AIO is possible. See [this documentation](https://github.com/nextcloud/all-in-one/blob/main/migration.md)
+- [Fail2Ban can be added](https://github.com/nextcloud/all-in-one#fail2ban)
+- [phpMyAdmin, Adminer or pgAdmin can be added](https://github.com/nextcloud/all-in-one#phpmyadmin-adminer-or-pgadmin)
+- [Mail server can be added](https://github.com/nextcloud/all-in-one#mail-server)
+- Nextcloud can be [accessed locally via the domain](https://github.com/nextcloud/all-in-one#how-can-i-access-nextcloud-locally)
+- Can [be installed locally](https://github.com/nextcloud/all-in-one/blob/main/local-instance.md) (if you don't want or cannot make the instance publicly reachable)
+- [IPv6-ready](https://github.com/nextcloud/all-in-one/blob/main/docker-ipv6-support.md)
+- Can be used with [Docker rootles](https://github.com/nextcloud/all-in-one/blob/main/docker-rootless.md) (good for additional security)
+- Runs on all platforms Docker supports (e.g. also on Windows and Macos)
+- Included containers easy to debug by having the possibility to check their logs directly from the AIO interface
+- [Docker-compose ready](https://github.com/nextcloud/all-in-one/blob/main/docker-compose.yml)
+- Can be installed [without a container having access to the docker socket](https://github.com/nextcloud/all-in-one/tree/main/manual-install)
+- Can be installed with [Docker Swarm](https://github.com/nextcloud/all-in-one#can-i-run-this-with-docker-swarm)
+- Can be installed with [Kubernetes](https://github.com/nextcloud/all-in-one/tree/main/nextcloud-aio-helm-chart)
+- Almost all included containers Alpine Linux based (good for security and size)
+- Many of the included containers run as non-root user (good for security)
+- Included containers run in its own docker network (good for security) and only really necessary ports are exposed on the host
+- [Multiple instances on one server](https://github.com/nextcloud/all-in-one/blob/main/multiple-instances.md) are doable without having to deal with VMs
+- Adjustable backup path from the AIO interface (good to put the backups e.g. on a different drive)
+- Possibility included to also back up external Docker Volumes or Host paths (can be used for host backups)
+- Borg backup can be completely managed from the AIO interface, including backup creation, backup restore, backup integrity check and integrity-repair
+- [Remote backups](https://github.com/nextcloud/all-in-one#are-remote-borg-backups-supported) are indirectly possible
+- Updates and backups can be [run from an external script](https://github.com/nextcloud/all-in-one#how-to-stopstartupdate-containers-or-trigger-the-daily-backup-from-a-script-externally). See [this documentation](https://github.com/nextcloud/all-in-one#how-to-enable-automatic-updates-without-creating-a-backup-beforehand) for a complete example.
+
+</details>
+
+## Screenshots
+| First setup | After installation |
+|---|---|
+| ![image](https://user-images.githubusercontent.com/42591237/232849125-30e24c85-bfd7-465e-8310-9b69cd9666fe.png) | ![image](https://user-images.githubusercontent.com/42591237/232849036-28c38d9a-3151-4cf1-97a5-4d94c1f0eba0.png) |
 
 ## How to use this?
 The following instructions are meant for installations without a web server or reverse proxy (like Apache, Nginx and else) already being in place. If you want to run AIO behind a web server or reverse proxy (like Apache, Nginx and else), see the [reverse proxy documentation](https://github.com/nextcloud/all-in-one/blob/main/reverse-proxy.md). Also, the instructions below are especially meant for Linux. For macOS see [this](#how-to-run-aio-on-macos), for Windows see [this](#how-to-run-aio-on-windows) and for Synology see [this](#how-to-run-aio-on-synology-dsm).
@@ -17,7 +79,7 @@ The following instructions are meant for installations without a web server or r
     ```sh
     curl -fsSL https://get.docker.com | sudo sh
     ```
-1. If you need ipv6 support, you should enable it by following https://docs.docker.com/config/daemon/ipv6/.
+1. If you need ipv6 support, you should enable it by following https://github.com/nextcloud/all-in-one/blob/main/docker-ipv6-support.md.
 2. Run the command below in order to start the container:
     ```
     # For Linux and without a web server or reverse proxy (like Apache, Nginx and else) already in place:
@@ -43,16 +105,16 @@ The following instructions are meant for installations without a web server or r
     - `--publish 8080:8080` This means that port 8080 of the container should get published on the host using port 8080. This port is used for the AIO interface and uses a self-signed certificate by default. You can also use a different host port if port 8080 is already used on your host, for example `--publish 8081:8080` (only the first port can be changed for the host, the second port is for the container and must remain at 8080).
     - `--publish 8443:8443` This means that port 8443 of the container should get published on the host using port 8443. If you publish port 80 and 8443 to the public internet, you can access the AIO interface via this port with a valid certificate. It is not needed if you run AIO behind a web server or reverse proxy and can get removed in that case as you can simply use port 8080 for the AIO interface then.
     - `--volume nextcloud_aio_mastercontainer:/mnt/docker-aio-config` This means that the files that are created by the mastercontainer will be stored in a docker volume that is called `nextcloud_aio_mastercontainer`. This line is not allowed to be changed, since built-in backups would fail later on.
-    - `--volume /var/run/docker.sock:/var/run/docker.sock:ro` The docker socket is mounted into the container which is used for spinning up all the other containers and for further features. It needs to be adjusted on Windows/macOS and on docker rootless. See the applicable documentation on this. If adjusting, don't forget to also set `DOCKER_SOCKET_PATH`! If you dislike this, see https://github.com/nextcloud/all-in-one/discussions/500#discussioncomment-2740767 and the whole thread for options.
+    - `--volume /var/run/docker.sock:/var/run/docker.sock:ro` The docker socket is mounted into the container which is used for spinning up all the other containers and for further features. It needs to be adjusted on Windows/macOS and on docker rootless. See the applicable documentation on this. If adjusting, don't forget to also set `WATCHTOWER_DOCKER_SOCKET_PATH`! If you dislike this, see https://github.com/nextcloud/all-in-one/tree/main/manual-install.
     - `nextcloud/all-in-one:latest` This is the docker container image that is used.
-    - Further options can be set using environment variables, for example `-e NEXTCLOUD_DATADIR="/mnt/ncdata"` (This is an example for Linux. See [this](https://github.com/nextcloud/all-in-one#how-to-change-the-default-location-of-nextclouds-datadir) for other OS' and for an explanation of what this value does. This specific one needs to be specified upon the first startup if you want to change it to a specific path instead of the default Docker volume). To see explanations and examples for further variables (like changing the location of Nextcloud's datadir or mounting some locations as external storage into the Nextcloud container), read through this readme and look at the docker-compose file: https://github.com/nextcloud/all-in-one/blob/main/docker-compose.yml
+    - Further options can be set using environment variables, for example `--env NEXTCLOUD_DATADIR="/mnt/ncdata"` (This is an example for Linux. See [this](https://github.com/nextcloud/all-in-one#how-to-change-the-default-location-of-nextclouds-datadir) for other OS' and for an explanation of what this value does. This specific one needs to be specified upon the first startup if you want to change it to a specific path instead of the default Docker volume). To see explanations and examples for further variables (like changing the location of Nextcloud's datadir or mounting some locations as external storage into the Nextcloud container), read through this readme and look at the docker-compose file: https://github.com/nextcloud/all-in-one/blob/main/docker-compose.yml
     </details>
 
     Note: You may be interested in adjusting Nextcloud’s datadir to store the files in a different location than the default docker volume. See [this documentation](https://github.com/nextcloud/all-in-one#how-to-change-the-default-location-of-nextclouds-datadir) on how to do it.
 
 3. After the initial startup, you should be able to open the Nextcloud AIO Interface now on port 8080 of this server.<br>
 E.g. `https://ip.address.of.this.server:8080`<br><br>
-If your firewall/router has port 80 and 8443 open and you point a domain to your server, you can get a valid certificate automatically by opening the Nextcloud AIO Interface via:<br>
+If your firewall/router has port 80 and 8443 open/forwarded and you point a domain to your server, you can get a valid certificate automatically by opening the Nextcloud AIO Interface via:<br>
 `https://your-domain-that-points-to-this-server.tld:8443`
 4. Please do not forget to open port `3478/TCP` and `3478/UDP` in your firewall/router for the Talk container!
 
@@ -76,17 +138,17 @@ Only those (if you access the Mastercontainer Interface internally via port 8080
 ### Explanation of used ports:
 - `8080/TCP`: Mastercontainer Interface with self-signed certificate (works always, also if only access via IP-address is possible, e.g. `https://ip.address.of.this.server:8080/`)
 - `80/TCP`: redirects to Nextcloud (is used for getting the certificate via ACME http-challenge for the Mastercontainer)
-- `8443/TCP`: Mastercontainer Interface with valid certificate (only works if port 80 and 8443 are open in your firewall/router and you point a domain to your server. It generates a valid certificate then automatically and access via e.g. `https://public.domain.com:8443/` is possible.)
-- `443/TCP`: will be used by the Apache container later on and needs to be open in your firewall/router
-- `3478/TCP` and `3478/UDP`: will be used by the Turnserver inside the Talk container and needs to be open in your firewall/router
+- `8443/TCP`: Mastercontainer Interface with valid certificate (only works if port 80 and 8443 are open/forwarded in your firewall/router and you point a domain to your server. It generates a valid certificate then automatically and access via e.g. `https://public.domain.com:8443/` is possible.)
+- `443/TCP`: will be used by the Apache container later on and needs to be open/forwarded in your firewall/router
+- `3478/TCP` and `3478/UDP`: will be used by the Turnserver inside the Talk container and needs to be open/forwarded in your firewall/router
 
 ### How to run AIO on macOS?
-On macOS, there is only one thing different in comparison to Linux: instead of using `--volume /var/run/docker.sock:/var/run/docker.sock:ro`, you need to use `--volume /var/run/docker.sock.raw:/var/run/docker.sock:ro` to run it after you installed [Docker Desktop](https://www.docker.com/products/docker-desktop/). Apart from that it should work and behave the same like on Linux.
+On macOS, there is only one thing different in comparison to Linux: instead of using `--volume /var/run/docker.sock:/var/run/docker.sock:ro`, you need to use `--volume /var/run/docker.sock.raw:/var/run/docker.sock:ro` to run it after you installed [Docker Desktop](https://www.docker.com/products/docker-desktop/) (and don't forget to [enable ipv6](https://github.com/nextcloud/all-in-one/blob/main/docker-ipv6-support.md) if you should need that). Apart from that it should work and behave the same like on Linux.
 
 Also, you may be interested in adjusting Nextcloud's Datadir to store the files on the host system. See [this documentation](https://github.com/nextcloud/all-in-one#how-to-change-the-default-location-of-nextclouds-datadir) on how to do it.
 
 ### How to run AIO on Windows?
-On Windows, the following command should work in the command prompt after you installed [Docker Desktop](https://www.docker.com/products/docker-desktop/):
+On Windows, install [Docker Desktop](https://www.docker.com/products/docker-desktop/) (and don't forget to [enable ipv6](https://github.com/nextcloud/all-in-one/blob/main/docker-ipv6-support.md) if you should need that) and run the following command in the command prompt:
 
 ```
 docker run ^
@@ -106,7 +168,7 @@ Also, you may be interested in adjusting Nextcloud's Datadir to store the files 
 ⚠️ **Please note:** Almost all commands in this project's documentation use `sudo docker ...`. Since `sudo` is not available on Windows, you simply remove `sudo` from the commands and they should work.  
 
 ### How to run AIO on Synology DSM
-On Synology, there are two things different in comparison to Linux: instead of using `--volume /var/run/docker.sock:/var/run/docker.sock:ro`, you need to use `--volume /volume1/docker/docker.sock:/var/run/docker.sock:ro` to run it. You also need to add `-e DOCKER_SOCKET_PATH="/volume1/docker/docker.sock"`to the startup command. Apart from that it should work and behave the same like on Linux. Obviously the Synology Docker GUI will not work with that so you will need to either use SSH or create a user-defined script task in the task scheduler as the user 'root' in order to run the command.
+On Synology, there are two things different in comparison to Linux: instead of using `--volume /var/run/docker.sock:/var/run/docker.sock:ro`, you need to use `--volume /volume1/docker/docker.sock:/var/run/docker.sock:ro` to run it. You also need to add `--env WATCHTOWER_DOCKER_SOCKET_PATH="/volume1/docker/docker.sock"`to the docker run command of the mastercontainer (but before the last line `nextcloud/all-in-one:latest`). Apart from that it should work and behave the same like on Linux. Obviously the Synology Docker GUI will not work with that so you will need to either use SSH or create a user-defined script task in the task scheduler as the user 'root' in order to run the command.
 
 Also, you may be interested in adjusting Nextcloud's Datadir to store the files on the host system. See [this documentation](https://github.com/nextcloud/all-in-one#how-to-change-the-default-location-of-nextclouds-datadir) on how to do it.
 
@@ -138,7 +200,7 @@ The easiest way to run it with Portainer on Linux is to use Portainer's stacks f
 - If you are using AIO's built-in Reverse Proxy and don't use your own, then may the certificate issuing possibly not work out-of-the-box because Cloudflare might block the attempt. In that case you need to disable the Proxy feature at least temporarily in order to make it work. See https://github.com/nextcloud/all-in-one/discussions/1101.
 
 ### How to run Nextcloud behind a Cloudflare Tunnel?
-Although it does not seems like it is the case but from AIO perspective a Cloudflare Tunnel works like a reverse proxy. So please follow the [reverse proxy documentation](./reverse-proxy.md) where is documented how to make it run behind a Cloudflare Tunnel. Also see https://github.com/dani-garcia/vaultwarden/wiki/Running-a-private-vaultwarden-instance-with-Let%27s-Encrypt-certs#cloudflare-setup for additional docs on this topic.
+Although it does not seems like it is the case but from AIO perspective a Cloudflare Tunnel works like a reverse proxy. So please follow the [reverse proxy documentation](./reverse-proxy.md) where is documented how to make it run behind a Cloudflare Tunnel. However please see the [caveats](https://github.com/nextcloud/all-in-one#notes-on-cloudflare-proxytunnel) before proceeding.
 
 ### Disrecommended VPS providers
 - Stratos VPS crash/freeze/make errors when they reach an extremely low PID limit, which is very quickly reached by AIO, see [here](https://github.com/nextcloud/all-in-one/discussions/1747#discussioncomment-4716164), Strato does normally not increase this limit.
@@ -178,7 +240,7 @@ The recommended way is to set up a local dns-server like a pi-hole and set up a 
 - https://dockerlabs.collabnix.com/intermediate/networking/Configuring_DNS.html
 
 ### How to skip the domain validation?
-If you are completely sure that you've configured everything correctly and are not able to pass the domain validation, you may skip the domain validation by adding `-e SKIP_DOMAIN_VALIDATION=true` to the docker run command of the mastercontainer.
+If you are completely sure that you've configured everything correctly and are not able to pass the domain validation, you may skip the domain validation by adding `--env SKIP_DOMAIN_VALIDATION=true` to the docker run command of the mastercontainer (but before the last line `nextcloud/all-in-one:latest`! If it was started already, you will need to stop the mastercontainer, remove it (no data will be lost) and recreate it using the docker run command that you initially used).
 
 ### How to resolve firewall problems with Fedora Linux, RHEL OS, CentOS, SUSE Linux and others?
 It is known that Linux distros that use [firewalld](https://firewalld.org) as their firewall daemon have problems with docker networks. In case the containers are not able to communicate with each other, you may change your firewalld to use the iptables backend by running:
@@ -222,7 +284,7 @@ If your Nextcloud is running and you are logged in as admin in your Nextcloud, y
 **⚠️ Please note:** Editing the configuration.json manually and making a mistake may break your instance so please create a backup first!
 
 If you set up a new AIO instance, you need to enter a domain. Currently there is no way to change this domain afterwards from the AIO interface. So in order to change it, you need to edit the configuration.json manually using `sudo docker run -it --rm --volume nextcloud_aio_mastercontainer:/mnt/docker-aio-config:rw alpine sh -c "apk add --no-cache nano && nano /mnt/docker-aio-config/data/configuration.json"`, subsitute each occurrence of your old domain with your new domain and save and write out the file. Afterwards restart your containers from the AIO interface and everything should work as expected if the new domain is correctly configured.<br>
-If you are running AIO behind a reverse proxy, you need to obviously also change the domain in your reverse proxy config.
+If you are running AIO behind a web server or reverse proxy (like Apache, Nginx and else), you need to obviously also change the domain in your reverse proxy config.
 
 ### How to properly reset the instance?
 If something goes unexpected routes during the initial installation, you might want to reset the AIO installation to be able to start from scratch.
@@ -238,7 +300,7 @@ Here is how to reset the AIO instance properly:
 1. Now remove all these stopped containers with `sudo docker container prune`
 1. Delete the docker network with `sudo docker network rm nextcloud-aio`
 1. Check which volumes are dangling with `sudo docker volume ls --filter "dangling=true"`
-1. Now remove all these dangling volumes: `sudo docker volume prune` (on Windows you might need to remove some volumes afterwards manually with `docker volume rm nextcloud_aio_backupdir`, `docker volume rm nextcloud_aio_nextcloud_datadir`). 
+1. Now remove all these dangling volumes: `sudo docker volume prune docker --filter all=1` (on Windows you might need to remove some volumes afterwards manually with `docker volume rm nextcloud_aio_backupdir`, `docker volume rm nextcloud_aio_nextcloud_datadir`). 
 1. If you've configured `NEXTCLOUD_DATADIR` to a path on your host instead of the default volume, you need to clean that up as well. (E.g. by simply deleting the directory).
 1. Make sure that no volumes are remaining with `sudo docker volume ls --format {{.Name}}`. If no `nextcloud-aio` volumes are listed, you can proceed with the steps below. If there should be some, you will need to stop them with `sudo docker volume rm <volume_name>` until no one is listed anymore.
 1. Optional: You can remove all docker images with `sudo docker image prune -a`.
@@ -268,7 +330,11 @@ Backups can be created and restored in the AIO interface using the buttons `Crea
 
 The backups itself get encrypted with an encryption key that gets shown to you in the AIO interface. Please save that at a safe place as you will not be able to restore from backup without this key.
 
-Be aware that this solution does not back up files and folders that are mounted into Nextcloud using the external storage app.
+Daily backups can get enabled after the initial backup is done. Enabling this also allows to enable an option that allows to update all containers, Nextcloud and its apps automatically.
+
+Be aware that this solution does not back up files and folders that are mounted into Nextcloud using the external storage app - but you can add further Docker volumes and host paths that you want to back up after the initial backup is done.
+
+Regarding backup retention, see [this documentation](https://github.com/nextcloud/all-in-one/discussions/1675).
 
 ---
 
@@ -442,23 +508,23 @@ You can do so by running the `/daily-backup.sh` script that is stored in the mas
 - `STOP_CONTAINERS` if set to `1`, it will automatically stop the containers.
 - `CHECK_BACKUP` if set to `1`, it will start the backup check. This is not allowed to be enabled at the same time like `DAILY_BACKUP`. Please be aware that this option is non-blocking which means that the backup check is not done when the process is finished since it only start the borgbackup container with the correct configuration.
 
-One example for this would be `sudo docker exec -it -e DAILY_BACKUP=1 nextcloud-aio-mastercontainer /daily-backup.sh`, which you can run via a cronjob or put it in a script.
+One example for this would be `sudo docker exec -it --env DAILY_BACKUP=1 nextcloud-aio-mastercontainer /daily-backup.sh`, which you can run via a cronjob or put it in a script.
 
 ⚠️ Please note that none of the option returns error codes. So you need to check for the correct result yourself.
 
 ### How to disable the backup section?
-If you already have a backup solution in place, you may want to hide the backup section. You can do so by adding `-e DISABLE_BACKUP_SECTION=true` to the initial startup of the mastercontainer.
+If you already have a backup solution in place, you may want to hide the backup section. You can do so by adding `--env AIO_DISABLE_BACKUP_SECTION=true` to the docker run command of the mastercontainer (but before the last line `nextcloud/all-in-one:latest`! If it was started already, you will need to stop the mastercontainer, remove it (no data will be lost) and recreate it using the docker run command that you initially used).
 
 ### How to change the default location of Nextcloud's Datadir?
 ⚠️ **Attention:** It is very important to change the datadir **before** Nextcloud is installed/started the first time and not to change it afterwards! If you still want to do it afterwards, see [this](https://github.com/nextcloud/all-in-one/discussions/890#discussioncomment-3089903) on how to do it.
 
-You can configure the Nextcloud container to use a specific directory on your host as data directory. You can do so by adding the environmental variable `NEXTCLOUD_DATADIR` to the initial startup of the mastercontainer. Allowed values for that variable are strings that start with `/` and are not equal to `/`.
+You can configure the Nextcloud container to use a specific directory on your host as data directory. You can do so by adding the environmental variable `NEXTCLOUD_DATADIR` to the docker run command of the mastercontainer (but before the last line `nextcloud/all-in-one:latest`! If it was started already, you will need to stop the mastercontainer, remove it (no data will be lost) and recreate it using the docker run command that you initially used). Allowed values for that variable are strings that start with `/` and are not equal to `/`. The chosen directory or volume will then be mounted to `/mnt/ncdata` inside the container.
 
-- An example for Linux is `-e NEXTCLOUD_DATADIR="/mnt/ncdata"`.
-- On macOS it might be `-e NEXTCLOUD_DATADIR="/var/nextcloud-data"`
-- For Synology it may be `-e NEXTCLOUD_DATADIR="/volume1/docker/nextcloud/data"`. 
-- On Windows it might be `-e NEXTCLOUD_DATADIR="/run/desktop/mnt/host/c/ncdata"`. (This path is equivalent to `C:\ncdata` on your Windows host so you need to translate the path accordingly. Hint: the path that you enter needs to start with `/run/desktop/mnt/host/`. Append to that the exact location on your windows host, e.g. `c/ncdata` which is equivalent to `C:\ncdata`.)
-- Another option is to provide a specific volume name here with: `-e NEXTCLOUD_DATADIR="nextcloud_aio_nextcloud_datadir"`. This volume needs to be created beforehand manually by you in order to be able to use it. e.g. with:
+- An example for Linux is `--env NEXTCLOUD_DATADIR="/mnt/ncdata"`.
+- On macOS it might be `--env NEXTCLOUD_DATADIR="/var/nextcloud-data"`
+- For Synology it may be `--env NEXTCLOUD_DATADIR="/volume1/docker/nextcloud/data"`. 
+- On Windows it might be `--env NEXTCLOUD_DATADIR="/run/desktop/mnt/host/c/ncdata"`. (This path is equivalent to `C:\ncdata` on your Windows host so you need to translate the path accordingly. Hint: the path that you enter needs to start with `/run/desktop/mnt/host/`. Append to that the exact location on your windows host, e.g. `c/ncdata` which is equivalent to `C:\ncdata`.)
+- Another option is to provide a specific volume name here with: `--env NEXTCLOUD_DATADIR="nextcloud_aio_nextcloud_datadir"`. This volume needs to be created beforehand manually by you in order to be able to use it. e.g. with:
     ```
     docker volume create ^
     --driver local ^
@@ -486,14 +552,14 @@ password=<password>
 Now you can use `/mnt/storagebox` as Nextcloud's datadir like described in the section above above this one.
 
 ### How to allow the Nextcloud container to access directories on the host?
-By default, the Nextcloud container is confined and cannot access directories on the host OS. You might want to change this when you are planning to use local external storage in Nextcloud to store some files outside the data directory and can do so by adding the environmental variable `NEXTCLOUD_MOUNT` to the initial startup of the mastercontainer. Allowed values for that variable are strings that start with `/` and are not equal to `/`.
+By default, the Nextcloud container is confined and cannot access directories on the host OS. You might want to change this when you are planning to use local external storage in Nextcloud to store some files outside the data directory and can do so by adding the environmental variable `NEXTCLOUD_MOUNT` to the docker run command of the mastercontainer (but before the last line `nextcloud/all-in-one:latest`! If it was started already, you will need to stop the mastercontainer, remove it (no data will be lost) and recreate it using the docker run command that you initially used). Allowed values for that variable are strings that start with `/` and are not equal to `/`.
 
-- Two examples for Linux are `-e NEXTCLOUD_MOUNT="/mnt/"` and `-e NEXTCLOUD_MOUNT="/media/"`.
-- On macOS it might be `-e NEXTCLOUD_MOUNT="/Volumes/your_drive/"`
-- For Synology it may be `-e NEXTCLOUD_MOUNT="/volume1/"`.
-- On Windows it might be `-e NEXTCLOUD_MOUNT="/run/desktop/mnt/host/d/your-folder/"`. (This path is equivalent to `D:\your-folder` on your Windows host so you need to translate the path accordingly. Hint: the path that you enter needs to start with `/run/desktop/mnt/host/`. Append to that the exact location on your windows host, e.g. `d/your-folder/` which is equivalent to `D:\your-folder`.)
+- Two examples for Linux are `--env NEXTCLOUD_MOUNT="/mnt/"` and `--env NEXTCLOUD_MOUNT="/media/"`.
+- On macOS it might be `--env NEXTCLOUD_MOUNT="/Volumes/your_drive/"`
+- For Synology it may be `--env NEXTCLOUD_MOUNT="/volume1/"`.
+- On Windows it might be `--env NEXTCLOUD_MOUNT="/run/desktop/mnt/host/d/your-folder/"`. (This path is equivalent to `D:\your-folder` on your Windows host so you need to translate the path accordingly. Hint: the path that you enter needs to start with `/run/desktop/mnt/host/`. Append to that the exact location on your windows host, e.g. `d/your-folder/` which is equivalent to `D:\your-folder`.)
 
-After using this option, please make sure to apply the correct permissions to the directories that you want to use in Nextcloud. E.g. `sudo chown -R 33:0 /mnt/your-drive-mountpoint` and `sudo chmod -R 750 /mnt/your-drive-mountpoint` should make it work on Linux when you have used `-e NEXTCLOUD_MOUNT="/mnt/"`. On Windows you could do this e.g. with `docker exec -it nextcloud-aio-nextcloud chown -R 33:0 /run/desktop/mnt/host/d/your-folder/` and `docker exec -it nextcloud-aio-nextcloud chmod -R 750 /run/desktop/mnt/host/d/your-folder/`.
+After using this option, please make sure to apply the correct permissions to the directories that you want to use in Nextcloud. E.g. `sudo chown -R 33:0 /mnt/your-drive-mountpoint` and `sudo chmod -R 750 /mnt/your-drive-mountpoint` should make it work on Linux when you have used `--env NEXTCLOUD_MOUNT="/mnt/"`. On Windows you could do this e.g. with `docker exec -it nextcloud-aio-nextcloud chown -R 33:0 /run/desktop/mnt/host/d/your-folder/` and `docker exec -it nextcloud-aio-nextcloud chmod -R 750 /run/desktop/mnt/host/d/your-folder/`.
 
 You can then navigate to the apps management page, activate the external storage app, navigate to `https://your-nc-domain.com/settings/admin/externalstorages` and add a local external storage directory that will be accessible inside the container at the same place that you've entered. E.g. `/mnt/your-drive-mountpoint` will be mounted to `/mnt/your-drive-mountpoint` inside the container, etc. 
 
@@ -502,22 +568,25 @@ Be aware though that these locations will not be covered by the built-in backup 
 **Please note:** If you can't see the type "local storage" in the external storage admin options, a restart of the containers from the AIO interface may be required.
 
 ### How to adjust the Talk port?
-By default will the talk container use port `3478/UDP` and `3478/TCP` for connections. You can adjust the port by adding e.g. `-e TALK_PORT=3478` to the initial docker run command and adjusting the port to your desired value.
+By default will the talk container use port `3478/UDP` and `3478/TCP` for connections. You can adjust the port by adding e.g. `--env TALK_PORT=3478` to the docker run command of the mastercontainer (but before the last line `nextcloud/all-in-one:latest`! If it was started already, you will need to stop the mastercontainer, remove it (no data will be lost) and recreate it using the docker run command that you initially used) and adjusting the port to your desired value.
 
 ### How to adjust the upload limit for Nextcloud?
-By default are uploads to Nextcloud limited to a max of 10G. You can adjust the upload limit by providing `-e NEXTCLOUD_UPLOAD_LIMIT=10G` to the docker run command of the mastercontainer and customize the value to your fitting. It must start with a number and end with `G` e.g. `10G`.
+By default are public uploads to Nextcloud limited to a max of 10G (logged in users can upload much bigger files using the webinterface or the mobile/desktop clients since chunking is used in that case). You can adjust the upload limit by providing `--env NEXTCLOUD_UPLOAD_LIMIT=10G` to the docker run command of the mastercontainer (but before the last line `nextcloud/all-in-one:latest`! If it was started already, you will need to stop the mastercontainer, remove it (no data will be lost) and recreate it using the docker run command that you initially used) and customize the value to your fitting. It must start with a number and end with `G` e.g. `10G`.
 
 ### How to adjust the max execution time for Nextcloud?
-By default are uploads to Nextcloud limited to a max of 3600s. You can adjust the upload time limit by providing `-e NEXTCLOUD_MAX_TIME=3600` to the docker run command of the mastercontainer and customize the value to your fitting. It must be a number e.g. `3600`.
+By default are uploads to Nextcloud limited to a max of 3600s. You can adjust the upload time limit by providing `--env NEXTCLOUD_MAX_TIME=3600` to the docker run command of the mastercontainer (but before the last line `nextcloud/all-in-one:latest`! If it was started already, you will need to stop the mastercontainer, remove it (no data will be lost) and recreate it using the docker run command that you initially used) and customize the value to your fitting. It must be a number e.g. `3600`.
 
 ### How to adjust the PHP memory limit for Nextcloud?
-By default is each PHP process in the Nextcloud container limited to a max of 512 MB. You can adjust the memory limit by providing `-e NEXTCLOUD_MEMORY_LIMIT=512M` to the docker run command of the mastercontainer and customize the value to your fitting. It must start with a number and end with `M` e.g. `1024M`.
+By default is each PHP process in the Nextcloud container limited to a max of 512 MB. You can adjust the memory limit by providing `--env NEXTCLOUD_MEMORY_LIMIT=512M` to the docker run command of the mastercontainer (but before the last line `nextcloud/all-in-one:latest`! If it was started already, you will need to stop the mastercontainer, remove it (no data will be lost) and recreate it using the docker run command that you initially used) and customize the value to your fitting. It must start with a number and end with `M` e.g. `1024M`.
 
 ### What can I do to fix the internal or reserved ip-address error?
-If you get an error during the domain validation which states that your ip-address is an internal or reserved ip-address, you can fix this by first making sure that your domain indeed has the correct public ip-address that points to the server and then adding `--add-host yourdomain.com:<public-ip-address>` to the initial docker run command which will allow the domain validation to work correctly. And so that you know: even if the `A` record of your domain should change over time, this is no problem since the mastercontainer will not make any attempt to access the chosen domain after the initial domain validation.
+If you get an error during the domain validation which states that your ip-address is an internal or reserved ip-address, you can fix this by first making sure that your domain indeed has the correct public ip-address that points to the server and then adding `--add-host yourdomain.com:<public-ip-address>` to the docker run command of the mastercontainer (but before the last line `nextcloud/all-in-one:latest`! If it was started already, you will need to stop the mastercontainer, remove it (no data will be lost) and recreate it using the docker run command that you initially used) which will allow the domain validation to work correctly. And so that you know: even if the `A` record of your domain should change over time, this is no problem since the mastercontainer will not make any attempt to access the chosen domain after the initial domain validation.
 
 ### Can I run this with Docker swarm?
 Yes. For that to work, you need to use and follow the [manual-install documentation](./manual-install/).
+
+### Can I run this with Kubernetes?
+Yes. For that to work, you need to use and follow the [helm-chart documentation](./nextcloud-aio-helm-chart/).
 
 ### How to run this with Docker rootless?
 You can run AIO also with docker rootless. How to do this is documented here: [docker-rootless.md](https://github.com/nextcloud/all-in-one/blob/main/docker-rootless.md)
@@ -526,23 +595,25 @@ You can run AIO also with docker rootless. How to do this is documented here: [d
 No. Since Podman is not 100% compatible with the Docker API, you cannot use Podman instead of Docker (since that would add yet another platform where the maintaner would need to test on). However you can use and follow the [manual-install documentation](./manual-install/) to get AIO's containers running with Podman or use Docker rootless, as described in the above section.
 
 ### How to change the Nextcloud apps that are installed on the first startup?
-You might want to adjust the Nextcloud apps that are installed upon the first startup of the Nextcloud container. You can do so by adding `-e NEXTCLOUD_STARTUP_APPS="deck twofactor_totp tasks calendar contacts"` to the docker run command of the mastercontainer and customize the value to your fitting. It must be a string with small letters a-z, 0-9, spaces and hyphens or '_'. You can disable shipped and by default enabled apps by adding a hyphen in front of the appid. E.g. `-contactsinteraction`.
+You might want to adjust the Nextcloud apps that are installed upon the first startup of the Nextcloud container. You can do so by adding `--env NEXTCLOUD_STARTUP_APPS="deck twofactor_totp tasks calendar contacts"` to the docker run command of the mastercontainer (but before the last line `nextcloud/all-in-one:latest`! If it was started already, you will need to stop the mastercontainer, remove it (no data will be lost) and recreate it using the docker run command that you initially used) and customize the value to your fitting. It must be a string with small letters a-z, 0-9, spaces and hyphens or '_'. You can disable shipped and by default enabled apps by adding a hyphen in front of the appid. E.g. `-contactsinteraction`.
 
 ### How to add OS packages permanently to the Nextcloud container?
 Some Nextcloud apps require additional external dependencies that must be bundled within Nextcloud container in order to work correctly. As we cannot put each and every dependency for all apps into the container - as this would make the project very fast unmaintainable - there is an official way how you can add additional dependencies into the Nextcloud container. However note that doing this is disrecommended since we do not test Nextcloud apps that require external dependencies. 
 
-You can do so by adding `-e NEXTCLOUD_ADDITIONAL_APKS="imagemagick dependency2 dependency3"` to the docker run command of the mastercontainer and customize the value to your fitting. It must be a string with small letters a-z, digits 0-9, spaces, dots and hyphens or '_'. You can find available packages here: https://pkgs.alpinelinux.org/packages?name=&branch=v3.16&repo=&arch=&maintainer=. By default added is `imagemagick`. If you want to keep that, you need to specify it as well.
+You can do so by adding `--env NEXTCLOUD_ADDITIONAL_APKS="imagemagick dependency2 dependency3"` to the docker run command of the mastercontainer (but before the last line `nextcloud/all-in-one:latest`! If it was started already, you will need to stop the mastercontainer, remove it (no data will be lost) and recreate it using the docker run command that you initially used) and customize the value to your fitting. It must be a string with small letters a-z, digits 0-9, spaces, dots and hyphens or '_'. You can find available packages here: https://pkgs.alpinelinux.org/packages?name=&branch=v3.16&repo=&arch=&maintainer=. By default added is `imagemagick`. If you want to keep that, you need to specify it as well.
 
 ### How to add PHP extensions permanently to the Nextcloud container?
 Some Nextcloud apps require additional php extensions that must be bundled within Nextcloud container in order to work correctly. As we cannot put each and every dependency for all apps into the container - as this would make the project very fast unmaintainable - there is an official way how you can add additional php extensions into the Nextcloud container. However note that doing this is disrecommended since we do not test Nextcloud apps that require additional php extensions. 
 
-You can do so by adding `-e NEXTCLOUD_ADDITIONAL_PHP_EXTENSIONS="imagick extension1 extension2"` to the docker run command of the mastercontainer and customize the value to your fitting. It must be a string with small letters a-z, digits 0-9, spaces, dots and hyphens or '_'. You can find available extensions here: https://pecl.php.net/packages.php. By default added is `imagick`. If you want to keep that, you need to specify it as well.
+You can do so by adding `--env NEXTCLOUD_ADDITIONAL_PHP_EXTENSIONS="imagick extension1 extension2"` to the docker run command of the mastercontainer (but before the last line `nextcloud/all-in-one:latest`! If it was started already, you will need to stop the mastercontainer, remove it (no data will be lost) and recreate it using the docker run command that you initially used) and customize the value to your fitting. It must be a string with small letters a-z, digits 0-9, spaces, dots and hyphens or '_'. You can find available extensions here: https://pecl.php.net/packages.php. By default added is `imagick`. If you want to keep that, you need to specify it as well.
 
 ### What about the pdlib PHP extension for the facerecognition app?
 The [facerecognition app](https://apps.nextcloud.com/apps/facerecognition) requires the pdlib PHP extension to be installed. Unfortunately, it is not available on PECL nor via PHP core, so there is no way to add this into AIO currently. However you can vote up [this issue](https://github.com/goodspb/pdlib/issues/56) to bring it to PECL and there is the [recognize app](https://apps.nextcloud.com/apps/recognize) that also allows to do face-recognition.
 
 ### How to enable hardware-transcoding for Nextcloud?
-The [memories app](https://apps.nextcloud.com/apps/memories) allows to enable hardware transcoding for videos. In order to use that, you need to add `-e NEXTCLOUD_ENABLE_DRI_DEVICE=true` to the docker run command of the mastercontainer which will mount the `/dev/dri` device into the container (⚠️ Attention: this only works if the device is present on the host!). Additionally, you need to add required packets to the Nextcloud container by using [this feature](https://github.com/nextcloud/all-in-one#how-to-add-os-packages-permanently-to-the-nextcloud-container) and adding the required Alpine packages that are documented [here](https://github.com/pulsejet/memories/wiki/QSV-Transcoding).
+⚠️ Attention: this only works if the `/dev/dri` device is present on the host! If it should not exist on your host, don't proceed as otherwise the Nextcloud container will fail to start!
+
+The [memories app](https://apps.nextcloud.com/apps/memories) allows to enable hardware transcoding for videos. In order to use that, you need to add `--env NEXTCLOUD_ENABLE_DRI_DEVICE=true` to the docker run command of the mastercontainer (but before the last line `nextcloud/all-in-one:latest`! If it was started already, you will need to stop the mastercontainer, remove it (no data will be lost) and recreate it using the docker run command that you initially used) which will mount the `/dev/dri` device into the container. Additionally, you need to add required packets to the Nextcloud container by using [this feature](https://github.com/nextcloud/all-in-one#how-to-add-os-packages-permanently-to-the-nextcloud-container) and adding the required Alpine packages that are documented [here](https://github.com/pulsejet/memories/wiki/QSV-Transcoding).
 
 ### Huge docker logs
 When your containers run for a few days without a restart, the container logs that you can view from the AIO interface can get really huge. You can limit the loge sizes by enabling logrotate for docker container logs. Feel free to enable this by following those instructions: https://sandro-keil.de/blog/logrotate-for-docker-container/
@@ -596,14 +667,14 @@ What are the requirements?
 ### How to trust user-defiend Certification Authorities (CA)?
 For some applications it might be necessary to enstablish a secured connection to a host / server which is using a certificated issued by a Certification Authority that is not trusted out of the box. An example could be configuring LDAPS against the Domain Controller (ActiveDirectory) of an organization
 
-You can make the Nextcloud container trust any Certification Authority by providing the environmental variable `NEXTCLOUD_TRUSTED_CACERTS_DIR` when starting the AIO-mastercontainer. The value of the variables should be set to the absolute path to a directory on the host, which contains one or more Certification Authority's certificate. You should use X.509 certificates, Base64 encoded. (Other formats may work but have not been tested!) All the certificates in the directory will be trusted.
+You can make the Nextcloud container trust any Certification Authority by providing the environmental variable `NEXTCLOUD_TRUSTED_CACERTS_DIR` to the docker run command of the mastercontainer (but before the last line `nextcloud/all-in-one:latest`! If it was started already, you will need to stop the mastercontainer, remove it (no data will be lost) and recreate it using the docker run command that you initially used). The value of the variables should be set to the absolute path to a directory on the host, which contains one or more Certification Authority's certificate. You should use X.509 certificates, Base64 encoded. (Other formats may work but have not been tested!) All the certificates in the directory will be trusted.
 
-When using `docker run`, the environmental variable can be set with `-e NEXTCLOUD_TRUSTED_CACERTS_DIR=/path/to/my/cacerts`.
+When using `docker run`, the environmental variable can be set with `--env NEXTCLOUD_TRUSTED_CACERTS_DIR=/path/to/my/cacerts`.
 
 In order for the value to be valid, the path should start with `/` and not end with '/' and point to an existing **directory**. Pointing the variable directly to a certificate **file** will not work and may also break things.
 
 ### How to disable Collabora's Seccomp feature?
-The Collabora container enables Seccomp by default, which is a security feature of the Linux kernel. On systems without this kernel feature enabled, you need to provide `-e COLLABORA_SECCOMP_DISABLED=true` to the initial docker run command in order to make it work.
+The Collabora container enables Seccomp by default, which is a security feature of the Linux kernel. On systems without this kernel feature enabled, you need to provide `--env COLLABORA_SECCOMP_DISABLED=true` to the initial docker run command in order to make it work.
 
 ### How to enable automatic updates without creating a backup beforehand?
 If you have an external backup solution, you might want to enable automatic updates without creating a backup first. However note that doing this is disrecommended since you will not be able to easily create and restore a backup from the AIO interface anymore and you need to make sure to shut down all the containers properly before creating the backup, e.g. by stopping them from the AIO interface first. 
@@ -617,7 +688,7 @@ But anyhow, is here a guide that helps you automate the whole procedure:
 #!/bin/bash
 
 # Stop the containers
-docker exec -e STOP_CONTAINERS=1 nextcloud-aio-mastercontainer /daily-backup.sh
+docker exec --env STOP_CONTAINERS=1 nextcloud-aio-mastercontainer /daily-backup.sh
 
 # Below is optional if you run AIO in a VM which will shut down the VM afterwards
 # poweroff
@@ -645,7 +716,7 @@ Afterwards apply the correct permissions with `sudo chown root:root /root/shutdo
 #!/bin/bash
 
 # Run container update once
-if ! docker exec -e AUTOMATIC_UPDATES=1 nextcloud-aio-mastercontainer /daily-backup.sh; then
+if ! docker exec --env AUTOMATIC_UPDATES=1 nextcloud-aio-mastercontainer /daily-backup.sh; then
     while docker ps --format "{{.Names}}" | grep -q "^nextcloud-aio-watchtower$"; do
         echo "Waiting for watchtower to stop"
         sleep 30
@@ -657,7 +728,7 @@ if ! docker exec -e AUTOMATIC_UPDATES=1 nextcloud-aio-mastercontainer /daily-bac
     done
 
     # Run container update another time to make sure that all containers are updated correctly.
-    docker exec -e AUTOMATIC_UPDATES=1 nextcloud-aio-mastercontainer /daily-backup.sh
+    docker exec --env AUTOMATIC_UPDATES=1 nextcloud-aio-mastercontainer /daily-backup.sh
 fi
 
 ```

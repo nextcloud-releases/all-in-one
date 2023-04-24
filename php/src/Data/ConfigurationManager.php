@@ -239,6 +239,16 @@ class ConfigurationManager
             throw new InvalidSettingConfigurationException("Domain must contain at least one dot!");
         }
 
+        // Validate that no slashes are contained
+        if (strpos($domain, '/') !== false) {
+            throw new InvalidSettingConfigurationException("Domain must not contain slashes!");
+        }
+
+        // Validate that no colons are contained
+        if (strpos($domain, ':') !== false) {
+            throw new InvalidSettingConfigurationException("Domain must not contain colons!");
+        }
+
         // Validate domain
         if (!filter_var($domain, FILTER_VALIDATE_DOMAIN, FILTER_FLAG_HOSTNAME)) {
             throw new InvalidSettingConfigurationException("Domain is not a valid domain!");
@@ -572,7 +582,7 @@ class ConfigurationManager
     }
 
     public function GetDockerSocketPath() : string {
-        $envVariableName = 'DOCKER_SOCKET_PATH';
+        $envVariableName = 'WATCHTOWER_DOCKER_SOCKET_PATH';
         $configName = 'docker_socket_path';
         $defaultValue = '/var/run/docker.sock';
         return $this->GetEnvironmentalVariableOrConfig($envVariableName, $configName, $defaultValue);
@@ -801,7 +811,7 @@ class ConfigurationManager
     }
 
     private function GetDisableBackupSection() : string {
-        $envVariableName = 'DISABLE_BACKUP_SECTION';
+        $envVariableName = 'AIO_DISABLE_BACKUP_SECTION';
         $configName = 'disable_backup_section';
         $defaultValue = '';
         return $this->GetEnvironmentalVariableOrConfig($envVariableName, $configName, $defaultValue);

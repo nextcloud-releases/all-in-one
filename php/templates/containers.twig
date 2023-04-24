@@ -16,7 +16,7 @@
     </header>
 
     <div class="content">
-        <h1>Nextcloud AIO v4.9.0</h1>
+        <h1>Nextcloud AIO v5.0.0</h1>
 
         {# Add 2nd tab warning #}
         <script type="text/javascript" src="second-tab-warning.js"></script>
@@ -79,9 +79,16 @@
                     </form>
                 {% else %}
                     {% if borg_backup_host_location == '' and borg_restore_password == '' %}
-                        Nextcloud AIO stands for Nextcloud All In One and provides easy deployment and maintenance with most features included in this one Nextcloud instance.<br><br>
+                        Nextcloud AIO stands for Nextcloud All-in-One and provides easy deployment and maintenance with most features included in this one Nextcloud instance.<br><br>
+                        You can either create a new AIO instance or restore a former AIO instance from backup. See the two sections below.<br><br>
+                        {{ include('includes/aio-config.twig') }}
                         <h2>New AIO instance</h2>
-                        Please type in the domain that will be used for Nextcloud if you want to create a new instance:<br><br />
+                        {% if apache_port == '443' %}
+                            AIO is currently in "normal" mode which means that it cannot be installed behind a web server or reverse proxy (like Apache, Nginx and else) because it does the TLS proxying itself. If you want to run AIO behind a web server or reverse proxy (like Apache, Nginx and else), see the <b><a href="https://github.com/nextcloud/all-in-one/blob/main/reverse-proxy.md">reverse proxy documentation</a></b>.<br><br>
+                        {% else %}
+                            AIO is currently in "reverse proxy" mode which means that it can be installed behind a web server or reverse proxy (like Apache Nginx and else) and does not do the TLS proxying itself.<br><br>
+                        {% endif %}
+                        Please type in the domain into the input field below that will be used for Nextcloud in order to create a new AIO instance.<br><br />
                         {% if skip_domain_validation == true %}
                             <b>Please note:</b> The domain validation is disabled so any domain will be accepted here! So make sure that you do not make a typo here as you will not be able to change it afterwards!<br><br>
                         {% endif %}
@@ -92,9 +99,18 @@
                             <input class="button" type="submit" value="Submit" />
                         </form>
                         {% if skip_domain_validation == false %}
-                            Make sure that this server is reachable on Port 443 and you've correctly set up the DNS config for the domain that you enter. <br><br>
-                            If you have a dynamic IP-address, you can use e.g. <a href="https://ddclient.net/">DDclient</a> with a compatible domain provider for DNS updates. <br /><br/>
-                            <b>Hint:</b> If the domain validation fails but you are completely sure that you've configured everything correctly, you may skip the domain validation by following <a href="https://github.com/nextcloud/all-in-one#how-to-skip-the-domain-validation">this documentation</a>.<br><br>
+                            Make sure that this server is reachable on port 443 (port 443/tcp is open/forwarded in your firewall/router) and that you've correctly set up the DNS config for the domain that you enter (set the A record to your public ipv4-address and if you need ipv6, set the AAAA record to your public ipv6-address. A CNAME record if of course also possible). You should see hints on what went wrong if your domain does not get accepted in the top right corner.<br><br>
+                            <details>
+                                <summary>Click here for further hints</summary><br />
+                                If you should not have a domain yet, you can get one for free e.g. from duckduckdns.org and others.<br><br>
+                                If you have a dynamic public IP-address, you can use e.g. <a href="https://ddclient.net/">DDclient</a> with a compatible domain provider for DNS updates.<br /><br/>
+                                If you only want to install AIO locally without exposing it to the public internet or if you cannot do so, feel free to follow <b><a href="">this documentation</a></b>.<br><br>
+                                If you should be using Cloudflare Proxy for your domain, make sure to disable the Proxy feature temporarily as it might block the domain validation attempts.<br /><br/>
+                                {% if apache_port != '443' %}
+                                    If you run into issues getting your domain accepted, see <b><a href="https://github.com/nextcloud/all-in-one/blob/main/reverse-proxy.md#6-how-to-debug-things">these steps</a></b> for how to debug things. <br /><br/>
+                                {% endif %}
+                                <b>Hint:</b> If the domain validation fails but you are completely sure that you've configured everything correctly, you may skip the domain validation by following <a href="https://github.com/nextcloud/all-in-one#how-to-skip-the-domain-validation">this documentation</a>.
+                            </details><br /><br />
                         {% endif %}
 
                         <h2>Restore former AIO instance from backup</h2>
@@ -206,7 +222,10 @@
                         {% else %}
                             <b>{{ nextcloud_password }}</b><br><br>
                         {% endif %}
-                        <a href="https://{{ domain }}" class="button" target="_blank" rel="noopener">Open your Nextcloud ↗</a><br/>
+                        <a href="https://{{ domain }}" class="button" target="_blank" rel="noopener">Open your Nextcloud ↗</a><br/><br>
+                        {% if borg_backup_host_location != '' %}
+                            If your Nextcloud does not open when clicking the button above, see <b><a href="https://github.com/nextcloud/all-in-one/discussions/2105">this documentation<a/></b><br><br>
+                        {% endif %}
                     {% else %}
                         {% if isAnyRestarting == false %}
                             <span class="status running"></span> Containers are currently starting.<br /><br />
@@ -221,6 +240,10 @@
                             </form>
                         {% endif %}
                     {% endif %}
+                {% endif %}
+
+                {% if isApacheStarting == false and is_backup_container_running == false %}
+                    {{ include('includes/aio-config.twig') }}
                 {% endif %}
 
                 {% if was_start_button_clicked == true %}
@@ -391,9 +414,12 @@
                                 This is your encryption password for backups: <b>{{ borgbackup_password }}</b><br /><br/>
                                 Please save it at a safe place since you won't be able to restore from backup if you lose this password! <br /><br/>
                                 Backed up will get all important data of your Nextcloud AIO instance like the database, your files and configuration files of the mastercontainer and else. <br /><br/>
-                                The backup itself will use a tool that is called <a href="https://github.com/borgbackup/borg#what-is-borgbackup"><b>BorgBackup</b><a/> which is a well-known server backup tool that efficiently backs up your files and encrypts them on the fly. <br /><br/>
+                                The backup itself uses a tool that is called <a href="https://github.com/borgbackup/borg#what-is-borgbackup"><b>BorgBackup</b><a/> which is a well-known server backup tool that efficiently backs up your files and encrypts them on the fly. <br /><br/>
                                 Backups get created in the following directory on the host: <b>{{ borg_backup_host_location }}/borg</b> <br /><br/>
-                                Be aware that this solution does not back up files and folders that are mounted into Nextcloud using the external storage app.
+                                Be aware that this solution does not back up files and folders that are mounted into Nextcloud using the external storage app - but you can add further Docker volumes and host paths that you want to back up after the initial backup is done.<br><br>
+                                Regarding backup retention, see <b><a href="https://github.com/nextcloud/all-in-one/discussions/1675">this documentation</a></b><br><br>
+                                Daily backups can get enabled after the initial backup is done. Enabling this also allows to enable an option that allows to update all containers, Nextcloud and its apps automatically.<br><br>
+                                For further documentation and options on this backup solution refer to <b><a href="https://github.com/nextcloud/all-in-one#backup-solution">this documentation<a/></b> and below.
 
                                 {% if isApacheStarting != true %}
                                     <h3>Backup creation</h3>
@@ -521,9 +547,9 @@
                             <input type="checkbox" id="imaginary" name="imaginary"><label for="imaginary">Imaginary (for previews of heic, heif, illustrator, pdf, svg, tiff and webp)</label><br>
                         {% endif %}
                         {% if is_talk_enabled == true %}
-                            <input type="checkbox" id="talk" name="talk" checked="checked"><label for="talk">Nextcloud Talk (needs ports {{ talk_port }}/TCP and {{ talk_port }}/UDP open in your firewall/router)</label><br><br>
+                            <input type="checkbox" id="talk" name="talk" checked="checked"><label for="talk">Nextcloud Talk (needs ports {{ talk_port }}/TCP and {{ talk_port }}/UDP open/forwarded in your firewall/router)</label><br><br>
                         {% else %}
-                            <input type="checkbox" id="talk" name="talk"><label for="talk">Nextcloud Talk (needs ports {{ talk_port }}/TCP and {{ talk_port }}/UDP open in your firewall/router)</label><br><br>
+                            <input type="checkbox" id="talk" name="talk"><label for="talk">Nextcloud Talk (needs ports {{ talk_port }}/TCP and {{ talk_port }}/UDP open/forwarded in your firewall/router)</label><br><br>
                         {% endif %}
                         {% if is_onlyoffice_enabled == true %}
                             <input type="checkbox" id="onlyoffice" name="onlyoffice" checked="checked"><label for="onlyoffice">OnlyOffice</label><br>
@@ -533,7 +559,7 @@
                         <input id="options-form-submit" class="button" type="submit" value="Save changes" />
                         <script type="text/javascript" src="options-form-submit.js"></script>
                     </form>
-                    <b>Minimal system requirements:</b> When any optional addon is enabled, at least 2GB RAM, a dual-core CPU and 40GB system storage are required. When enabling ClamAV or Fulltextsearch, at least 3GB RAM are required. When enabling everything, at least 4GB RAM are required. Recommended are at least 1GB more RAM than the minimal requirement.<br><br>
+                    <b>Minimal system requirements:</b> When any optional addon is enabled, at least 2GB RAM, a dual-core CPU and 40GB system storage are required. When enabling ClamAV or Fulltextsearch, at least 3GB RAM are required. When enabling everything, at least 4GB RAM are required. Recommended are at least 1GB more RAM than the minimal requirement. For further advices and recommendations see <b><a href="https://github.com/nextcloud/all-in-one/discussions/1335">this documentation</a></b><br><br>
                     {% if isAnyRunning == true or is_x64_platform == false %}
                         <script type="text/javascript" src="disable-clamav.js"></script>
                     {% endif %}
