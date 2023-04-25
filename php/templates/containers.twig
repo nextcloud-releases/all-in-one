@@ -104,10 +104,10 @@
                                 <summary>Click here for further hints</summary><br />
                                 If you should not have a domain yet, you can get one for free e.g. from duckduckdns.org and others.<br><br>
                                 If you have a dynamic public IP-address, you can use e.g. <a href="https://ddclient.net/">DDclient</a> with a compatible domain provider for DNS updates.<br /><br/>
-                                If you only want to install AIO locally without exposing it to the public internet or if you cannot do so, feel free to follow <b><a href="">this documentation</a></b>.<br><br>
+                                If you only want to install AIO locally without exposing it to the public internet or if you cannot do so, feel free to follow <a href="https://github.com/nextcloud/all-in-one/blob/main/local-instance.md">this documentation</a>.<br><br>
                                 If you should be using Cloudflare Proxy for your domain, make sure to disable the Proxy feature temporarily as it might block the domain validation attempts.<br /><br/>
                                 {% if apache_port != '443' %}
-                                    If you run into issues getting your domain accepted, see <b><a href="https://github.com/nextcloud/all-in-one/blob/main/reverse-proxy.md#6-how-to-debug-things">these steps</a></b> for how to debug things. <br /><br/>
+                                    If you run into issues getting your domain accepted, see <a href="https://github.com/nextcloud/all-in-one/blob/main/reverse-proxy.md#6-how-to-debug-things">these steps</a> for how to debug things. <br /><br/>
                                 {% endif %}
                                 <b>Hint:</b> If the domain validation fails but you are completely sure that you've configured everything correctly, you may skip the domain validation by following <a href="https://github.com/nextcloud/all-in-one#how-to-skip-the-domain-validation">this documentation</a>.<br />
                             </details><br />
@@ -175,12 +175,7 @@
                                 <input type="hidden" name="{{csrf.keys.value}}" value="{{csrf.value}}">
                                 <input class="button" type="submit" value="Submit" />
                             </form>
-                            The folder path that you enter must start with <b>/</b> and must <b>not</b> end with <b>/</b>.<br><br>
-                            An example for Linux is <b>/mnt/backup</b>.<br>
-                            On Synology it could be <b>/volume1/docker/nextcloud/backup</b>.<br>
-                            For macOS it may be <b>/var/backup</b>.<br>
-                            On Windows it might be <b>/run/desktop/mnt/host/c/backup</b>. (This path is equivalent to 'C:\backup' on your Windows host so you need to translate the path accordingly. Hint: the path that you enter needs to start with '/run/desktop/mnt/host/'. Append to that the exact location on your windows host, e.g. 'c/backup' which is equivalent to 'C:\backup'.)<br>
-                            Another option is to enter a specific volume name here: <b>nextcloud_aio_backupdir</b>. This volume needs to be created beforehand manually by you in order to be able to use it.<br><br>
+                            {{ include('includes/backup-dirs.twig') }}
                             ⚠️ Please note that the backup archive must be located in a subfolder of the folder that you enter here and the subfolder which contains the archive must be named 'borg'. Otherwise will the backup container not find the backup archive!<br><br>
                         {% endif %}
                     {% else %}
@@ -359,12 +354,7 @@
                                 <input type="hidden" name="{{csrf.keys.value}}" value="{{csrf.value}}">
                                 <input class="button" type="submit" value="Submit" />
                             </form>
-                            The folder path that you enter must start with <b>/</b> and must <b>not</b> end with <b>/</b>.<br><br>
-                            An example for Linux is <b>/mnt/backup</b>.<br>
-                            On Synology it could be <b>/volume1/docker/nextcloud/backup</b>.<br>
-                            For macOS it may be <b>/var/backup</b>.<br>
-                            On Windows it might be <b>/run/desktop/mnt/host/c/backup</b>. (This path is equivalent to 'C:\backup' on your Windows host so you need to translate the path accordingly. Hint: the path that you enter needs to start with '/run/desktop/mnt/host/'. Append to that the exact location on your windows host, e.g. 'c/backup' which is equivalent to 'C:\backup'.)<br>
-                            Another option is to enter a specific volume name here: <b>nextcloud_aio_backupdir</b>. This volume needs to be created beforehand manually by you in order to be able to use it.<br><br>
+                            {{ include('includes/backup-dirs.twig') }}
                         {% endif %}
                     {% endif %}
 
@@ -417,7 +407,7 @@
                                 The backup itself uses a tool that is called <a href="https://github.com/borgbackup/borg#what-is-borgbackup"><b>BorgBackup</b></a> which is a well-known server backup tool that efficiently backs up your files and encrypts them on the fly. <br /><br/>
                                 Backups get created in the following directory on the host: <b>{{ borg_backup_host_location }}/borg</b> <br /><br/>
                                 Be aware that this solution does not back up files and folders that are mounted into Nextcloud using the external storage app - but you can add further Docker volumes and host paths that you want to back up after the initial backup is done.<br><br>
-                                Regarding backup retention, see <b><a href="https://github.com/nextcloud/all-in-one/discussions/1675">this</a></b><br><br>
+                                Regarding backup retention, see <b><a href="https://github.com/nextcloud/all-in-one/discussions/1675">this</a></b>.<br><br>
                                 Daily backups can get enabled after the initial backup is done. Enabling this also allows to enable an option that allows to update all containers, Nextcloud and its apps automatically.<br><br>
                                 For further documentation and options on this backup solution refer to <b><a href="https://github.com/nextcloud/all-in-one#backup-solution">this section</a></b> and below.<br>
 
