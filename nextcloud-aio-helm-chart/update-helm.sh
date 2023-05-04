@@ -56,11 +56,19 @@ cat << EOL > /tmp/initcontainers
 EOL
 cat << EOL > /tmp/initcontainers.database
       initContainers:
+        - init-subpath
+          image: alpine
+          command:
+            - mkdir
+            - "-p"
+            - /nextcloud-aio-database/data
+          volumeMountsInitContainer:
         - name: init-volumes
           image: alpine
           command:
             - chown
             - 999:999
+            - "-R"
           volumeMountsInitContainer:
 EOL
 # shellcheck disable=SC1083
@@ -80,6 +88,11 @@ for variable in "${DEPLOYMENTS[@]}"; do
             if [ "$volumeName" != "nextcloud-aio-nextcloud-data" ]; then
                 sed -i "/^.*volumeMountsInitContainer:/i\ \ \ \ \ \ \ \ \ \ \ \ - /$volumeName" "$variable"
                 sed -i "/volumeMountsInitContainer:/a\ \ \ \ \ \ \ \ \ \ \ \ - name: $volumeName\n\ \ \ \ \ \ \ \ \ \ \ \ \ \ mountPath: /$volumeName" "$variable"
+                # Workaround for the database volume
+                if [ "$volumeName" = nextcloud-aio-database ]; then
+                    sed -i "/mountPath: \/var\/lib\/postgresql\/data/a\ \ \ \ \ \ \ \ \ \ \ \ \ \ subPath: data" "$variable"
+                fi
+                
             fi
         done
         sed -i "s|volumeMountsInitContainer|volumeMounts|" "$variable"

@@ -1,5 +1,5 @@
 # Docker CLI is a requirement
-FROM docker:23.0.4-cli as docker
+FROM docker:23.0.5-cli as docker
 
 # Caddy is a requirement
 FROM caddy:2.6.4-alpine as caddy
@@ -71,9 +71,11 @@ RUN set -e && \
     chmod +x /usr/local/bin/composer; \
     cd /var/www/docker-aio; \
     git clone https://github.com/nextcloud-releases/all-in-one.git --depth 1 .; \
+    find ./ -not -path ./php -maxdepth 1 -mindepth 1 -delete; \
+    chown www-data:www-data -R /var/www/docker-aio; \
     cd php; \
-    composer install --no-dev; \
-    composer clearcache; \
+    sudo -u www-data composer install --no-dev; \
+    sudo -u www-data composer clearcache; \
     cd ..; \
     rm -f /usr/local/bin/composer; \
     chmod 770 -R ./; \

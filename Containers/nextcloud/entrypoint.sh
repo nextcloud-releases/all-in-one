@@ -305,6 +305,7 @@ DATADIR_PERMISSION_CONF
             php /var/www/html/occ config:system:set enabledPreviewProviders 4 --value="OC\\Preview\\TXT"
             php /var/www/html/occ config:system:set enabledPreviewProviders 5 --value="OC\\Preview\\OpenDocument"
             php /var/www/html/occ config:system:set enabledPreviewProviders 6 --value="OC\\Preview\\Movie"
+            php /var/www/html/occ config:system:set enabledPreviewProviders 7 --value="OC\\Preview\\Krita"
             php /var/www/html/occ config:system:set enable_previews --value=true --type=boolean
 
             # Apply other settings
@@ -628,12 +629,6 @@ if version_greater "$installed_version" "24.0.0.0"; then
             php /var/www/html/occ config:system:delete enabledPreviewProviders 22
         fi
     fi
-fi
-
-# Migration to ES8 is pending, thus disabling FTS for now.
-if [ "$INSTALL_LATEST_MAJOR" = yes ] || version_greater "$installed_version" "26.0.0.0"; then
-    export FULLTEXTSEARCH_ENABLED=no
-    echo "Fulltextsearch is not compatible with Nextcloud 26 and is getting disabled."
 fi
 
 # Fulltextsearch

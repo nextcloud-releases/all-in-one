@@ -85,6 +85,7 @@ sed -i 's|NEXTCLOUD_ADDITIONAL_APKS=|NEXTCLOUD_ADDITIONAL_APKS=imagemagick      
 sed -i 's|NEXTCLOUD_ADDITIONAL_PHP_EXTENSIONS=|NEXTCLOUD_ADDITIONAL_PHP_EXTENSIONS=imagick        # This allows to add additional php extensions to the Nextcloud container permanently. Default is imagick but can be overwritten by modifying this value.|' sample.conf
 sed -i 's|INSTALL_LATEST_MAJOR=|INSTALL_LATEST_MAJOR=no        # Setting this to yes will install the latest Major Nextcloud version upon the first installation|' sample.conf
 sed -i 's|=$|=          # TODO! This needs to be a unique and good password!|' sample.conf
+echo 'IPV6_NETWORK=fd12:3456:789a:2::/64 # IPv6 subnet to use' >> sample.conf
 
 cat sample.conf
 
@@ -128,8 +129,16 @@ done
 
 cat << NETWORK >> containers.yml
 
+# Inspired by https://github.com/mailcow/mailcow-dockerized/blob/master/docker-compose.yml
 networks:
   nextcloud-aio:
+    name: nextcloud-aio
+    driver: bridge
+    enable_ipv6: true
+    ipam:
+      driver: default
+      config:
+        - subnet: \${IPV6_NETWORK}
 NETWORK
 
 cat containers.yml > latest.yml

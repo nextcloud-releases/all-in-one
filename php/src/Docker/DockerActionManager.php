@@ -421,10 +421,12 @@ class DockerActionManager
             $requestBody['HostConfig']['CapAdd'] = $capAdds;
         }
 
+        if ($container->isApparmorUnconfined()) {
+            $requestBody['HostConfig']['SecurityOpt'] = ["apparmor:unconfined"];
+        }
+
         // Special things for the backup container which should not be exposed in the containers.json
         if ($container->GetIdentifier() === 'nextcloud-aio-borgbackup') {
-            $requestBody['HostConfig']['SecurityOpt'] = ["apparmor:unconfined"];
-            
             // Additional backup directories
             $mounts = [];
             foreach ($this->configurationManager->GetAdditionalBackupDirectoriesArray() as $additionalBackupDirectories) {
@@ -488,6 +490,10 @@ class DockerActionManager
     }
 
     public function isAnyUpdateAvailable() : bool {
+        // return early if instance is not installed
+        if (!$this->configurationManager->wasStartButtonClicked()) {
+            return false;
+        }
         $id = 'nextcloud-aio-apache';
 
         if ($this->isContainerUpdateAvailable($id) !== "") {
@@ -677,10 +683,6 @@ class DockerActionManager
                         'CheckDuplicate' => true,
                         'Driver' => 'bridge',
                         'Internal' => false,
-                        'Options' => [
-                            'com.docker.network.bridge.enable_icc' => 'true',
-                            'com.docker.network.bridge.enable_ip_masquerade' => 'true'
-                        ]
                     ]
                 ]
             );
