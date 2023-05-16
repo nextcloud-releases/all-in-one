@@ -1,11 +1,11 @@
 # Docker CLI is a requirement
-FROM docker:23.0.5-cli as docker
+FROM docker:23.0.6-cli as docker
 
 # Caddy is a requirement
 FROM caddy:2.6.4-alpine as caddy
 
-# From https://github.com/docker-library/php/blob/master/8.1/alpine3.17/fpm/Dockerfile
-FROM php:8.1.18-fpm-alpine3.17
+# From https://github.com/docker-library/php/blob/master/8.2/alpine3.17/fpm/Dockerfile
+FROM php:8.2.6-fpm-alpine3.17
 
 RUN set -ex; \
     apk add --no-cache shadow; \

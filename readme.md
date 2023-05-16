@@ -170,6 +170,8 @@ Also, you may be interested in adjusting Nextcloud's Datadir to store the files 
 ### How to run AIO on Synology DSM
 On Synology, there are two things different in comparison to Linux: instead of using `--volume /var/run/docker.sock:/var/run/docker.sock:ro`, you need to use `--volume /volume1/docker/docker.sock:/var/run/docker.sock:ro` to run it. You also need to add `--env WATCHTOWER_DOCKER_SOCKET_PATH="/volume1/docker/docker.sock"`to the docker run command of the mastercontainer (but before the last line `nextcloud/all-in-one:latest`). Apart from that it should work and behave the same like on Linux. Obviously the Synology Docker GUI will not work with that so you will need to either use SSH or create a user-defined script task in the task scheduler as the user 'root' in order to run the command.
 
+⚠️ **Please note**: it is possible that the docker socket on your Synology is located in `/var/run/docker.sock` like the default on Linux. Then you can just use the Linux command without having to change anything - you will notice this when you try to start the container and it says that the bind mount failed. E.g. `docker: Error response from daemon: Bind mount failed: '/volume1/docker/docker.sock' does not exists.` 
+
 Also, you may be interested in adjusting Nextcloud's Datadir to store the files on the host system. See [this documentation](https://github.com/nextcloud/all-in-one#how-to-change-the-default-location-of-nextclouds-datadir) on how to do it.
 
 You'll also need to adjust Synology's firewall, see below:
@@ -301,7 +303,7 @@ Here is how to reset the AIO instance properly:
 1. Now remove all these stopped containers with `sudo docker container prune`
 1. Delete the docker network with `sudo docker network rm nextcloud-aio`
 1. Check which volumes are dangling with `sudo docker volume ls --filter "dangling=true"`
-1. Now remove all these dangling volumes: `sudo docker volume prune docker --filter all=1` (on Windows you might need to remove some volumes afterwards manually with `docker volume rm nextcloud_aio_backupdir`, `docker volume rm nextcloud_aio_nextcloud_datadir`). 
+1. Now remove all these dangling volumes: `sudo docker volume prune --filter all=1` (on Windows you might need to remove some volumes afterwards manually with `docker volume rm nextcloud_aio_backupdir`, `docker volume rm nextcloud_aio_nextcloud_datadir`). 
 1. If you've configured `NEXTCLOUD_DATADIR` to a path on your host instead of the default volume, you need to clean that up as well. (E.g. by simply deleting the directory).
 1. Make sure that no volumes are remaining with `sudo docker volume ls --format {{.Name}}`. If no `nextcloud-aio` volumes are listed, you can proceed with the steps below. If there should be some, you will need to stop them with `sudo docker volume rm <volume_name>` until no one is listed anymore.
 1. Optional: You can remove all docker images with `sudo docker image prune -a`.
@@ -569,7 +571,7 @@ Be aware though that these locations will not be covered by the built-in backup 
 **Please note:** If you can't see the type "local storage" in the external storage admin options, a restart of the containers from the AIO interface may be required.
 
 ### How to adjust the Talk port?
-By default will the talk container use port `3478/UDP` and `3478/TCP` for connections. You can adjust the port by adding e.g. `--env TALK_PORT=3478` to the docker run command of the mastercontainer (but before the last line `nextcloud/all-in-one:latest`! If it was started already, you will need to stop the mastercontainer, remove it (no data will be lost) and recreate it using the docker run command that you initially used) and adjusting the port to your desired value.
+By default will the talk container use port `3478/UDP` and `3478/TCP` for connections. You can adjust the port by adding e.g. `--env TALK_PORT=3478` to the docker run command of the mastercontainer (but before the last line `nextcloud/all-in-one:latest`! If it was started already, you will need to stop the mastercontainer, remove it (no data will be lost) and recreate it using the docker run command that you initially used) and adjusting the port to your desired value. Best is to use a port over 1024, so e.g. 3479 to not run into this: https://github.com/nextcloud/all-in-one/discussions/2517
 
 ### How to adjust the upload limit for Nextcloud?
 By default are public uploads to Nextcloud limited to a max of 10G (logged in users can upload much bigger files using the webinterface or the mobile/desktop clients since chunking is used in that case). You can adjust the upload limit by providing `--env NEXTCLOUD_UPLOAD_LIMIT=10G` to the docker run command of the mastercontainer (but before the last line `nextcloud/all-in-one:latest`! If it was started already, you will need to stop the mastercontainer, remove it (no data will be lost) and recreate it using the docker run command that you initially used) and customize the value to your fitting. It must start with a number and end with `G` e.g. `10G`.
