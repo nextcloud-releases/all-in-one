@@ -235,6 +235,10 @@ class DockerActionManager
         }
 
         $envs = $container->GetEnvironmentVariables()->GetVariables();
+        // Special thing for the nextcloud container
+        if ($container->GetIdentifier() === 'nextcloud-aio-nextcloud') {
+            $envs[] = $this->GetAllNextcloudExecCommands();
+        }
         foreach($envs as $key => $env) {
             // TODO: This whole block below is a hack and needs to get reworked in order to support multiple substitutions per line by default for all envs
             if (str_starts_with($env, 'extra_params=')) {
@@ -328,6 +332,8 @@ class DockerActionManager
                     $replacements[1] = $this->configurationManager->GetNextcloudMemoryLimit();
                 } elseif ($out[1] === 'NEXTCLOUD_MAX_TIME') {
                     $replacements[1] = $this->configurationManager->GetNextcloudMaxTime();
+                } elseif ($out[1] === 'BORG_RETENTION_POLICY') {
+                    $replacements[1] = $this->configurationManager->GetBorgRetentionPolicy();
                 } elseif ($out[1] === 'NEXTCLOUD_TRUSTED_CACERTS_DIR') {
                     $replacements[1] = $this->configurationManager->GetTrustedCacertsDir();
                 } elseif ($out[1] === 'ADDITIONAL_DIRECTORIES_BACKUP') {
@@ -508,29 +514,44 @@ class DockerActionManager
         }
     }
 
-    private function getBackupVolumes(string $id) : array
+    private function getBackupVolumes(string $id) : string
     {
         $container = $this->containerDefinitionFetcher->GetContainerById($id);
 
-        $backupVolumes = $container->GetBackupVolumes();
-
+        $backupVolumes = '';
+        foreach ($container->GetBackupVolumes() as $backupVolume) {
+            $backupVolumes .= $backupVolume . ' ';
+        }
         foreach ($container->GetDependsOn() as $dependency) {
-            $backupVolumes[] = $this->getBackupVolumes($dependency);
+            $backupVolumes .= $this->getBackupVolumes($dependency);
         }
         return $backupVolumes;
     }
 
     private function getAllBackupVolumes() : array {
         $id = 'nextcloud-aio-apache';
-        $backupVolumesArray = $this->getBackupVolumes($id);
-        // Flatten array
-        $backupVolumesArrayFlat = iterator_to_array(
-            new \RecursiveIteratorIterator(
-                new \RecursiveArrayIterator($backupVolumesArray)
-            ),
-            $use_keys = false
-        );
-        return array_unique($backupVolumesArrayFlat);
+        $backupVolumesArray = explode(' ', $this->getBackupVolumes($id));
+        return array_unique($backupVolumesArray);
+    }
+
+    private function GetNextcloudExecCommands(string $id) : string
+    {
+        $container = $this->containerDefinitionFetcher->GetContainerById($id);
+
+        $nextcloudExecCommands = '';
+        foreach ($container->GetNextcloudExecCommands() as $execCommand) {
+            $nextcloudExecCommands .= $execCommand . PHP_EOL;
+        }
+        foreach ($container->GetDependsOn() as $dependency) {
+            $nextcloudExecCommands .= $this->GetNextcloudExecCommands($dependency);
+        }
+        return $nextcloudExecCommands;
+    }
+
+    private function GetAllNextcloudExecCommands() : string
+    {
+        $id = 'nextcloud-aio-apache';
+        return 'NEXTCLOUD_EXEC_COMMANDS=' . $this->GetNextcloudExecCommands($id);
     }
 
     private function GetRepoDigestsOfContainer(string $containerName) : ?array {

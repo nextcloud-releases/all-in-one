@@ -228,7 +228,11 @@
           "writeable": true
         }
       ],
-      "restart": "unless-stopped"
+      "restart": "unless-stopped",
+      "nextcloud_exec_commands": [
+        "echo 'Activating collabora config...'",
+        "php /var/www/html/occ richdocuments:activate-config"
+      ]
     },
     {
       "container_name": "nextcloud-aio-talk",
@@ -273,7 +277,8 @@
         "BACKUP_RESTORE_PASSWORD=%BACKUP_RESTORE_PASSWORD%",
         "ADDITIONAL_DIRECTORIES_BACKUP=%ADDITIONAL_DIRECTORIES_BACKUP%",
         "BORGBACKUP_HOST_LOCATION=%BORGBACKUP_HOST_LOCATION%",
-        "BORG_HOST_ID=nextcloud-aio-borgbackup"
+        "BORG_HOST_ID=nextcloud-aio-borgbackup",
+        "BORG_RETENTION_POLICY=%BORG_RETENTION_POLICY%"
       ],
       "volumes": [
         {

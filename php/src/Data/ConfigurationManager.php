@@ -157,10 +157,10 @@ class ConfigurationManager
 
     public function isImaginaryEnabled() : bool {
         $config = $this->GetConfig();
-        if (isset($config['isImaginaryEnabled']) && $config['isImaginaryEnabled'] === 1) {
-            return true;
-        } else {
+        if (isset($config['isImaginaryEnabled']) && $config['isImaginaryEnabled'] === 0) {
             return false;
+        } else {
+            return true;
         }
     }
 
@@ -581,6 +581,13 @@ class ConfigurationManager
         return $this->GetEnvironmentalVariableOrConfig($envVariableName, $configName, $defaultValue);
     }
 
+    public function GetBorgRetentionPolicy() : string {
+        $envVariableName = 'BORG_RETENTION_POLICY';
+        $configName = 'borg_retention_policy';
+        $defaultValue = '--keep-within=7d --keep-weekly=4 --keep-monthly=6';
+        return $this->GetEnvironmentalVariableOrConfig($envVariableName, $configName, $defaultValue);
+    }
+
     public function GetDockerSocketPath() : string {
         $envVariableName = 'WATCHTOWER_DOCKER_SOCKET_PATH';
         $configName = 'docker_socket_path';
@@ -768,7 +775,7 @@ class ConfigurationManager
         if (is_string($apps)) {
             return trim($apps);
         }
-        return 'deck twofactor_totp tasks calendar contacts';
+        return 'deck twofactor_totp tasks calendar contacts notes';
     }
 
     public function GetCollaboraDictionaries() : string {

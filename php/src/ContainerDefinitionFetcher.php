@@ -12,6 +12,7 @@ use AIO\Container\State\RunningState;
 use AIO\Data\ConfigurationManager;
 use AIO\Data\DataConst;
 use AIO\Docker\DockerActionManager;
+use JsonSchema\Validator;
 
 class ContainerDefinitionFetcher
 {
@@ -40,12 +41,27 @@ class ContainerDefinitionFetcher
         throw new \Exception("The provided id " . $id . " was not found in the container definition.");
     }
 
+    private function validateJson(object $data): void {
+        // Validate against json schema
+        $validator = new Validator;
+        $validator->validate($data, (object)[file_get_contents(__DIR__ . '/../containers-schema.json')]);
+        if (!$validator->isValid()) {
+            error_log("JSON does not validate. Violations:");
+            foreach ($validator->getErrors() as $error) {
+                error_log(printf("[%s] %s\n", $error['property'], $error['message']));
+            }
+        }
+    }
+
     /**
      * @return array
      */
     private function GetDefinition(bool $latest): array
     {
-        $data = json_decode(file_get_contents(__DIR__ . '/../containers.json'), true);
+        $rawData = file_get_contents(__DIR__ . '/../containers.json');
+        $objectData = json_decode($rawData, false);
+        $this->validateJson($objectData);
+        $data = json_decode($rawData, true);
 
         $containers = [];
         foreach ($data['aio_services_v1'] as $entry) {
@@ -233,6 +249,11 @@ class ContainerDefinitionFetcher
                 $backupVolumes = $entry['backup_volumes'];
             }
 
+            $nextcloudExecCommands = [];
+            if (isset($entry['nextcloud_exec_commands'])) {
+                $nextcloudExecCommands = $entry['nextcloud_exec_commands'];
+            }
+
             $containers[] = new Container(
                 $entry['container_name'],
                 $displayName,
@@ -250,6 +271,7 @@ class ContainerDefinitionFetcher
                 $shmSize,
                 $apparmorUnconfined,
                 $backupVolumes,
+                $nextcloudExecCommands,
                 $this->container->get(DockerActionManager::class)
             );
         }

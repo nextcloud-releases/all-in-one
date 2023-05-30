@@ -26,8 +26,8 @@
         {% set isWatchtowerRunning = false %}
         {% set isBackupOrRestoreRunning = false %}
         {% set isApacheStarting = false %}
-        {# Setting newMajorVersion to '' will hide corresponding options/elements #}
-        {% set newMajorVersion = 26 %}
+        {# Setting newMajorVersion to '' will hide corresponding options/elements, can be set to an integer like 26 in order to show corresponding elements. If set, also increase installLatestMajor in https://github.com/nextcloud/all-in-one/blob/main/php/src/Controller/DockerController.php #}
+        {% set newMajorVersion = '' %}
 
         {% if is_backup_container_running == true %}
             {% if borg_backup_mode == 'backup' or borg_backup_mode == 'restore' %}
@@ -407,7 +407,7 @@
                                 The backup itself uses a tool that is called <a href="https://github.com/borgbackup/borg#what-is-borgbackup"><b>BorgBackup</b></a> which is a well-known server backup tool that efficiently backs up your files and encrypts them on the fly. <br /><br/>
                                 Backups get created in the following directory on the host: <b>{{ borg_backup_host_location }}/borg</b> <br /><br/>
                                 Be aware that this solution does not back up files and folders that are mounted into Nextcloud using the external storage app - but you can add further Docker volumes and host paths that you want to back up after the initial backup is done.<br><br>
-                                Regarding backup retention, see <b><a href="https://github.com/nextcloud/all-in-one/discussions/1675">this</a></b>.<br><br>
+                                Regarding backup retention, see <b><a href="https://github.com/nextcloud/all-in-one#how-to-adjust-borgs-retention-policy">this</a></b>.<br><br>
                                 Daily backups can get enabled after the initial backup is done. Enabling this also allows to enable an option that allows to update all containers, Nextcloud and its apps automatically.<br><br>
                                 For further documentation and options on this backup solution refer to <b><a href="https://github.com/nextcloud/all-in-one#backup-solution">this section</a></b> and below.<br>
 
