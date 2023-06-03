@@ -48,6 +48,7 @@ sudo apt-get -y autoremove
 sudo apt-get -y autoclean
 sudo rm -rf /tmp/* /var/tmp/*
 history -c
+# shellcheck disable=SC2002
 cat /dev/null | sudo tee /root/.bash_history
 unset HISTFILE
 sudo find /var/log -mtime -1 -type f -exec truncate -s 0 {} \;

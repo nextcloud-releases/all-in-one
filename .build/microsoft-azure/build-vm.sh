@@ -57,7 +57,8 @@ export location=westeurope
 
 # your subscription
 # get the current subID : 'az account show | grep id'
-export subscriptionID=$(az account show | grep id | tr -d '",' | cut -c7-)
+subscriptionID=$(az account show | grep id | tr -d '",' | cut -c7-)
+export subscriptionID
 
 # name of the image to be created
 export imageName=nextcloud-aio-image
@@ -73,20 +74,24 @@ az group create -n $imageResourceGroup -l $location
 #
 
 # create user assigned identity for image builder to access the storage account where the script is located
-export identityName=nextcloud-aio-$(date +'%s')
-az identity create -g $imageResourceGroup -n $identityName
+identityName=nextcloud-aio-$(date +'%s')
+export identityName
+az identity create -g "$imageResourceGroup" -n "$identityName"
 
 # get identity id
-export imgBuilderCliId=$(az identity show -g $imageResourceGroup -n $identityName | grep "clientId" | cut -c16- | tr -d '",')
+imgBuilderCliId=$(az identity show -g "$imageResourceGroup" -n "$identityName" | grep "clientId" | cut -c16- | tr -d '",')
+export imgBuilderCliId
 
 # get the user identity URI, needed for the template
-export imgBuilderId=/subscriptions/$subscriptionID/resourcegroups/$imageResourceGroup/providers/Microsoft.ManagedIdentity/userAssignedIdentities/$identityName
+imgBuilderId="/subscriptions/$subscriptionID/resourcegroups/$imageResourceGroup/providers/Microsoft.ManagedIdentity/userAssignedIdentities/$identityName"
+export imgBuilderId
 
 # download preconfigured role definition example
 rm -f aibRoleImageCreation.json
 curl https://raw.githubusercontent.com/Azure/azvmimagebuilder/main/solutions/12_Creating_AIB_Security_Roles/aibRoleImageCreation.json -o aibRoleImageCreation.json
 
-export imageRoleDefName="Azure Image Builder Image Def"$(date +'%s')
+imageRoleDefName="Azure Image Builder Image Def"$(date +'%s')
+export imageRoleDefName
 
 # update the definition
 sed -i -e "s/<subscriptionID>/$subscriptionID/g" aibRoleImageCreation.json
@@ -101,9 +106,9 @@ sleep 1m
 
 # grant role definition to the user assigned identity
 az role assignment create \
-    --assignee $imgBuilderCliId \
+    --assignee "$imgBuilderCliId" \
     --role "$imageRoleDefName" \
-    --scope /subscriptions/$subscriptionID/resourceGroups/$imageResourceGroup
+    --scope "/subscriptions/$subscriptionID/resourceGroups/$imageResourceGroup"
 
 #------------------------------------------------------------
 
@@ -128,16 +133,17 @@ sed -i -e "s%<imgBuilderId>%$imgBuilderId%g" image-build.json
 # 3. Create the image
 #
 
-export IMAGE_BUILD_NUMBER=$(date +'%s')
+IMAGE_BUILD_NUMBER=$(date +'%s')
+export IMAGE_BUILD_NUMBER
 
 # submit the image confiuration to the VM Image Builder Service
 
 az resource create \
-    --resource-group $imageResourceGroup \
+    --resource-group "$imageResourceGroup" \
     --properties @image-build.json \
     --is-full-object \
     --resource-type Microsoft.VirtualMachineImages/imageTemplates \
-    -n image-build-$IMAGE_BUILD_NUMBER
+    -n "image-build-$IMAGE_BUILD_NUMBER"
 
 # wait approx 1-3mins, depending on external links
 # sleep 3m
@@ -145,9 +151,9 @@ az resource create \
 # start the image build
 
 az resource invoke-action \
-     --resource-group $imageResourceGroup \
+     --resource-group "$imageResourceGroup" \
      --resource-type  Microsoft.VirtualMachineImages/imageTemplates \
-     -n image-build-$IMAGE_BUILD_NUMBER \
+     -n "image-build-$IMAGE_BUILD_NUMBER" \
      --action Run 
 
 # wait approx 15mins
@@ -160,11 +166,11 @@ az resource invoke-action \
 #
 
 az vm create \
-  --resource-group $imageResourceGroup \
-  --name nextcloudAioImgVm$IMAGE_BUILD_NUMBER \
+  --resource-group "$imageResourceGroup" \
+  --name "nextcloudAioImgVm$IMAGE_BUILD_NUMBER" \
   --admin-username ncadmin \
-  --image $imageName \
-  --location $location \
+  --image "$imageName" \
+  --location "$location" \
   --generate-ssh-keys
 
 # and login...
@@ -173,22 +179,22 @@ az vm create \
 # Clean up
 
 az resource delete \
-    --resource-group $imageResourceGroup \
+    --resource-group "$imageResourceGroup" \
     --resource-type Microsoft.VirtualMachineImages/imageTemplates \
-    -n image-build-$IMAGE_BUILD_NUMBER
+    -n "image-build-$IMAGE_BUILD_NUMBER"
 
 # delete permissions asssignments, roles and identity
 az role assignment delete \
-    --assignee $imgBuilderCliId \
+    --assignee "$imgBuilderCliId" \
     --role "$imageRoleDefName" \
-    --scope /subscriptions/$subscriptionID/resourceGroups/$imageResourceGroup
+    --scope "/subscriptions/$subscriptionID/resourceGroups/$imageResourceGroup"
 
 az role definition delete --name "$imageRoleDefName"
 
-az identity delete --ids $imgBuilderId
+az identity delete --ids "$imgBuilderId"
 
 # Will delete the VM:
-# az group delete -n $imageResourceGroup
+# az group delete -n "$imageResourceGroup"
 
 # Revert git changes
 git stash
