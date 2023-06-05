@@ -35,6 +35,7 @@ jobs:
           'aio-clamav',
           'aio-onlyoffice',
           'aio-imaginary',
+          'aio-talk-recording',
           'aio-fulltextsearch']
 
     steps:
