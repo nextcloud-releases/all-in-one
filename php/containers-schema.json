@@ -117,9 +117,25 @@
 						"type": "array",
 						"items": {
 							"type": "string",
-							"pattern": "^(php /var/www/html/occ .*|echo .*)$",
-							"minlength": 1
+							"pattern": "^(php /var/www/html/occ .*|echo .*)$"
 						}
+					},
+					"profiles": {
+						"type": "array",
+						"items": {
+							"type": "string",
+							"pattern": "^[a-z-]+$"
+						}
+					},
+					"networks": {
+						"type": "array",
+						"items": {
+							"type": "string",
+							"pattern": "^nextcloud-aio$"
+						}
+					},
+					"read_only": {
+						"type": "boolean"
 					},
 					"volumes": {
 						"type": "array",

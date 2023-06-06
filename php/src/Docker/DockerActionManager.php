@@ -278,6 +278,12 @@ class DockerActionManager
                     } else {
                         $replacements[1] = '';
                     }
+                } elseif ($out[1] === 'TALK_RECORDING_ENABLED') {
+                    if ($this->configurationManager->isTalkRecordingEnabled()) {
+                        $replacements[1] = 'yes';
+                    } else {
+                        $replacements[1] = '';
+                    }
                 } elseif ($out[1] === 'ONLYOFFICE_ENABLED') {
                     if ($this->configurationManager->isOnlyofficeEnabled()) {
                         $replacements[1] = 'yes';
@@ -377,6 +383,8 @@ class DockerActionManager
         }
 
         $requestBody['HostConfig']['RestartPolicy']['Name'] = $container->GetRestartPolicy();
+
+        $requestBody['HostConfig']['ReadonlyRootfs'] = $container->GetReadOnlySetting();
  
         $exposedPorts = [];
         if ($container->GetInternalPort() !== 'host') {
@@ -768,7 +776,8 @@ class DockerActionManager
     public function ConnectMasterContainerToNetwork() : void
     {
         $this->ConnectContainerIdToNetwork('nextcloud-aio-mastercontainer', '');
-        $this->DisconnectContainerFromBridgeNetwork('nextcloud-aio-mastercontainer');
+        // Don't disconnect here since it slows down the initial login by a lot. Is getting done during cron.sh instead.
+        // $this->DisconnectContainerFromBridgeNetwork('nextcloud-aio-mastercontainer');
     }
 
     public function ConnectContainerToNetwork(Container $container) : void

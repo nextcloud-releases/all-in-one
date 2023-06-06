@@ -22,7 +22,7 @@ redis.session.lock_wait_time = 10000
 REDIS_CONF
 
 echo "Setting php max children..."
-MEMORY=$(mawk '/MemTotal/ {printf "%d", $2/1024}' /proc/meminfo)
+MEMORY=$(awk '/MemTotal/ {printf "%d", $2/1024}' /proc/meminfo)
 PHP_MAX_CHILDREN=$((MEMORY/50))
 if [ -n "$PHP_MAX_CHILDREN" ]; then
     sed -i "s/^pm.max_children =.*/pm.max_children = $PHP_MAX_CHILDREN/" /usr/local/etc/php-fpm.d/www.conf
@@ -253,7 +253,6 @@ DATADIR_PERMISSION_CONF
                 php /var/www/html/occ config:system:set updater.release.channel --value=beta
                 php /var/www/html/occ config:system:set updatedirectory --value="/nc-updater"
                 php /var/www/html/updater/updater.phar --no-interaction
-                php /var/www/html/occ app:enable nextcloud-aio --force
                 if ! php /var/www/html/occ -V || php /var/www/html/occ status | grep maintenance | grep -q 'true'; then
                     echo "Installation of Nextcloud failed!"
                     touch "$NEXTCLOUD_DATA_DIR/install.failed"
@@ -264,8 +263,6 @@ DATADIR_PERMISSION_CONF
                 INSTALLED_MAJOR="${installed_version%%.*}"
                 IMAGE_MAJOR="${image_version%%.*}"
                 if ! [ "$INSTALLED_MAJOR" -gt "$IMAGE_MAJOR" ]; then
-                    php /var/www/html/occ config:system:set updater.release.channel --value=beta
-                    php /var/www/html/occ config:system:set updatedirectory --value="/nc-updater"
                     php /var/www/html/updater/updater.phar --no-interaction
                     if ! php /var/www/html/occ -V || php /var/www/html/occ status | grep maintenance | grep -q 'true'; then
                         echo "Installation of Nextcloud failed!"
@@ -273,7 +270,10 @@ DATADIR_PERMISSION_CONF
                         exit 1
                     fi
                 fi
+                php /var/www/html/occ app:disable updatenotification
+                rm -rf /var/www/html/apps/updatenotification
                 php /var/www/html/occ config:system:set updater.release.channel --value=stable
+                php /var/www/html/occ app:enable nextcloud-aio --force
                 php /var/www/html/occ db:add-missing-indices
                 php /var/www/html/occ db:add-missing-columns
                 php /var/www/html/occ db:add-missing-primary-keys
@@ -362,6 +362,11 @@ DATADIR_PERMISSION_CONF
                         if [ "${APPSTORAGE[$app]}" != "no" ]; then
                             echo "Enabling $app..."
                             if ! php /var/www/html/occ app:enable "$app" >/dev/null; then
+                                php /var/www/html/occ app:disable "$app" >/dev/null
+                                if ! php /var/www/html/occ -V &>/dev/null; then
+                                    rm -r "/var/www/html/custom_apps/$app"
+                                    php /var/www/html/occ maintenance:mode --off
+                                fi
                                 echo "The $app app could not get enabled. Probably because it is not compatible with the new Nextcloud version."
                                 if [ "$app" = apporder ]; then
                                     CUSTOM_HINT="The apporder app was deprecated. A possible replacement is the side_menu app, aka 'Custom menu'."
@@ -580,6 +585,21 @@ if [ "$TALK_ENABLED" = 'yes' ]; then
 else
     if [ -d "/var/www/html/custom_apps/spreed" ]; then
         php /var/www/html/occ app:remove spreed
+    fi
+fi
+
+# Talk recording
+if [ -d "/var/www/html/custom_apps/spreed" ]; then
+    if [ "$TALK_RECORDING_ENABLED" = 'yes' ]; then
+        while ! nc -z "$TALK_RECORDING_HOST" 1234; do
+            echo "waiting for Talk Recording to become available..."
+            sleep 5
+        done
+        # TODO: migrate to occ command if that becomes available
+        RECORDING_SERVERS_STRING="{\"servers\":[{\"server\":\"http://$TALK_RECORDING_HOST:1234/\",\"verify\":true}],\"secret\":\"$RECORDING_SECRET\"}"
+        php /var/www/html/occ config:app:set spreed recording_servers --value="$RECORDING_SERVERS_STRING"
+    else
+        php /var/www/html/occ config:app:delete spreed recording_servers
     fi
 fi
 

@@ -6,6 +6,7 @@
         "nextcloud-aio-onlyoffice",
         "nextcloud-aio-collabora",
         "nextcloud-aio-talk",
+        "nextcloud-aio-talk-recording",
         "nextcloud-aio-nextcloud"
       ],
       "display_name": "Apache",
@@ -45,6 +46,9 @@
       "backup_volumes": [
         "nextcloud_aio_nextcloud",
         "nextcloud_aio_apache"
+      ],
+      "networks": [
+        "nextcloud-aio"
       ]
     },
     {
@@ -83,6 +87,9 @@
       "backup_volumes": [
         "nextcloud_aio_database",
         "nextcloud_aio_database_dump"
+      ],
+      "networks": [
+        "nextcloud-aio"
       ]
     },
     {
@@ -170,7 +177,10 @@
         "STARTUP_APPS=%NEXTCLOUD_STARTUP_APPS%",
         "ADDITIONAL_APKS=%NEXTCLOUD_ADDITIONAL_APKS%",
         "ADDITIONAL_PHP_EXTENSIONS=%NEXTCLOUD_ADDITIONAL_PHP_EXTENSIONS%",
-        "INSTALL_LATEST_MAJOR=%INSTALL_LATEST_MAJOR%"
+        "INSTALL_LATEST_MAJOR=%INSTALL_LATEST_MAJOR%",
+        "TALK_RECORDING_ENABLED=%TALK_RECORDING_ENABLED%",
+        "RECORDING_SECRET=%RECORDING_SECRET%",
+        "TALK_RECORDING_HOST=nextcloud-aio-talk-recording"
       ],
       "restart": "unless-stopped",
       "devices": [
@@ -178,6 +188,9 @@
       ],
       "backup_volumes": [
         "nextcloud_aio_nextcloud"
+      ],
+      "networks": [
+        "nextcloud-aio"
       ]
     },
     {
@@ -203,7 +216,11 @@
         "REDIS_PASSWORD",
         "ONLYOFFICE_SECRET"
       ],
-      "restart": "unless-stopped"
+      "restart": "unless-stopped",
+      "networks": [
+        "nextcloud-aio"
+      ],
+      "read_only": true
     },
     {
       "container_name": "nextcloud-aio-collabora",
@@ -221,17 +238,16 @@
         "server_name=%NC_DOMAIN%",
         "DONT_GEN_SSL_CERT=1"
       ],
-      "volumes": [
-        {
-          "source": "nextcloud_aio_collabora_fonts",
-          "destination": "/opt/cool/systemplate/tmpfonts",
-          "writeable": true
-        }
-      ],
       "restart": "unless-stopped",
       "nextcloud_exec_commands": [
         "echo 'Activating collabora config...'",
         "php /var/www/html/occ richdocuments:activate-config"
+      ],
+      "profiles": [
+        "collabora"
+      ],
+      "networks": [
+        "nextcloud-aio"
       ]
     },
     {
@@ -259,13 +275,49 @@
         "TURN_SECRET=%TURN_SECRET%",
         "SIGNALING_SECRET=%SIGNALING_SECRET%",
         "TZ=%TIMEZONE%",
-        "TALK_PORT=%TALK_PORT%"
+        "TALK_PORT=%TALK_PORT%",
+        "INTERNAL_SECRET=%TALK_INTERNAL_SECRET%"
       ],
       "secrets": [
         "TURN_SECRET",
-        "SIGNALING_SECRET"
+        "SIGNALING_SECRET",
+        "TALK_INTERNAL_SECRET"
       ],
-      "restart": "unless-stopped"
+      "restart": "unless-stopped",
+      "profiles": [
+        "talk",
+        "talk-recording"
+      ],
+      "networks": [
+        "nextcloud-aio"
+      ]
+    },
+    {
+      "container_name": "nextcloud-aio-talk-recording",
+      "display_name": "Talk Recording",
+      "image": "nextcloud/aio-talk-recording",
+      "expose": [
+        "1234"
+      ],
+      "internal_port": "1234",
+      "environment": [
+        "NC_DOMAIN=%NC_DOMAIN%",
+        "TZ=%TIMEZONE%",
+        "RECORDING_SECRET=%RECORDING_SECRET%",
+        "INTERNAL_SECRET=%TALK_INTERNAL_SECRET%"
+      ],
+      "shm_size": 2147483648,
+      "secrets": [
+        "RECORDING_SECRET",
+        "TALK_INTERNAL_SECRET"
+      ],
+      "restart": "unless-stopped",
+      "profiles": [
+        "talk-recording"
+      ],
+      "networks": [
+        "nextcloud-aio"
+      ]
     },
     {
       "container_name": "nextcloud-aio-borgbackup",
@@ -375,7 +427,13 @@
           "writeable": true
         }
       ],
-      "restart": "unless-stopped"
+      "restart": "unless-stopped",
+      "profiles": [
+        "clamav"
+      ],
+      "networks": [
+        "nextcloud-aio"
+      ]
     },
     {
       "container_name": "nextcloud-aio-onlyoffice",
@@ -401,7 +459,13 @@
       "secrets": [
         "ONLYOFFICE_SECRET"
       ],
-      "restart": "unless-stopped"
+      "restart": "unless-stopped",
+      "profiles": [
+        "onlyoffice"
+      ],
+      "networks": [
+        "nextcloud-aio"
+      ]
     },
     {
       "container_name": "nextcloud-aio-imaginary",
@@ -417,6 +481,12 @@
       "restart": "unless-stopped",
       "cap_add": [
         "SYS_NICE"
+      ],
+      "profiles": [
+        "imaginary"
+      ],
+      "networks": [
+        "nextcloud-aio"
       ]
     },
     {
@@ -440,7 +510,13 @@
           "writeable": true
         }
       ],
-      "restart": "unless-stopped"
+      "restart": "unless-stopped",
+      "profiles": [
+        "fulltextsearch"
+      ],
+      "networks": [
+        "nextcloud-aio"
+      ]
     }
   ]
 }

@@ -1,10 +1,11 @@
-# From https://github.com/nextcloud/docker/blob/master/23/fpm-alpine/Dockerfile
 FROM php:8.1.19-fpm-alpine3.17
 
 ENV PHP_MEMORY_LIMIT 512M
 ENV PHP_UPLOAD_LIMIT 10G
 ENV PHP_MAX_TIME 3600
 ENV NEXTCLOUD_VERSION 26.0.2
+ENV AIO_TOKEN 123456
+ENV AIO_URL localhost
 
 COPY --chmod=775 *.sh /
 COPY --chmod=774 upgrade.exclude /upgrade.exclude
@@ -184,7 +185,6 @@ RUN set -ex; \
         git \
         postgresql-client \
         tzdata \
-        mawk \
         sudo \
         grep \
         nodejs \

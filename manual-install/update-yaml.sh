@@ -28,10 +28,14 @@ echo "$OUTPUT" | yq -P > ./manual-install/containers.yml
 cd manual-install || exit
 sed -i "s|'||g" containers.yml
 sed -i '/display_name:/d' containers.yml
-sed -i '/stop_grace_period:/s/$/s/' containers.yml
 sed -i '/: \[\]/d' containers.yml
 sed -i 's|- source: |- |' containers.yml
 sed -i 's|- ip_binding: |- |' containers.yml
+sed -i '/AIO_TOKEN/d' containers.yml
+sed -i '/AIO_URL/d' containers.yml
+
+sed -i '/AIO_TOKEN/d' sample.conf
+sed -i '/AIO_URL/d' sample.conf
 
 TCP="$(grep -oP '[%A-Z0-9_]+/tcp' containers.yml | sort -u)"
 mapfile -t TCP <<< "$TCP"
@@ -76,8 +80,6 @@ sed -i 's|UPDATE_NEXTCLOUD_APPS=|UPDATE_NEXTCLOUD_APPS="no"          # When sett
 sed -i 's|APACHE_PORT=|APACHE_PORT=443          # Changing this to a different value than 443 will allow you to run it behind a web server or reverse proxy (like Apache, Nginx and else).|' sample.conf
 sed -i 's|APACHE_IP_BINDING=|APACHE_IP_BINDING=0.0.0.0          # This can be changed to e.g. 127.0.0.1 if you want to run AIO behind a web server or reverse proxy (like Apache, Nginx and else) and if that is running on the same host and using localhost to connect|' sample.conf
 sed -i 's|TALK_PORT=|TALK_PORT=3478          # This allows to adjust the port that the talk container is using.|' sample.conf
-sed -i 's|AIO_TOKEN=|AIO_TOKEN=123456          # Has no function but needs to be set!|' sample.conf
-sed -i 's|AIO_URL=|AIO_URL=localhost          # Has no function but needs to be set!|' sample.conf
 sed -i 's|NC_DOMAIN=|NC_DOMAIN=yourdomain.com          # TODO! Needs to be changed to the domain that you want to use for Nextcloud.|' sample.conf
 sed -i 's|NEXTCLOUD_PASSWORD=|NEXTCLOUD_PASSWORD=          # TODO! This is the password of the initially created Nextcloud admin with username "admin".|' sample.conf
 sed -i 's|TIMEZONE=|TIMEZONE=Europe/Berlin          # TODO! This is the timezone that your containers will use.|' sample.conf
@@ -89,6 +91,16 @@ sed -i 's|INSTALL_LATEST_MAJOR=|INSTALL_LATEST_MAJOR=no        # Setting this to
 sed -i 's|=$|=          # TODO! This needs to be a unique and good password!|' sample.conf
 echo 'IPV6_NETWORK=fd12:3456:789a:2::/64 # IPv6 subnet to use' >> sample.conf
 
+grep  '# TODO!' sample.conf > todo.conf
+grep -v '# TODO!\|_ENABLED' sample.conf > temp.conf
+grep '_ENABLED' sample.conf > enabled.conf
+cat todo.conf > sample.conf
+# shellcheck disable=SC2129
+echo '' >> sample.conf
+cat enabled.conf >> sample.conf
+echo '' >> sample.conf
+cat temp.conf >> sample.conf
+rm todo.conf temp.conf enabled.conf
 cat sample.conf
 
 OUTPUT="$(cat containers.yml)"
@@ -100,19 +112,9 @@ do
     if [ "$name" != "nextcloud-aio-apache" ]; then
         OUTPUT="$(echo "$OUTPUT" | sed "/  $name:/i\ ")"
     fi
-    if ! echo "$name" | grep "apache$" && ! echo "$name" | grep "database$" && ! echo "$name" | grep "nextcloud$" && ! echo "$name" | grep "redis$"; then
-        sed -i '/container_name/d' containers.yml
-        SLIM_NAME="${name##nextcloud-aio-}"
-        OUTPUT="$(echo "$OUTPUT" | sed "/container_name: $name$/a\ \ \ \ profiles:\ \[\"$SLIM_NAME\"\]")"
-    fi
 done
 
-OUTPUT="$(echo "$OUTPUT" | sed "/restart: /a\ \ \ \ networks:\n\ \ \ \ \ \ - nextcloud-aio")"
-
-echo 'version: "3.8"' > containers.yml
-echo "" >> containers.yml
-
-echo "$OUTPUT" >> containers.yml
+echo "$OUTPUT" > containers.yml
 
 sed -i '/container_name/d' containers.yml
 sed -i 's|^ $||' containers.yml
