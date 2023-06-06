@@ -28,6 +28,7 @@ echo "$OUTPUT" | yq -P > ./manual-install/containers.yml
 cd manual-install || exit
 sed -i "s|'||g" containers.yml
 sed -i '/display_name:/d' containers.yml
+sed -i '/stop_grace_period:/s/$/s/' containers.yml
 sed -i '/: \[\]/d' containers.yml
 sed -i 's|- source: |- |' containers.yml
 sed -i 's|- ip_binding: |- |' containers.yml
@@ -108,7 +109,7 @@ NAMES="$(grep -oP "container_name:.*" containers.yml | grep -oP 'nextcloud-aio.*
 mapfile -t NAMES <<< "$NAMES"
 for name in "${NAMES[@]}"
 do
-    OUTPUT="$(echo "$OUTPUT" | sed "/container_name.*$name/i\ \ $name:")"
+    OUTPUT="$(echo "$OUTPUT" | sed "/container_name.*$name$/i\ \ $name:")"
     if [ "$name" != "nextcloud-aio-apache" ]; then
         OUTPUT="$(echo "$OUTPUT" | sed "/  $name:/i\ ")"
     fi

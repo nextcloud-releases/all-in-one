@@ -1,5 +1,5 @@
 # Probably from here https://github.com/elastic/elasticsearch/blob/main/distribution/docker/src/docker/Dockerfile
-FROM elasticsearch:7.17.10
+FROM elasticsearch:8.7.1
 
 RUN set -ex; \
     \
@@ -11,7 +11,7 @@ RUN set -ex; \
     rm -rf /var/lib/apt/lists/*; \
     elasticsearch-plugin install --batch ingest-attachment
 
-USER 1000
+USER 1000:0
 
 HEALTHCHECK CMD nc -z localhost 9200 || exit 1
 LABEL com.centurylinklabs.watchtower.monitor-only="true"
