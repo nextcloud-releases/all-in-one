@@ -30,6 +30,7 @@ jobs:
           {name: 'aio-clamav', context: './Containers/clamav'},
           {name: 'aio-onlyoffice', context: './Containers/onlyoffice'},
           {name: 'aio-imaginary', context: './Containers/imaginary'},
+          {name: 'aio-talk-recording', context: './Containers/talk-recording'},
           {name: 'aio-fulltextsearch', context: './Containers/fulltextsearch'}]
         exclude:
           - platform: {arch: 'linux/arm64', tag: 'develop-arm64'}
