@@ -18,6 +18,7 @@ jobs:
           'aio-domaincheck',
           'all-in-one',
           'aio-nextcloud',
+          'aio-notify-push',
           'aio-postgresql',
           'aio-redis',
           'aio-talk',
