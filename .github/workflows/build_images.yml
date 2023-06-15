@@ -23,6 +23,7 @@ jobs:
           {name: 'aio-domaincheck', context: './Containers/domaincheck'},
           {name: 'all-in-one', context: './Containers/mastercontainer'},
           {name: 'aio-nextcloud', context: './Containers/nextcloud'},
+          {name: 'aio-notify-push', context: './Containers/notify-push'},
           {name: 'aio-postgresql', context: './Containers/postgresql'},
           {name: 'aio-redis', context: './Containers/redis'},
           {name: 'aio-talk', context: './Containers/talk'},
