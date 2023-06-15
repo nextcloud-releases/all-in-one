@@ -1,4 +1,4 @@
-{{- if eq .Values.TALK_ENABLED "yes" }}
+{{- if eq .Values.TALK_RECORDING_ENABLED "yes" }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -6,13 +6,13 @@ metadata:
     kompose.cmd: kompose convert -c -f latest.yml
     kompose.version: 1.28.0 (c4137012e)
   labels:
-    io.kompose.service: nextcloud-aio-talk
-  name: nextcloud-aio-talk
+    io.kompose.service: nextcloud-aio-talk-recording
+  name: nextcloud-aio-talk-recording
 spec:
   replicas: 1
   selector:
     matchLabels:
-      io.kompose.service: nextcloud-aio-talk
+      io.kompose.service: nextcloud-aio-talk-recording
   template:
     metadata:
       annotations:
@@ -20,7 +20,7 @@ spec:
         kompose.version: 1.28.0 (c4137012e)
       labels:
         io.kompose.network/nextcloud-aio: "true"
-        io.kompose.service: nextcloud-aio-talk
+        io.kompose.service: nextcloud-aio-talk-recording
     spec:
       containers:
         - env:
@@ -28,19 +28,12 @@ spec:
               value: "{{ .Values.TALK_INTERNAL_SECRET }}"
             - name: NC_DOMAIN
               value: "{{ .Values.NC_DOMAIN }}"
-            - name: SIGNALING_SECRET
-              value: "{{ .Values.SIGNALING_SECRET }}"
-            - name: TALK_PORT
-              value: "{{ .Values.TALK_PORT }}"
-            - name: TURN_SECRET
-              value: "{{ .Values.TURN_SECRET }}"
+            - name: RECORDING_SECRET
+              value: "{{ .Values.RECORDING_SECRET }}"
             - name: TZ
               value: "{{ .Values.TIMEZONE }}"
-          image: nextcloud/aio-talk:20230613_120442-latest
-          name: nextcloud-aio-talk
+          image: nextcloud/aio-talk-recording:20230613_120442-latest
+          name: nextcloud-aio-talk-recording
           ports:
-            - containerPort: {{ .Values.TALK_PORT }}
-            - containerPort: {{ .Values.TALK_PORT }}
-              protocol: UDP
-            - containerPort: 8081
+            - containerPort: 1234
 {{- end }}
