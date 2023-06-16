@@ -6,8 +6,8 @@
         "nextcloud-aio-onlyoffice",
         "nextcloud-aio-collabora",
         "nextcloud-aio-talk",
-        "nextcloud-aio-notify-push",
-        "nextcloud-aio-nextcloud"
+        "nextcloud-aio-nextcloud",
+        "nextcloud-aio-notify-push"
       ],
       "display_name": "Apache",
       "image": "nextcloud/aio-apache",
@@ -204,7 +204,7 @@
       "internal_port": "7867",
       "secrets": [
         "REDIS_PASSWORD",
-        "POSTGRES_PASSWORD"
+        "DATABASE_PASSWORD"
       ],
       "volumes": [
         {
@@ -525,7 +525,8 @@
       ],
       "networks": [
         "nextcloud-aio"
-      ]
+      ],
+      "read_only": true
     },
     {
       "container_name": "nextcloud-aio-fulltextsearch",
