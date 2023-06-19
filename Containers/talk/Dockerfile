@@ -2,14 +2,17 @@ FROM nats:2.9.18-scratch as nats
 FROM strukturag/nextcloud-spreed-signaling:1.1.2 as signaling
 FROM coturn/coturn:4.6.2-r3-alpine
 USER root
+# Pin alpine version manually as long as https://github.com/coturn/coturn/issues/1226 is not done
+ENV ALPINE_VERSION=3.18
 
 COPY --from=nats /nats-server /usr/local/bin/nats-server
 COPY --from=signaling /usr/bin/nextcloud-spreed-signaling /usr/local/bin/nextcloud-spreed-signaling
 
-COPY --chmod=775 start.sh /usr/bin/start.sh
+COPY --chmod=775 start.sh /start.sh
 COPY --chmod=664 supervisord.conf /supervisord.conf
 
 RUN set -ex; \
+    grep VERSION_ID /etc/os-release | grep -q "$ALPINE_VERSION.[0-9]\+$"; \
     apk add --no-cache \
         ca-certificates \
         tzdata \
@@ -64,7 +67,7 @@ RUN set -ex; \
 ENV TALK_PORT=3478
 
 USER talk
-ENTRYPOINT ["start.sh"]
+ENTRYPOINT ["/start.sh"]
 CMD ["supervisord", "-c", "/supervisord.conf"]
 
 HEALTHCHECK CMD (nc -z localhost 8081 && nc -z localhost 8188 && nc -z localhost 4222 && nc -z localhost "$TALK_PORT" && nc -z "$NC_DOMAIN" "$TALK_PORT") || exit 1
