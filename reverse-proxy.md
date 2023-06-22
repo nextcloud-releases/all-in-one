@@ -340,21 +340,6 @@ Of course you need to modify `<your-nc-domain>` to the domain on which you want 
 
 </details>
 
-### Nginx-Proxy
-
-<details>
-
-<summary>click here to expand</summary>
-
-Unfortunately it is not possible to configure nginx-proxy in a way that works because it completely relies on environmental variables of the docker containers itself. Providing these variables does not work as stated above.
-
-If you really want to use AIO, we recommend you to switch to caddy. It is simply amazing!<br>
-Of course understandable if that is not possible for you.
-
-Apart from that, there is this: [manual-install](https://github.com/nextcloud/all-in-one/tree/main/manual-install)
-
-</details>
-
 ### Nginx-Proxy-Manager
 
 <details>
@@ -381,6 +366,21 @@ client_max_body_size 0;
 ```
 
 Of course you need to modify `<your-nc-domain>` to the domain on which you want to run Nextcloud. Also change `<you>@<your-mail-provider-domain>` to a mail address of yours. Also make sure to adjust the port 11000 to match the chosen `APACHE_PORT`. **Please note:** The above configuration will only work if your reverse proxy is running directly on the host that is running the docker daemon. If the reverse proxy is running in a docker container, you can use the `--network host` option (or `network_mode: host` for docker-compose) when starting the reverse proxy container in order to connect the reverse proxy container to the host network (if you are using a firewall on the server, you need to open ports 80 and 443 for the reverse proxy in that case manually). ***If that is not an option or not possible for you (like e.g. on Windows or if the reverse proxy is running on a different host), you can alternatively instead of `localhost` use the private ip-address of the host that is running the docker daemon. If you are not sure how to retrieve that, you can run: `ip a | grep "scope global" | head -1 | awk '{print $2}' | sed 's|/.*||'`. If the command returns a public ip-address, use `ip a | grep "scope global" | grep docker0 | awk '{print $2}' | sed 's|/.*||'` instead (the commands only work on Linux)***
+
+</details>
+
+### Nginx-Proxy
+
+<details>
+
+<summary>click here to expand</summary>
+
+Unfortunately it is not possible to configure nginx-proxy in a way that works because it completely relies on environmental variables of the docker containers itself. Providing these variables does not work as stated above.
+
+If you really want to use AIO, we recommend you to switch to caddy. It is simply amazing!<br>
+Of course understandable if that is not possible for you.
+
+Apart from that, there is this: [manual-install](https://github.com/nextcloud/all-in-one/tree/main/manual-install)
 
 </details>
 
@@ -668,9 +668,9 @@ Afterwards should the AIO interface be accessible via `https://ip.address.of.the
 ## 6. How to debug things?
 If something does not work, follow the steps below:
 1. Make sure to exactly follow the whole reverse proxy documentation step-for-step from top to bottom!
-1. Make sure that you used the docker run command that is described in this reverse proxy documentation. Hint: make sure that you have set the APACHE_PORT during the docker run command!
+1. Make sure that you used the docker run command that is described in this reverse proxy documentation. **Hint:** make sure that you have set the `APACHE_PORT` via e.g. `--env APACHE_PORT=11000` during the docker run command!
 1. Make sure to set the `APACHE_IP_BINDING` variable correctly. If in doubt, set it to `--env APACHE_IP_BINDING=0.0.0.0`
-1. Make sure that all ports match the chosen `APACHE_PORT`.
+1. Make sure that all ports to which your reverse proxy is pointing match the chosen `APACHE_PORT`.
 1. Make sure that the reverse proxy is running on the host OS or if running in a container, connected to the host network. If that is not possible (e.g. on Windows or if the reverse proxy is running on a different host), substitute `localhost` or `127.0.0.1` in the default configurations by the private ip-address of the host that is running the docker daemon. If you are not sure how to retrieve that, you can run: `ip a | grep "scope global" | head -1 | awk '{print $2}' | sed 's|/.*||'`. If the command returns a public ip-address, use `ip a | grep "scope global" | grep docker0 | awk '{print $2}' | sed 's|/.*||'` instead (the commands only work on Linux)
 1. Make sure that the mastercontainer is able to spawn other containers. You can do so by checking that the mastercontainer indeed has access to the Docker socket which might not be positioned in one of the suggested directories like `/var/run/docker.sock` but in a different directory, based on your OS and the way how you installed Docker. The mastercontainer logs should help figuring this out. You can have a look at them by running `sudo docker logs nextcloud-aio-mastercontainer` after the container is started the first time.
 1. Check if after the mastercontainer was started, the reverse proxy if running inside a container, can reach the provided apache port. You can test this by running `nc -z localhost 11000; echo $?` from inside the reverse proxy container. If the output is `0`, everything works. Alternatively you can of course use instead of `localhost` the ip-address of the host here for the test.
