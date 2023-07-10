@@ -2,7 +2,7 @@ FROM python:3.11.4-alpine3.18
 
 COPY --chmod=775 start.sh /start.sh
 
-ENV RECORDING_VERSION v17.0.0
+ENV RECORDING_VERSION v17.0.1
 
 RUN set -ex; \
     apk add --no-cache \
@@ -43,4 +43,4 @@ ENTRYPOINT ["/start.sh"]
 CMD ["python", "-m", "nextcloud.talk.recording", "--config", "/etc/recording.conf"]
 
 HEALTHCHECK CMD nc -z localhost 1234 || exit 1
-LABEL com.centurylinklabs.watchtower.monitor-only="true"
+LABEL com.centurylinklabs.watchtower.enable="false"

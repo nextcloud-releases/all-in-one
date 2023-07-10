@@ -1,5 +1,5 @@
 # From a file located probably somewhere here: https://github.com/CollaboraOnline/online/tree/master/docker
-FROM collabora/code:23.05.0.5.1
+FROM collabora/code:23.05.1.2.1
 
 USER root
 
@@ -16,4 +16,4 @@ RUN set -ex; \
 USER 100
 
 HEALTHCHECK CMD nc -z localhost 9980 || exit 1
-LABEL com.centurylinklabs.watchtower.monitor-only="true"
+LABEL com.centurylinklabs.watchtower.enable="false"

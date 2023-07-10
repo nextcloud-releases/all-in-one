@@ -136,6 +136,7 @@ You can check this on Linux by running: `uname -m`
 ### Which ports are mandatory to be open in your firewall/router?
 Only those (if you access the Mastercontainer Interface internally via port 8080):
 - `443/TCP` for the Apache container
+- `443/UDP` if you want to enable http3 for the Apache container
 - `3478/TCP` and `3478/UDP` for the Talk container
 
 ### Explanation of used ports:
@@ -143,6 +144,7 @@ Only those (if you access the Mastercontainer Interface internally via port 8080
 - `80/TCP`: redirects to Nextcloud (is used for getting the certificate via ACME http-challenge for the Mastercontainer)
 - `8443/TCP`: Mastercontainer Interface with valid certificate (only works if port 80 and 8443 are open/forwarded in your firewall/router and you point a domain to your server. It generates a valid certificate then automatically and access via e.g. `https://public.domain.com:8443/` is possible.)
 - `443/TCP`: will be used by the Apache container later on and needs to be open/forwarded in your firewall/router
+- `443/UDP`: will be used by the Apache container later on and needs to be open/forwarded in your firewall/router if you want to enable http3
 - `3478/TCP` and `3478/UDP`: will be used by the Turnserver inside the Talk container and needs to be open/forwarded in your firewall/router
 
 ### How to run AIO on macOS?
@@ -589,7 +591,7 @@ After using this option, please make sure to apply the correct permissions to th
 
 You can then navigate to the apps management page, activate the external storage app, navigate to `https://your-nc-domain.com/settings/admin/externalstorages` and add a local external storage directory that will be accessible inside the container at the same place that you've entered. E.g. `/mnt/your-drive-mountpoint` will be mounted to `/mnt/your-drive-mountpoint` inside the container, etc. 
 
-Be aware though that these locations will not be covered by the built-in backup solution!
+Be aware though that these locations will not be covered by the built-in backup solution - but you can add further Docker volumes and host paths that you want to back up after the initial backup is done.
 
 **Please note:** If you can't see the type "local storage" in the external storage admin options, a restart of the containers from the AIO interface may be required.
 
@@ -642,7 +644,7 @@ The [facerecognition app](https://apps.nextcloud.com/apps/facerecognition) requi
 The [memories app](https://apps.nextcloud.com/apps/memories) allows to enable hardware transcoding for videos. In order to use that, you need to add `--env NEXTCLOUD_ENABLE_DRI_DEVICE=true` to the docker run command of the mastercontainer (but before the last line `nextcloud/all-in-one:latest`! If it was started already, you will need to stop the mastercontainer, remove it (no data will be lost) and recreate it using the docker run command that you initially used) which will mount the `/dev/dri` device into the container. Additionally, you need to add required packets to the Nextcloud container by using [this feature](https://github.com/nextcloud/all-in-one#how-to-add-os-packages-permanently-to-the-nextcloud-container) and adding the required Alpine packages that are documented [here](https://github.com/pulsejet/memories/wiki/QSV-Transcoding).
 
 ### Huge docker logs
-When your containers run for a few days without a restart, the container logs that you can view from the AIO interface can get really huge. You can limit the loge sizes by enabling logrotate for docker container logs. Feel free to enable this by following those instructions: https://sandro-keil.de/blog/logrotate-for-docker-container/
+If you should run into issues with huge docker logs, you can adjust the log size by following https://docs.docker.com/config/containers/logging/local/#usage. However for the included AIO containers, this should usually not be needed because almost all of them have the log level set to warn so they should not produce many logs.
 
 ### Access/Edit Nextcloud files/folders manually
 The files and folders that you add to Nextcloud are by default stored in the following docker directory: `nextcloud_aio_nextcloud:/mnt/ncdata/` (usually `/var/lib/docker/volumes/nextcloud_aio_nextcloud_data/_data/` on linux host systems). If needed, you can modify/add/delete files/folders there but **ATTENTION**: be very careful when doing so because you might corrupt your AIO installation! Best is to create a backup using the built-in backup solution before editing/changing files/folders in there because you will then be able to restore your instance to the backed up state.

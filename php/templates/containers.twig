@@ -99,7 +99,7 @@
                             <input class="button" type="submit" value="Submit domain" />
                         </form>
                         {% if skip_domain_validation == false %}
-                            Make sure that this server is reachable on port 443 (port 443/tcp is open/forwarded in your firewall/router) and that you've correctly set up the DNS config for the domain that you enter (set the A record to your public ipv4-address and if you need ipv6, set the AAAA record to your public ipv6-address. A CNAME record if of course also possible). You should see hints on what went wrong if your domain does not get accepted in the top right corner.<br><br>
+                            Make sure that this server is reachable on port 443 (port 443/tcp is open/forwarded in your firewall/router and 443/udp as well if you want to enable http3) and that you've correctly set up the DNS config for the domain that you enter (set the A record to your public ipv4-address and if you need ipv6, set the AAAA record to your public ipv6-address. A CNAME record if of course also possible). You should see hints on what went wrong if your domain does not get accepted in the top right corner.<br><br>
                             <details>
                                 <summary>Click here for further hints</summary><br />
                                 If you should not have a domain yet, you can get one for free e.g. from duckdns.org and others.<br><br>
@@ -468,7 +468,7 @@
                                             {% if automatic_updates == true %}
                                                 Also your containers, the mastercontainer and on saturdays your Nextcloud apps will be automatically updated. 
                                             {% endif %}
-                                            You can disable this option again by clicking on the button below.<br><br/>
+                                            To change your backup time, first disable Daily Backups and then re-enable them with your new backup time.<br><br/>
                                             <form method="POST" action="/api/configuration" class="xhr">
                                                 <input type="hidden" name="delete_daily_backup_time" value="yes"/>
                                                 <input type="hidden" name="{{csrf.keys.name}}" value="{{csrf.name}}">
@@ -509,8 +509,8 @@
                                 <summary>Click here to change your AIO password</summary><br />
                                 You can change your AIO password below:<br><br />
                                 <form method="POST" action="/api/configuration" class="xhr">
-                                    <input type="text" autocomplete="current-password" name="current-master-password" placeholder="Your current AIO password"/>
-                                    <input type="text" autocomplete="new-password" name="new-master-password" placeholder="Your new AIO password"/>
+                                    <input type="password" autocomplete="current-password" name="current-master-password" placeholder="Your current AIO password" id="current-master-password" oninput="showPassword('current-master-password')">
+                                    <input type="password" autocomplete="new-password" name="new-master-password" placeholder="Your new AIO password" id="new-master-password" oninput="showPassword('new-master-password')">
                                     <input type="hidden" name="{{csrf.keys.name}}" value="{{csrf.name}}">
                                     <input type="hidden" name="{{csrf.keys.value}}" value="{{csrf.value}}">
                                     <input class="button" type="submit" value="Submit password change" />
@@ -548,9 +548,9 @@
                             <input type="checkbox" id="fulltextsearch" name="fulltextsearch"><label for="fulltextsearch">Fulltextsearch (needs ~1GB additional RAM)</label><br>
                         {% endif %}
                         {% if is_imaginary_enabled == true %}
-                            <input type="checkbox" id="imaginary" name="imaginary" checked="checked"><label for="imaginary">Imaginary (for previews of heic, heif, illustrator, pdf, svg, tiff and webp)</label><br><br>
+                            <input type="checkbox" id="imaginary" name="imaginary" checked="checked"><label for="imaginary">Imaginary (for previews of heic, heif, illustrator, pdf, svg, tiff and webp. Imaginary is currently <a href="https://github.com/nextcloud/server/issues/34262">incompatible with server-side-encryption</a>)</label><br><br>
                         {% else %}
-                            <input type="checkbox" id="imaginary" name="imaginary"><label for="imaginary">Imaginary (for previews of heic, heif, illustrator, pdf, svg, tiff and webp)</label><br><br>
+                            <input type="checkbox" id="imaginary" name="imaginary"><label for="imaginary">Imaginary (for previews of heic, heif, illustrator, pdf, svg, tiff and webp. Imaginary is currently <a href="https://github.com/nextcloud/server/issues/34262">incompatible with server-side-encryption</a>)</label><br><br>
                         {% endif %}
                         {% if is_talk_enabled == true %}
                             <input type="checkbox" id="talk" name="talk" checked="checked"><label for="talk">Nextcloud Talk (needs ports {{ talk_port }}/TCP and {{ talk_port }}/UDP open/forwarded in your firewall/router)</label><br><br>
