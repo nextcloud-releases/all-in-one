@@ -55,6 +55,13 @@
       ],
       "networks": [
         "nextcloud-aio"
+      ],
+      "read_only": true,
+      "tmpfs": [
+        "/var/log/supervisord",
+        "/var/run/supervisord",
+        "/usr/local/apache2/logs",
+        "/caddy"
       ]
     },
     {
@@ -96,6 +103,10 @@
       ],
       "networks": [
         "nextcloud-aio"
+      ],
+      "read_only": true,
+      "tmpfs": [
+        "/var/run/postgresql"
       ]
     },
     {
@@ -290,6 +301,10 @@
       ],
       "networks": [
         "nextcloud-aio"
+      ],
+      "read_only": true,
+      "tmpfs": [
+        "/opt/cool/child-roots"
       ]
     },
     {
@@ -332,6 +347,12 @@
       ],
       "networks": [
         "nextcloud-aio"
+      ],
+      "read_only": true,
+      "tmpfs": [
+        "/var/log/supervisord",
+        "/var/run/supervisord",
+        "/conf"
       ]
     },
     {
@@ -359,6 +380,11 @@
       ],
       "networks": [
         "nextcloud-aio"
+      ],
+      "read_only": true,
+      "tmpfs": [
+        "/tmp",
+        "/conf"
       ]
     },
     {
@@ -454,7 +480,12 @@
       "secrets": [
         "INSTANCE_ID"
       ],
-      "stop_grace_period": 1
+      "stop_grace_period": 1,
+      "read_only": true,
+      "tmpfs": [
+        "/etc/lighttpd",
+        "/var/www/domaincheck"
+      ]
     },
     {
       "container_name": "nextcloud-aio-clamav",

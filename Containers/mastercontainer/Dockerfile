@@ -1,11 +1,11 @@
 # Docker CLI is a requirement
-FROM docker:24.0.3-cli as docker
+FROM docker:24.0.4-cli as docker
 
 # Caddy is a requirement
 FROM caddy:2.6.4-alpine as caddy
 
 # From https://github.com/docker-library/php/blob/master/8.2/alpine3.18/fpm/Dockerfile
-FROM php:8.2.7-fpm-alpine3.18
+FROM php:8.2.8-fpm-alpine3.18
 
 EXPOSE 80
 EXPOSE 8080

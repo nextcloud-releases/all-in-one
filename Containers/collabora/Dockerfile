@@ -1,5 +1,5 @@
 # From a file located probably somewhere here: https://github.com/CollaboraOnline/online/tree/master/docker
-FROM collabora/code:23.05.1.2.1
+FROM collabora/code:23.05.1.3.1
 
 USER root
 
@@ -11,7 +11,9 @@ RUN set -ex; \
         tzdata \
         netcat-openbsd \
     ; \
-    rm -rf /var/lib/apt/lists/*
+    rm -rf /var/lib/apt/lists/*; \
+    mkdir -p /opt/cool/child-roots; \
+    chmod 777 -R /opt/cool/child-roots
 
 USER 100
 
