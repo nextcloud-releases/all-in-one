@@ -16,7 +16,7 @@
     </header>
 
     <div class="content">
-        <h1>Nextcloud AIO v6.4.0</h1>
+        <h1>Nextcloud AIO v7.0.0</h1>
 
         {# Add 2nd tab warning #}
         <script type="text/javascript" src="second-tab-warning.js"></script>
@@ -28,7 +28,7 @@
         {% set isBackupOrRestoreRunning = false %}
         {% set isApacheStarting = false %}
         {# Setting newMajorVersion to '' will hide corresponding options/elements, can be set to an integer like 26 in order to show corresponding elements. If set, also increase installLatestMajor in https://github.com/nextcloud/all-in-one/blob/main/php/src/Controller/DockerController.php #}
-        {% set newMajorVersion = 27 %}
+        {% set newMajorVersion = '' %}
 
         {% if is_backup_container_running == true %}
             {% if borg_backup_mode == 'backup' or borg_backup_mode == 'restore' %}
@@ -629,7 +629,7 @@
                                 <input type="hidden" name="{{csrf.keys.value}}" value="{{csrf.value}}">
                                 <input class="button" type="submit" value="Submit timezone" onclick="return confirm('Are you sure that this is a valid timezone? Please double check by following the wikipedia article and checking the correct column since if not, it will break the startup since the database will not get correctly initialized and you will end in a startup loop.')" />
                             </form>
-                            You need to make sure that the timezone that you enter is valid. An example is <b>Europe/Berlin</b>. You can get valid values by looking at the 'TZ database name' column of this list: <a href="https://en.wikipedia.org/wiki/List_of_tz_database_time_zones#List"><b>click here</b></a>.<br><br>
+                            You need to make sure that the timezone that you enter is valid. An example is <b>Europe/Berlin</b>. You can get valid values by looking at the 'TZ database name' column of this list: <a href="https://en.wikipedia.org/wiki/List_of_tz_database_time_zones#List"><b>click here</b></a>. The default is <b>Etc/UTC<b> if nothing is entered.<br><br>
                         {% else %}
                             The timezone for Nextcloud is currently set to <b>{{ timezone }}</b>. You can reset the timezone again by clicking on the button below.<br><br/>
                             <form method="POST" action="/api/configuration" class="xhr">
