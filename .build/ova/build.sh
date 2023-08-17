@@ -11,6 +11,7 @@ sudo chown -R 33:0 /mnt/ncdata
 
 # Install Nextcloud
 sudo docker run -d \
+--init \
 --name nextcloud-aio-mastercontainer \
 --restart always \
 -p 80:80 \

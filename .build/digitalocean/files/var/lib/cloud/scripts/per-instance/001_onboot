@@ -10,6 +10,7 @@ sudo docker pull nextcloud/all-in-one:latest
 
 # Install Nextcloud AIO
 sudo docker run -d \
+--init \
 --name nextcloud-aio-mastercontainer \
 --restart always \
 -p 80:80 \
