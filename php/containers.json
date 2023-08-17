@@ -11,6 +11,7 @@
       ],
       "display_name": "Apache",
       "image": "nextcloud/aio-apache",
+      "init": true,
       "ports": [
         {
           "ip_binding": "%APACHE_IP_BINDING%",
@@ -69,6 +70,7 @@
       "container_name": "nextcloud-aio-database",
       "display_name": "Database",
       "image": "nextcloud/aio-postgresql",
+      "init": true,
       "expose": [
         "5432"
       ],
@@ -122,6 +124,7 @@
       ],
       "display_name": "Nextcloud",
       "image": "nextcloud/aio-nextcloud",
+      "init": true,
       "expose": [
         "9000"
       ],
@@ -131,7 +134,8 @@
         "REDIS_PASSWORD",
         "NEXTCLOUD_PASSWORD",
         "TURN_SECRET",
-        "SIGNALING_SECRET"
+        "SIGNALING_SECRET",
+        "FULLTEXTSEARCH_PASSWORD"
       ],
       "volumes": [
         {
@@ -198,7 +202,8 @@
         "INSTALL_LATEST_MAJOR=%INSTALL_LATEST_MAJOR%",
         "TALK_RECORDING_ENABLED=%TALK_RECORDING_ENABLED%",
         "RECORDING_SECRET=%RECORDING_SECRET%",
-        "TALK_RECORDING_HOST=nextcloud-aio-talk-recording"
+        "TALK_RECORDING_HOST=nextcloud-aio-talk-recording",
+        "FULLTEXTSEARCH_PASSWORD=%FULLTEXTSEARCH_PASSWORD%"
       ],
       "restart": "unless-stopped",
       "devices": [
@@ -218,6 +223,7 @@
       "container_name": "nextcloud-aio-notify-push",
       "display_name": "Notify Push",
       "image": "nextcloud/aio-notify-push",
+      "init": true,
       "expose": [
         "7867"
       ],
@@ -253,6 +259,7 @@
       "container_name": "nextcloud-aio-redis",
       "display_name": "Redis",
       "image": "nextcloud/aio-redis",
+      "init": true,
       "expose": [
         "6379"
       ],
@@ -283,6 +290,7 @@
       "container_name": "nextcloud-aio-collabora",
       "display_name": "Collabora",
       "image": "nextcloud/aio-collabora",
+      "init": true,
       "expose": [
         "9980"
       ],
@@ -311,6 +319,7 @@
       "container_name": "nextcloud-aio-talk",
       "display_name": "Talk",
       "image": "nextcloud/aio-talk",
+      "init": true,
       "ports": [
         {
           "ip_binding": "",
@@ -352,8 +361,8 @@
       "tmpfs": [
         "/var/log/supervisord",
         "/var/run/supervisord",
+        "/opt/eturnal/run",
         "/conf",
-        "/var/lib/turn",
         "/tmp"
       ]
     },
@@ -361,6 +370,7 @@
       "container_name": "nextcloud-aio-talk-recording",
       "display_name": "Talk Recording",
       "image": "nextcloud/aio-talk-recording",
+      "init": true,
       "expose": [
         "1234"
       ],
@@ -392,6 +402,7 @@
     {
       "container_name": "nextcloud-aio-borgbackup",
       "image": "nextcloud/aio-borgbackup",
+      "init": true,
       "environment": [
         "BORG_PASSWORD=%BORGBACKUP_PASSWORD%",
         "BORG_MODE=%BORGBACKUP_MODE%",
@@ -453,6 +464,7 @@
     {
       "container_name": "nextcloud-aio-watchtower",
       "image": "nextcloud/aio-watchtower",
+      "init": true,
       "environment": [
         "CONTAINER_TO_UPDATE=nextcloud-aio-mastercontainer"
       ],
@@ -468,6 +480,7 @@
     {
       "container_name": "nextcloud-aio-domaincheck",
       "image": "nextcloud/aio-domaincheck",
+      "init": true,
       "ports": [
         {
           "ip_binding": "%APACHE_IP_BINDING%",
@@ -494,6 +507,7 @@
       "container_name": "nextcloud-aio-clamav",
       "display_name": "ClamAV",
       "image": "nextcloud/aio-clamav",
+      "init": true,
       "expose": [
         "3310"
       ],
@@ -527,6 +541,7 @@
       "container_name": "nextcloud-aio-onlyoffice",
       "display_name": "OnlyOffice",
       "image": "nextcloud/aio-onlyoffice",
+      "init": true,
       "expose": [
         "80"
       ],
@@ -559,6 +574,7 @@
       "container_name": "nextcloud-aio-imaginary",
       "display_name": "Imaginary",
       "image": "nextcloud/aio-imaginary",
+      "init": true,
       "expose": [
         "9000"
       ],
@@ -585,6 +601,7 @@
       "container_name": "nextcloud-aio-fulltextsearch",
       "display_name": "Fulltextsearch",
       "image": "nextcloud/aio-fulltextsearch",
+      "init": false,
       "expose": [
         "9200"
       ],
@@ -598,7 +615,8 @@
         "logger.org.elasticsearch.discovery=WARN",
         "http.port=9200",
         "xpack.license.self_generated.type=basic",
-        "xpack.security.enabled=false"
+        "xpack.security.enabled=false",
+        "FULLTEXTSEARCH_PASSWORD=%FULLTEXTSEARCH_PASSWORD%"
       ],
       "volumes": [
         {
@@ -613,6 +631,9 @@
       ],
       "networks": [
         "nextcloud-aio"
+      ],
+      "secrets": [
+        "FULLTEXTSEARCH_PASSWORD"
       ]
     }
   ]

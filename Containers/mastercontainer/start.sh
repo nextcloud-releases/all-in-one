@@ -253,6 +253,32 @@ if [ "$?" = 6 ]; then
     exit 1
 fi
 
+# Check that no changes have been made to timezone settings since AIO only supports running in UTC timezone
+if [ -n "$TZ" ]; then
+    print_red "The environmental variable TZ has been set which is not supported by AIO since it only supports running in the default UTC timezone!"
+    echo "The correct timezone can be set in the AIO interface later on!"
+    exit 1
+elif mountpoint -q /etc/localtime; then
+    print_red "/etc/localtime has been mounted into the container which is not allowed because AIO only supports running in the default UTC timezone!"
+    echo "The correct timezone can be set in the AIO interface later on!"
+    exit 1
+elif mountpoint -q /etc/timezone; then
+    print_red "/etc/timezone has been mounted into the container which is not allowed because AIO only supports running in the default UTC timezone!"
+    echo "The correct timezone can be set in the AIO interface later on!"
+    exit 1
+fi
+
+# Check if unsupported env are set (but don't exit as it would break many instances)
+if [ -n "$APACHE_DISABLE_REWRITE_IP" ]; then
+    print_red "The environmental variable APACHE_DISABLE_REWRITE_IP has been set which is not supported by AIO. Please remove it!"
+fi
+if [ -n "$NEXTCLOUD_TRUSTED_DOMAINS" ]; then
+    print_red "The environmental variable NEXTCLOUD_TRUSTED_DOMAINS has been set which is not supported by AIO. Please remove it!"
+fi
+if [ -n "$TRUSTED_PROXIES" ]; then
+    print_red "The environmental variable TRUSTED_PROXIES has been set which is not supported by AIO. Please remove it!"
+fi
+
 # Add important folders
 mkdir -p /mnt/docker-aio-config/data/
 mkdir -p /mnt/docker-aio-config/session/
