@@ -34,16 +34,14 @@ RUN set -ex; \
     rename -v ".jcfg.sample" ".jcfg" /usr/local/etc/janus/*.jcfg.sample
 
 FROM alpine:3.18.2
-ENV STUN_SERVICE="stun.nextcloud.com 443"
 ENV ETURNAL_ETC_DIR="/conf"
 COPY --from=janus     /usr/local                          /usr/local
 COPY --from=eturnal   /opt/eturnal                        /opt/eturnal
-COPY --from=eturnal   /usr/local/bin/stun                 /usr/local/bin/stun
-COPY --from=eturnal   /usr/local/bin/eturnalctl           /usr/local/bin/eturnalctl
 COPY --from=nats      /nats-server                        /usr/local/bin/nats-server
 COPY --from=signaling /usr/bin/nextcloud-spreed-signaling /usr/local/bin/nextcloud-spreed-signaling
 
 COPY --chmod=775 start.sh /start.sh
+COPY --chmod=775 healthcheck.sh /healthcheck.sh
 COPY --chmod=664 supervisord.conf /supervisord.conf
 
 RUN set -ex; \
@@ -97,11 +95,13 @@ RUN set -ex; \
         /conf \
         /opt/eturnal \
         /var/run/supervisord \
-        /var/log/supervisord;
+        /var/log/supervisord; \
+    ln -s /opt/eturnal/bin/stun /usr/local/bin/stun; \
+    ln -s /opt/eturnal/bin/eturnalctl /usr/local/bin/eturnalctl
 
 USER eturnal
 ENTRYPOINT ["/start.sh"]
 CMD ["supervisord", "-c", "/supervisord.conf"]
 
-HEALTHCHECK CMD (nc -z localhost 8081 && nc -z localhost 8188 && nc -z localhost 4222 && nc -z localhost "$TALK_PORT" && nc -z "$NC_DOMAIN" "$TALK_PORT" && eturnalctl status) || exit 1
+HEALTHCHECK CMD /healthcheck.sh
 LABEL com.centurylinklabs.watchtower.enable="false"
