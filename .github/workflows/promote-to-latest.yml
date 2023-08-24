@@ -37,7 +37,8 @@ jobs:
           'aio-onlyoffice',
           'aio-imaginary',
           'aio-talk-recording',
-          'aio-fulltextsearch']
+          'aio-fulltextsearch',
+          'aio-docker-socket-proxy']
 
     steps:
     - name: Login to DockerHub
