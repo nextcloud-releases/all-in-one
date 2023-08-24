@@ -13,6 +13,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        platform: [
+          {arch: 'linux/amd64', tag: 'develop'},
+          {arch: 'linux/arm64', tag: 'develop-arm64'}]
         container: [
           {name: 'aio-apache', context: './Containers/apache'},
           {name: 'aio-borgbackup', context: './Containers/borgbackup'},
@@ -29,10 +32,8 @@ jobs:
           {name: 'aio-onlyoffice', context: './Containers/onlyoffice'},
           {name: 'aio-imaginary', context: './Containers/imaginary'},
           {name: 'aio-talk-recording', context: './Containers/talk-recording'},
-          {name: 'aio-fulltextsearch', context: './Containers/fulltextsearch'}]
-        platform: [
-          {arch: 'linux/amd64', tag: 'develop'},
-          {arch: 'linux/arm64', tag: 'develop-arm64'}]
+          {name: 'aio-fulltextsearch', context: './Containers/fulltextsearch'},
+          {name: 'aio-docker-socket-proxy', context: './Containers/docker-socket-proxy'}]
         exclude:
           - platform: {arch: 'linux/arm64', tag: 'develop-arm64'}
             container: {name: 'aio-clamav', context: './Containers/clamav'}
