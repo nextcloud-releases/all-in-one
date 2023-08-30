@@ -21,6 +21,7 @@ OUTPUT="$(echo "$OUTPUT" | jq 'del(.services[] | select(.container_name == "next
 OUTPUT="$(echo "$OUTPUT" | jq 'del(.services[] | select(.container_name == "nextcloud-aio-domaincheck"))')"
 OUTPUT="$(echo "$OUTPUT" | jq 'del(.services[] | select(.container_name == "nextcloud-aio-borgbackup"))')"
 OUTPUT="$(echo "$OUTPUT" | jq 'del(.services[] | select(.container_name == "nextcloud-aio-docker-socket-proxy"))')"
+OUTPUT="$(echo "$OUTPUT" | jq '.services[] |= if has("depends_on") then .depends_on |= if contains(["nextcloud-aio-docker-socket-proxy"]) then del(.[index("nextcloud-aio-docker-socket-proxy")]) else . end else . end')"
 OUTPUT="$(echo "$OUTPUT" | jq '.services[] |= if has("depends_on") then .depends_on |= map({ (.): { "condition": "service_started", "required": false } }) else . end' | jq '.services[] |= if has("depends_on") then .depends_on |= reduce .[] as $item ({}; . + $item) else . end')"
 
 snap install yq
@@ -36,9 +37,7 @@ sed -i 's|- source: |- |' containers.yml
 sed -i 's|- ip_binding: |- |' containers.yml
 sed -i '/AIO_TOKEN/d' containers.yml
 sed -i '/AIO_URL/d' containers.yml
-
-sed -i '/AIO_TOKEN/d' sample.conf
-sed -i '/AIO_URL/d' sample.conf
+sed -i '/DOCKER_SOCKET_PROXY_ENABLED/d' containers.yml
 
 TCP="$(grep -oP '[%A-Z0-9_]+/tcp' containers.yml | sort -u)"
 mapfile -t TCP <<< "$TCP"
@@ -67,7 +66,6 @@ do
     sed -i "s|$variable|\${$sole_variable}|g" containers.yml
 done
 
-sed -i '/DOCKER_SOCKET_PROXY_ENABLED/d' sample.conf
 sed -i 's|_ENABLED=|_ENABLED="no"          # Setting this to "yes" (with quotes) enables the option in Nextcloud automatically.|' sample.conf
 sed -i 's|CLAMAV_ENABLED=no.*|CLAMAV_ENABLED="no"          # Setting this to "yes" (with quotes) enables the option in Nextcloud automatically. Note: arm64 has no clamav support|' sample.conf
 sed -i 's|TALK_ENABLED=no|TALK_ENABLED="yes"|' sample.conf
