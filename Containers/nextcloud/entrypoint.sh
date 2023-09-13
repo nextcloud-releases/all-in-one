@@ -562,7 +562,7 @@ if [ "$COLLABORA_ENABLED" = 'yes' ]; then
         echo "Warning: wopi_allowlist is empty which should not be the case!"
     fi
 else
-    if [ -d "/var/www/html/custom_apps/richdocuments" ]; then
+    if [ "$REMOVE_DISABLED_APPS" = yes ] && [ -d "/var/www/html/custom_apps/richdocuments" ]; then
         php /var/www/html/occ app:remove richdocuments
     fi
 fi
@@ -586,7 +586,7 @@ if [ "$ONLYOFFICE_ENABLED" = 'yes' ]; then
     php /var/www/html/occ config:app:set onlyoffice DocumentServerUrl --value="https://$NC_DOMAIN/onlyoffice"
     php /var/www/html/occ config:system:set allow_local_remote_servers --type=bool --value=true
 else
-    if [ -d "/var/www/html/custom_apps/onlyoffice" ] && [ -n "$ONLYOFFICE_SECRET" ] && [ "$(php /var/www/html/occ config:system:get onlyoffice jwt_secret)" = "$ONLYOFFICE_SECRET" ]; then
+    if [ "$REMOVE_DISABLED_APPS" = yes ] && [ -d "/var/www/html/custom_apps/onlyoffice" ] && [ -n "$ONLYOFFICE_SECRET" ] && [ "$(php /var/www/html/occ config:system:get onlyoffice jwt_secret)" = "$ONLYOFFICE_SECRET" ]; then
         php /var/www/html/occ app:remove onlyoffice
     fi
 fi
@@ -613,7 +613,7 @@ if [ "$TALK_ENABLED" = 'yes' ]; then
         php /var/www/html/occ talk:signaling:add "https://$NC_DOMAIN/standalone-signaling/" "$SIGNALING_SECRET" --verify
     fi
 else
-    if [ -d "/var/www/html/custom_apps/spreed" ]; then
+    if [ "$REMOVE_DISABLED_APPS" = yes ] && [ -d "/var/www/html/custom_apps/spreed" ]; then
         php /var/www/html/occ app:remove spreed
     fi
 fi
@@ -660,7 +660,7 @@ if [ "$CLAMAV_ENABLED" = 'yes' ]; then
         php /var/www/html/occ config:app:set files_antivirus av_infected_action --value="only_log"
     fi
 else
-    if [ -d "/var/www/html/custom_apps/files_antivirus" ]; then
+    if [ "$REMOVE_DISABLED_APPS" = yes ] && [ -d "/var/www/html/custom_apps/files_antivirus" ]; then
         php /var/www/html/occ app:remove files_antivirus
     fi
 fi
@@ -723,30 +723,32 @@ if [ "$FULLTEXTSEARCH_ENABLED" = 'yes' ]; then
         fi
     fi
 else
-    if [ -d "/var/www/html/custom_apps/fulltextsearch" ]; then
-        php /var/www/html/occ app:remove fulltextsearch
-    fi
-    if [ -d "/var/www/html/custom_apps/fulltextsearch_elasticsearch" ]; then
-        php /var/www/html/occ app:remove fulltextsearch_elasticsearch
-    fi
-    if [ -d "/var/www/html/custom_apps/files_fulltextsearch" ]; then
-        php /var/www/html/occ app:remove files_fulltextsearch
+    if [ "$REMOVE_DISABLED_APPS" = yes ]; then
+        if [ -d "/var/www/html/custom_apps/fulltextsearch" ]; then
+            php /var/www/html/occ app:remove fulltextsearch
+        fi
+        if [ -d "/var/www/html/custom_apps/fulltextsearch_elasticsearch" ]; then
+            php /var/www/html/occ app:remove fulltextsearch_elasticsearch
+        fi
+        if [ -d "/var/www/html/custom_apps/files_fulltextsearch" ]; then
+            php /var/www/html/occ app:remove files_fulltextsearch
+        fi
     fi
 fi
 
 # Docker socket proxy
 if version_greater "$installed_version" "27.1.0.0"; then
     if [ "$DOCKER_SOCKET_PROXY_ENABLED" = 'yes' ]; then
-        if ! [ -d "/var/www/html/custom_apps/app_ecosystem_v2" ]; then
-            php /var/www/html/occ app:install app_ecosystem_v2
-        elif [ "$(php /var/www/html/occ config:app:get app_ecosystem_v2 enabled)" != "yes" ]; then
-            php /var/www/html/occ app:enable app_ecosystem_v2
+        if ! [ -d "/var/www/html/custom_apps/app_api" ]; then
+            php /var/www/html/occ app:install app_api
+        elif [ "$(php /var/www/html/occ config:app:get app_api enabled)" != "yes" ]; then
+            php /var/www/html/occ app:enable app_api
         elif [ "$SKIP_UPDATE" != 1 ]; then
-            php /var/www/html/occ app:update app_ecosystem_v2
+            php /var/www/html/occ app:update app_api
         fi
     else
-        if [ -d "/var/www/html/custom_apps/app_ecosystem_v2" ]; then
-            php /var/www/html/occ app:remove app_ecosystem_v2
+        if [ "$REMOVE_DISABLED_APPS" = yes ] && [ -d "/var/www/html/custom_apps/app_api" ]; then
+            php /var/www/html/occ app:remove app_api
         fi
     fi
 fi
