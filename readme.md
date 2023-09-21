@@ -209,6 +209,7 @@ Another but untested way is to install Portainer on your TrueNAS SCALE from here
 - It is known that the domain validation may not work correctly behind Cloudflare since Cloudflare might block the validation attempt. You can simply skip it in that case by following: https://github.com/nextcloud/all-in-one#how-to-skip-the-domain-validation
 - Make sure to [disable Cloudflares Rocket Loader feature](https://help.nextcloud.com/t/login-page-not-working-solved/149417/8) as otherwise Nextcloud's login prompt will not be shown.
 - Cloudflare only supports uploading files up to 100 MB in the free plan, if you try to upload bigger files you will get an error (413 - Payload Too Large) if no chunking is used (e.g. for public uploads in the web, or if chunks are configured to be bigger than 100 MB in the clients or the web). If you need to upload bigger files, you need to disable the proxy option in your DNS settings, or you must use another proxy than Cloudflare tunnels. Both options will disable Cloudflare DDoS protection.
+- If using Cloudflare Tunnel and the Nextcloud Desktop Client [Set Chunking on Nextcloud Desktop Client](https://github.com/nextcloud/desktop/issues/4271#issuecomment-1159578065)
 - Cloudflare only allows a max timeout of 100s for requests which is not configurable. This means that any server-side processing e.g. for assembling chunks for big files during upload that take longer than 100s will simply not work. See https://github.com/nextcloud/server/issues/19223. If you need to upload big files reliably, you need to disable the proxy option in your DNS settings, or you must use another proxy than Cloudflare tunnels. Both options will disable Cloudflare DDoS protection.
 - It is known that the in AIO included collabora (Nextcloud Office) does not work out of the box behind Cloudflare. To make it work, you need to add all [Cloudflare IP-ranges](https://www.cloudflare.com/ips/) to the wopi-allowlist in `https://yourdomain.com/settings/admin/richdocuments`
 - Cloudflare Proxy might block the Turnserver for Nextcloud Talk from working correctly. You might want to disable Cloudflare Proxy thus. See https://github.com/nextcloud/all-in-one/discussions/2463#discussioncomment-5779981
@@ -286,7 +287,7 @@ Yes. If SELinux is enabled, you might need to add the `--security-opt label:disa
 Simply run the following: `sudo docker exec --user www-data -it nextcloud-aio-nextcloud php occ your-command`. Of course `your-command` needs to be exchanged with the command that you want to run.
 
 ### How to resolve `Security & setup warnings displays the "missing default phone region" after initial install`?
-Simply run the following command: `sudo docker exec --user www-data nextcloud-aio-nextcloud php occ config:system:set default_phone_region --value="yourvalue"`. Of course you need to modify `yourvalue` based on your location. Examples are `DE`, `EN` and `GB`. See this list for more codes: https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2#Officially_assigned_code_elements
+Simply run the following command: `sudo docker exec --user www-data nextcloud-aio-nextcloud php occ config:system:set default_phone_region --value="yourvalue"`. Of course you need to modify `yourvalue` based on your location. Examples are `DE`, `US` and `GB`. See this list for more codes: https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2#Officially_assigned_code_elements
 
 ### How to run multiple AIO instances on one server?
 See [multiple-instances.md](./multiple-instances.md) for some documentation on this.
@@ -376,12 +377,25 @@ Not directly but you have multiple options to achieve this:
 - Use rsync or rclone for syncing the borg backup archive that AIO creates locally to a remote target (make sure to lock the backup archive correctly before starting the sync; search for "aio-lockfile"; you can find a local example script here: https://github.com/nextcloud/all-in-one#sync-the-backup-regularly-to-another-drive)
 - You can find a well written guide that uses rclone and e.g. BorgBase for remote backups here: https://github.com/nextcloud/all-in-one/discussions/2247
 - create your own backup solution using a script and borg, borgmatic or any other to backup tool for backing up to a remote target (make sure to stop and start the AIO containers correctly following https://github.com/nextcloud/all-in-one#how-to-enable-automatic-updates-without-creating-a-backup-beforehand)
-- Additionally, there is the [backup app](https://apps.nextcloud.com/apps/backup) for remote backups
 
 ---
 
 #### Failure of the backup container in LXC containers
 If you are running AIO in a LXC container, you need to make sure that FUSE is enabled in the LXC container settings. Otherwise the backup container will not be able to start as FUSE is required for it to work.
+
+---
+
+#### How to create the backup volume on Windows?
+As stated in the AIO interface, it is possible to use a docker volume as backup target. Before you can use that, you need to create it first. Here is an example how to create one on Windows:
+```
+docker volume create ^
+--driver local ^
+--name nextcloud_aio_backupdir ^
+-o device="/host_mnt/e/your/backup/path" ^
+-o type="none" ^
+-o o="bind"
+```
+In this example, it would mount `E:\your\backup\path` into the volume so for a different location you need to adjust `/host_mnt/e/your/backup/path` accordingly. Afterwards enter `nextcloud_aio_backupdir` in the AIO interface as backup location.
 
 ---
 
@@ -556,16 +570,17 @@ You can configure the Nextcloud container to use a specific directory on your ho
 - An example for Linux is `--env NEXTCLOUD_DATADIR="/mnt/ncdata"`. ⚠️ Please note: If you should be using an external BTRFS drive that is mounted to `/mnt/ncdata`, make sure to choose a subfolder like e.g. `/mnt/ncdata/nextcloud` as datadir, since the root folder is not suited as datadir in that case. See https://github.com/nextcloud/all-in-one/discussions/2696.
 - On macOS it might be `--env NEXTCLOUD_DATADIR="/var/nextcloud-data"`
 - For Synology it may be `--env NEXTCLOUD_DATADIR="/volume1/docker/nextcloud/data"`. 
-- On Windows it might be `--env NEXTCLOUD_DATADIR="/run/desktop/mnt/host/c/ncdata"`. (This path is equivalent to `C:\ncdata` on your Windows host so you need to translate the path accordingly. Hint: the path that you enter needs to start with `/run/desktop/mnt/host/`. Append to that the exact location on your windows host, e.g. `c/ncdata` which is equivalent to `C:\ncdata`.)
-- Another option is to provide a specific volume name here with: `--env NEXTCLOUD_DATADIR="nextcloud_aio_nextcloud_datadir"`. This volume needs to be created beforehand manually by you in order to be able to use it. e.g. with:
+- On Windows it might be `--env NEXTCLOUD_DATADIR="/run/desktop/mnt/host/c/ncdata"`. (This path is equivalent to `C:\ncdata` on your Windows host so you need to translate the path accordingly. Hint: the path that you enter needs to start with `/run/desktop/mnt/host/`. Append to that the exact location on your windows host, e.g. `c/ncdata` which is equivalent to `C:\ncdata`.) ⚠️ **Please note**: This does not work with external drives like USB or network drives and only with internal drives like SATA or NVME drives.
+- Another option is to provide a specific volume name here with: `--env NEXTCLOUD_DATADIR="nextcloud_aio_nextcloud_datadir"`. This volume needs to be created beforehand manually by you in order to be able to use it. e.g. on Windows with:
     ```
     docker volume create ^
     --driver local ^
     --name nextcloud_aio_nextcloud_datadir ^
-    -o device="/host_mnt/c/your/data/path" ^
+    -o device="/host_mnt/e/your/data/path" ^
     -o type="none" ^
     -o o="bind"
     ```
+    In this example, it would mount `E:\your\data\path` into the volume so for a different location you need to adjust `/host_mnt/e/your/data/path` accordingly.
 
 ### Can I use a CIFS/SMB share as Nextcloud's datadir?
 
@@ -590,7 +605,7 @@ By default, the Nextcloud container is confined and cannot access directories on
 - Two examples for Linux are `--env NEXTCLOUD_MOUNT="/mnt/"` and `--env NEXTCLOUD_MOUNT="/media/"`.
 - On macOS it might be `--env NEXTCLOUD_MOUNT="/Volumes/your_drive/"`
 - For Synology it may be `--env NEXTCLOUD_MOUNT="/volume1/"`.
-- On Windows it might be `--env NEXTCLOUD_MOUNT="/run/desktop/mnt/host/d/your-folder/"`. (This path is equivalent to `D:\your-folder` on your Windows host so you need to translate the path accordingly. Hint: the path that you enter needs to start with `/run/desktop/mnt/host/`. Append to that the exact location on your windows host, e.g. `d/your-folder/` which is equivalent to `D:\your-folder`.)
+- On Windows it might be `--env NEXTCLOUD_MOUNT="/run/desktop/mnt/host/d/your-folder/"`. (This path is equivalent to `D:\your-folder` on your Windows host so you need to translate the path accordingly. Hint: the path that you enter needs to start with `/run/desktop/mnt/host/`. Append to that the exact location on your windows host, e.g. `d/your-folder/` which is equivalent to `D:\your-folder`.) ⚠️ **Please note**: This does not work with external drives like USB or network drives and only with internal drives like SATA or NVME drives.
 
 After using this option, please make sure to apply the correct permissions to the directories that you want to use in Nextcloud. E.g. `sudo chown -R 33:0 /mnt/your-drive-mountpoint` and `sudo chmod -R 750 /mnt/your-drive-mountpoint` should make it work on Linux when you have used `--env NEXTCLOUD_MOUNT="/mnt/"`. On Windows you could do this e.g. with `docker exec -it nextcloud-aio-nextcloud chown -R 33:0 /run/desktop/mnt/host/d/your-folder/` and `docker exec -it nextcloud-aio-nextcloud chmod -R 750 /run/desktop/mnt/host/d/your-folder/`.
 
