@@ -1,8 +1,9 @@
 # Probably from here https://github.com/elastic/elasticsearch/blob/main/distribution/docker/src/docker/Dockerfile
-FROM elasticsearch:8.10.1
+FROM elasticsearch:8.10.2
 
 USER root
 
+# hadolint ignore=DL3008
 RUN set -ex; \
     \
     export DEBIAN_FRONTEND=noninteractive; \

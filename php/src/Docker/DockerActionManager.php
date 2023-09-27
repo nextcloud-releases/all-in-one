@@ -49,7 +49,7 @@ class DockerActionManager
 
     private function BuildImageName(Container $container) : string {
         $tag = $container->GetImageTag();
-        if ($tag === '') {
+        if ($tag === '%AIO_CHANNEL%') {
             $tag = $this->GetCurrentChannel();
         }
         return $container->GetContainerName() . ':' . $tag;
@@ -100,7 +100,7 @@ class DockerActionManager
     public function GetContainerUpdateState(Container $container) : IContainerState
     {
         $tag = $container->GetImageTag();
-        if ($tag === '') {
+        if ($tag === '%AIO_CHANNEL%') {
             $tag = $this->GetCurrentChannel();
         }
 
@@ -474,6 +474,11 @@ class DockerActionManager
         $capAdds = $container->GetCapAdds();
         if (count($capAdds) > 0) {
             $requestBody['HostConfig']['CapAdd'] = $capAdds;
+        }
+
+        // Disable arp spoofing
+        if (!in_array('NET_RAW', $capAdds, true)) {
+            $requestBody['HostConfig']['CapDrop'] = ['NET_RAW'];
         }
 
         if ($container->isApparmorUnconfined()) {

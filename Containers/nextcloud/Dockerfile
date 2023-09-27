@@ -3,7 +3,7 @@ FROM php:8.1.23-fpm-alpine3.18
 ENV PHP_MEMORY_LIMIT 512M
 ENV PHP_UPLOAD_LIMIT 10G
 ENV PHP_MAX_TIME 3600
-ENV NEXTCLOUD_VERSION 27.1.1
+ENV NEXTCLOUD_VERSION 27.1.0
 ENV AIO_TOKEN 123456
 ENV AIO_URL localhost
 
@@ -16,6 +16,7 @@ VOLUME /mnt/ncdata
 VOLUME /var/www/html
 
 # Custom: change id of www-data user as it needs to be the same like on old installations
+# hadolint ignore=SC2086,DL3003
 RUN set -ex; \
     apk add --no-cache shadow; \
     deluser www-data; \
@@ -69,7 +70,7 @@ RUN set -ex; \
 # pecl will claim success even if one install fails, so we need to perform each install separately
     pecl install APCu-5.1.22; \
     pecl install memcached-3.2.0; \
-    pecl install redis-6.0.0; \
+    pecl install redis-6.0.1; \
     pecl install imagick-3.7.0; \
     \
     docker-php-ext-enable \
@@ -85,7 +86,7 @@ RUN set -ex; \
             | sort -u \
             | awk 'system("[ -e /usr/local/lib/" $1 " ]") == 0 { next } { print "so:" $1 }' \
     )"; \
-    apk add --virtual .nextcloud-phpext-rundeps $runDeps; \
+    apk add --no-cache --virtual .nextcloud-phpext-rundeps $runDeps; \
     apk del .build-deps; \
     \
 # set recommended PHP.ini settings
@@ -170,7 +171,7 @@ RUN set -ex; \
             | sort -u \
             | awk 'system("[ -e /usr/local/lib/" $1 " ]") == 0 { next } { print "so:" $1 }' \
     )"; \
-    apk add --virtual .nextcloud-phpext-rundeps $runDeps; \
+    apk add --no-cache --virtual .nextcloud-phpext-rundeps $runDeps; \
     apk del .build-deps; \
     \
     mkdir -p \
@@ -189,6 +190,7 @@ RUN set -ex; \
         sudo \
         grep \
         nodejs \
+        bind-tools \
         coreutils; \
     \
     grep -q '^pm = dynamic' /usr/local/etc/php-fpm.d/www.conf; \
@@ -219,6 +221,7 @@ RUN set -ex; \
 # Give root a random password
     echo "root:$(openssl rand -base64 12)" | chpasswd
 
+# hadolint ignore=DL3002
 USER root
 ENTRYPOINT ["/start.sh"]
 CMD ["/usr/bin/supervisord", "-c", "/supervisord.conf"]

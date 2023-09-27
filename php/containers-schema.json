@@ -10,7 +10,7 @@
 				"type": "object",
 				"additionalProperties": false,
 				"minProperties": 2,
-				"required": ["image", "container_name"],
+				"required": ["image", "container_name", "image_tag"],
 				"properties": {
 					"image": {
 						"type": "string",
@@ -39,7 +39,7 @@
 					},
 					"display_name": {
 						"type": "string",
-						"pattern": "^[A-Za-z ]+$"
+						"pattern": "^[A-Za-z 0-9]+$"
 					},
 					"environment": {
 						"type": "array",
@@ -51,7 +51,7 @@
 					},
 					"container_name": {
 						"type": "string",
-						"pattern": "^nextcloud-aio-[a-z-]+$"
+						"pattern": "^nextcloud-aio-[a-z0-9-]+$"
 					},
 					"internal_port": {
 						"type": "string",
@@ -98,7 +98,7 @@
 					},
 					"image_tag": {
 						"type": "string",
-						"pattern": "^[a-z0-9.-]+$"
+						"pattern": "^([a-z0-9.-]+|%AIO_CHANNEL%)$"
 					},
 					"devices": {
 						"type": "array",
