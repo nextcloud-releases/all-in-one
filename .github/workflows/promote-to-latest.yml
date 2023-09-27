@@ -64,7 +64,6 @@ jobs:
         # arm64
         if [ "$AIO_NAME" != "aio-clamav" ]; then
             docker buildx imagetools create --tag nextcloud/$AIO_NAME\:latest-arm64 nextcloud/$AIO_NAME\:beta-arm64
-            docker buildx imagetools create --tag nextcloud/$AIO_NAME\:"$DATE"-latest-arm64 nextcloud/$AIO_NAME\:beta-arm64
         fi
         
         if [ "$AIO_NAME" == "aio-nextcloud" ]; then

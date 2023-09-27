@@ -57,10 +57,6 @@ jobs:
           docker pull nextcloud/$AIO_NAME\:"$SOURCE_TAG"-arm64
           docker tag nextcloud/$AIO_NAME\:"$SOURCE_TAG"-arm64 nextcloud/$AIO_NAME\:"$TARGET_TAG"-arm64
           docker push nextcloud/$AIO_NAME\:"$TARGET_TAG"-arm64
-          if [ "$AIO_NAME" != "all-in-one" ] && [ "$TARGET_TAG" = latest ]; then 
-            docker tag nextcloud/$AIO_NAME\:beta-arm64 nextcloud/$AIO_NAME\:"$DATE"-latest-arm64
-            docker push nextcloud/$AIO_NAME\:"$DATE"-latest-arm64
-          fi
           if [ "$AIO_NAME" = "aio-nextcloud" ] && [ "$TARGET_TAG" = latest ]; then
           set -x
           PHP_VERSION="$(docker inspect nextcloud/aio-nextcloud:beta-arm64 | grep PHP_VERSION | grep -oP '[0-8.]+' | sed 's|\.[0-9]\+$||')"
