@@ -179,7 +179,7 @@ It is set to '$APACHE_PORT'."
     fi
 fi
 if [ -n "$APACHE_IP_BINDING" ]; then
-    if ! echo "$APACHE_IP_BINDING" | grep -q '^[0-9.]\+$'; then
+    if ! echo "$APACHE_IP_BINDING" | grep -q '^[0-9]\+\.[0-9]\+\.[0-9]\+\.[0-9]\+$\|^[0-9a-f:]\+$'; then
         print_red "You provided an ip-address for the apache container's ip-binding but it was not a valid ip-address.
 It is set to '$APACHE_IP_BINDING'."
         exit 1
@@ -245,7 +245,7 @@ if [ -n "$AIO_COMMUNITY_CONTAINERS" ]; then
     read -ra AIO_CCONTAINERS <<< "$AIO_COMMUNITY_CONTAINERS"
     for container in "${AIO_CCONTAINERS[@]}"; do
         if ! [ -d "/var/www/docker-aio/community-containers/$container" ]; then
-            echo "The community container $container was not found!"
+            print_red "The community container $container was not found!"
             FAIL_CCONTAINERS=1
         fi
     done
@@ -300,7 +300,6 @@ fi
 mkdir -p /mnt/docker-aio-config/data/
 mkdir -p /mnt/docker-aio-config/session/
 mkdir -p /mnt/docker-aio-config/caddy/
-mkdir -p /mnt/docker-aio-config/certs/ 
 
 # Adjust permissions for all instances
 chmod 770 -R /mnt/docker-aio-config
@@ -308,7 +307,6 @@ chmod 777 /mnt/docker-aio-config
 chown www-data:www-data -R /mnt/docker-aio-config/data/
 chown www-data:www-data -R /mnt/docker-aio-config/session/
 chown www-data:www-data -R /mnt/docker-aio-config/caddy/
-chown root:root -R /mnt/docker-aio-config/certs/
 
 # Don't allow access to the AIO interface from the Nextcloud container
 # Probably more cosmetic than anything but at least an attempt
@@ -322,22 +320,6 @@ allow from all
 </Location>
 # nextcloud-aio-block-end
 APACHE_CONF
-fi
-
-# Adjust certs
-GENERATED_CERTS="/mnt/docker-aio-config/certs"
-TMP_CERTS="/etc/apache2/certs"
-mkdir -p "$GENERATED_CERTS"
-cd "$GENERATED_CERTS" || exit 1
-if ! [ -f ./ssl.crt ] && ! [ -f ./ssl.key ]; then
-    openssl req -new -newkey rsa:4096 -days 3650 -nodes -x509 -subj "/C=DE/ST=BE/L=Local/O=Dev/CN=nextcloud.local" -keyout ./ssl.key -out ./ssl.crt
-fi
-if [ -f ./ssl.crt ] && [ -f ./ssl.key ]; then
-    cd "$TMP_CERTS" || exit 1
-    rm ./ssl.crt
-    rm ./ssl.key
-    cp "$GENERATED_CERTS/ssl.crt" ./
-    cp "$GENERATED_CERTS/ssl.key" ./
 fi
 
 print_green "Initial startup of Nextcloud All-in-One complete!
