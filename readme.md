@@ -716,6 +716,9 @@ What are the requirements?
 3. The feature that gets added into Nextcloud by adding the container must be maintained by the Nextcloud GmbH. 
 4. It must be possible to run the container without big quirks inside docker containers. Big quirks means e.g. needing to change the capabilities or security options. 
 5. The container should not mount directories from the host into the container: only docker volumes should be used.
+6. The container must be usable by more than 90% of the users (e.g. not too high system requirements and such)
+7. No additional setup should be needed after adding the container - it should work completely out of the box.
+8. If the container requires being exposed, only subfolders are supported. So the container should not require its own (sub-)domain and must be able to run in a subfolder.
 
 ### How to trust user-defined Certification Authorities (CA)?
 For some applications it might be necessary to establish a secure connection to another host/server which is using a certificate issued by a Certification Authority that is not trusted out of the box. An example could be configuring LDAPS against a domain controller (Active Directory or Samba-based) of an organization.
