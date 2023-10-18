@@ -676,7 +676,7 @@ class ConfigurationManager
     /**
      * @throws InvalidSettingConfigurationException
      */
-    public function SetDailyBackupTime(string $time, bool $enableAutomaticUpdates) : void {
+    public function SetDailyBackupTime(string $time, bool $enableAutomaticUpdates, bool $successNotification) : void {
         if ($time === "") {
             throw new InvalidSettingConfigurationException("The daily backup time must not be empty!");
         }
@@ -687,6 +687,9 @@ class ConfigurationManager
         
         if ($enableAutomaticUpdates === false) {
             $time .= PHP_EOL . 'automaticUpdatesAreNotEnabled';
+        }
+        if ($successNotification === false) {
+            $time .= PHP_EOL . 'successNotificationsAreNotEnabled';
         }
         file_put_contents(DataConst::GetDailyBackupTimeFile(), $time);
     }
@@ -729,7 +732,7 @@ class ConfigurationManager
             // Trim all unwanted chars on both sites
             $entry = trim($entry);
             if ($entry !== "") {
-                if (!preg_match("#^/[.0-1a-zA-Z/-_]+$#", $entry) && !preg_match("#^[.0-1a-zA-Z_-]+$#", $entry)) {
+                if (!preg_match("#^/[.0-1a-zA-Z/_-]+$#", $entry) && !preg_match("#^[.0-1a-zA-Z_-]+$#", $entry)) {
                     throw new InvalidSettingConfigurationException("You entered unallowed characters! Problematic is " . $entry);
                 }
                 $validDirectories .= rtrim($entry, '/') . PHP_EOL;
