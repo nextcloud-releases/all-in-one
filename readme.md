@@ -43,7 +43,7 @@ Included are:
 - Possibility included to [permanently add additional PHP extensions into the Nextcloud container](https://github.com/nextcloud/all-in-one#how-to-add-php-extensions-permanently-to-the-nextcloud-container) without having to build your own Docker image
 - Possibility included to [pass the needed device for hardware transcoding](https://github.com/nextcloud/all-in-one#how-to-enable-hardware-transcoding-for-nextcloud) to the Nextcloud container
 - Possibility included to [store all docker related files on a separate drive](https://github.com/nextcloud/all-in-one#how-to-store-the-filesinstallation-on-a-separate-drive)
-- [Additional features can be added very easily](https://github.com/nextcloud/all-in-one/tree/main/community-containers)
+- [Additional features can be added very easily](https://github.com/nextcloud/all-in-one/tree/main/community-containers#community-containers)
 - [LDAP can be used as user backend for Nextcloud](https://github.com/nextcloud/all-in-one/tree/main#ldap)
 - Migration from any former Nextcloud installation to AIO is possible. See [this documentation](https://github.com/nextcloud/all-in-one/blob/main/migration.md)
 - [Fail2Ban can be added](https://github.com/nextcloud/all-in-one#fail2ban)
@@ -340,9 +340,11 @@ Here is how to reset the AIO instance properly:
 1. And you are done! Now feel free to start over with the recommended docker run command!
 
 ### Backup solution
-Nextcloud AIO provides a local backup solution based on [BorgBackup](https://github.com/borgbackup/borg#what-is-borgbackup). These backups act as a local restore point in case the installation gets corrupted. 
+Nextcloud AIO provides a local backup solution based on [BorgBackup](https://github.com/borgbackup/borg#what-is-borgbackup). These backups act as a local restore point in case the installation gets corrupted. By using this tool, backups are incremental, differential, compressed and encrypted – so only the first backup will take a while. Further backups should be fast as only changes are taken into account.
 
 It is recommended to create a backup before any container update. By doing this, you will be safe regarding any possible complication during updates because you will be able to restore the whole instance with basically one click. 
+
+The restore process should be pretty fast as rsync is used to restore the chosen backup which only transfers changed files and deletes additional ones.
 
 If you connect an external drive to your host, and choose the backup directory to be on that drive, you are also kind of safe against drive failures of the drive where the docker volumes are stored on. 
 
@@ -690,7 +692,7 @@ If you want to define a custom skeleton directory, you can do so by copying your
 You can configure your server to block certain ip-addresses using fail2ban as bruteforce protection. Here is how to set it up: https://docs.nextcloud.com/server/stable/admin_manual/installation/harden_server.html#setup-fail2ban. The logpath of AIO is by default `/var/lib/docker/volumes/nextcloud_aio_nextcloud/_data/data/nextcloud.log`. Do not forget to add `chain=DOCKER-USER` to your nextcloud jail config (`nextcloud.local`) otherwise the nextcloud service running on docker will still be accessible even if the IP is banned. Also, you may change the blocked ports to cover all AIO ports: by default `80,443,8080,8443,3478` (see [this](https://github.com/nextcloud/all-in-one#explanation-of-used-ports)). Apart from that there is now a community container that can be added to the AIO stack: https://github.com/nextcloud/all-in-one/tree/main/community-containers/fail2ban
 
 ### LDAP
-It is possible to connect to an existing LDAP server. You need to make sure that the LDAP server is reachable from the Nextcloud container. Then you can enable the LDAP app and configure LDAP in Nextcloud manually. If you don't have a LDAP server yet, recommended is to use this docker container: https://hub.docker.com/r/nitnelave/lldap. Make sure here as well that Nextcloud can talk to the LDAP server. The easiest way is by adding the LDAP docker container to the docker network `nextcloud-aio`. Then you can connect to the LDAP container by its name from the Nextcloud container. Apart from that there is now a way for the community to add containers: https://github.com/nextcloud/all-in-one/tree/main/community-containers#how-to-add-containers
+It is possible to connect to an existing LDAP server. You need to make sure that the LDAP server is reachable from the Nextcloud container. Then you can enable the LDAP app and configure LDAP in Nextcloud manually. If you don't have a LDAP server yet, recommended is to use this docker container: https://hub.docker.com/r/nitnelave/lldap. Make sure here as well that Nextcloud can talk to the LDAP server. The easiest way is by adding the LDAP docker container to the docker network `nextcloud-aio`. Then you can connect to the LDAP container by its name from the Nextcloud container. Apart from that there is now a way for the community to add containers: https://github.com/nextcloud/all-in-one/discussions/406#discussioncomment-7133555
 
 ### Netdata
 Netdata allows you to monitor your server using a GUI. You can install it by following https://learn.netdata.cloud/docs/agent/packaging/docker#create-a-new-netdata-agent-container. Apart from that there is now a way for the community to add containers: https://github.com/nextcloud/all-in-one/discussions/392#discussioncomment-7133563
@@ -702,13 +704,13 @@ If you want to use the user_sql app, the easiest way is to create an additional 
 It is possible to install any of these to get a GUI for your AIO database. The pgAdmin container is recommended. You can get some docs on it here: https://www.pgadmin.org/docs/pgadmin4/latest/container_deployment.html. For the container to connect to the aio-database, you need to connect the container to the docker network `nextcloud-aio` and use `nextcloud-aio-database` as database host, `oc_nextcloud` as database username and the password that you get when running `sudo docker exec nextcloud-aio-nextcloud grep dbpassword config/config.php` as the password. Apart from that there is now a way for the community to add containers: https://github.com/nextcloud/all-in-one/discussions/3061#discussioncomment-7307045
 
 ### Mail server
-You can configure one yourself by using either of these three recommended projects: [Docker Mailserver](https://github.com/docker-mailserver/docker-mailserver/#docker-mailserver), [Maddy Mail Server](https://github.com/foxcpp/maddy#maddy-mail-server) or [Mailcow](https://github.com/mailcow/mailcow-dockerized#mailcow-dockerized-------). Docker Mailserver and Maddy Mail Server are probably a bit easier to set up as it is possible to run them using only one container but Mailcow has much more features. Apart from that there is now a way for the community to add containers: https://github.com/nextcloud/all-in-one/tree/main/community-containers#how-to-add-containers
+You can configure one yourself by using either of these three recommended projects: [Docker Mailserver](https://github.com/docker-mailserver/docker-mailserver/#docker-mailserver), [Maddy Mail Server](https://github.com/foxcpp/maddy#maddy-mail-server) or [Mailcow](https://github.com/mailcow/mailcow-dockerized#mailcow-dockerized-------). Docker Mailserver and Maddy Mail Server are probably a bit easier to set up as it is possible to run them using only one container but Mailcow has much more features. Apart from that there is now a way for the community to add containers: https://github.com/nextcloud/all-in-one/discussions/356#discussioncomment-7133547
 
 ### How to migrate from an already existing Nextcloud installation to Nextcloud AIO?
 Please see the following documentation on this: [migration.md](https://github.com/nextcloud/all-in-one/blob/main/migration.md)
 
 ### Requirements for integrating new containers
-For integrating new containers, they must pass specific requirements for being considered to get integrated in AIO itself. Even if not considered, we may add some documentation on it. Also there is this now: https://github.com/nextcloud/all-in-one/tree/main/community-containers
+For integrating new containers, they must pass specific requirements for being considered to get integrated in AIO itself. Even if not considered, we may add some documentation on it. Also there is this now: https://github.com/nextcloud/all-in-one/tree/main/community-containers#community-containers
 
 What are the requirements?
 1. New containers must be related to Nextcloud. Related means that there must be a feature in Nextcloud that gets added by adding this container.
