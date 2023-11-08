@@ -131,7 +131,8 @@ find ./ -name '*deployment.yaml' -exec sed -i "s|emptyDir:|emptyDir: \{\}|" \{} 
 find ./ -name '*deployment.yaml' -exec sed -i "/hostPort:/d" \{} \; 
 # shellcheck disable=SC1083
 find ./ -name '*persistentvolumeclaim.yaml' -exec sed -i "s|ReadOnlyMany|ReadWriteOnce|" \{} \;   
-sed -i "s|ReadWriteOnce|ReadWriteMany|" nextcloud-aio-nextcloud-persistentvolumeclaim.yaml
+# shellcheck disable=SC1083
+find ./ -name 'nextcloud-aio-nextcloud-persistentvolumeclaim.yaml' -exec sed -i "s|ReadWriteOnce|ReadWriteMany|"  \{} \;
 # shellcheck disable=SC1083
 find ./ -name '*persistentvolumeclaim.yaml' -exec sed -i "/accessModes:/i\ \ {{- if .Values.STORAGE_CLASS }}" \{} \;  
 # shellcheck disable=SC1083
@@ -148,6 +149,8 @@ find ./ -name '*talk*' -exec sed -i "s|$TALK_PORT|{{ .Values.TALK_PORT }}|" \{} 
 find ./ -name '*apache-service.yaml' -exec sed -i "/^spec:/a\ \ type: LoadBalancer" \{} \;
 # shellcheck disable=SC1083
 find ./ -name '*talk-service.yaml' -exec sed -i "/^spec:/a\ \ type: LoadBalancer" \{} \;
+# shellcheck disable=SC1083
+find ./ -name '*service.yaml' -exec sed -i "/type: LoadBalancer/a\ \ externalTrafficPolicy: Local" \{} \;
 echo '---' > /tmp/talk-service.copy
 # shellcheck disable=SC1083
 find ./ -name '*talk-service.yaml' -exec cat \{} \; >> /tmp/talk-service.copy
