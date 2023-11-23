@@ -81,15 +81,34 @@ cat << EOL > /tmp/initcontainers.database
             - "-R"
           volumeMountsInitContainer:
 EOL
+cat << EOL > /tmp/initcontainers.clamav
+      initContainers:
+        - name: init-subpath
+          image: alpine
+          command:
+            - mkdir
+            - "-p"
+            - /nextcloud-aio-clamav/data
+          volumeMountsInitContainer:
+        - name: init-volumes
+          image: alpine
+          command:
+            - chown
+            - 100:100
+            - "-R"
+          volumeMountsInitContainer:
+EOL
 # shellcheck disable=SC1083
 DEPLOYMENTS="$(find ./ -name '*deployment.yaml')"
 mapfile -t DEPLOYMENTS <<< "$DEPLOYMENTS"
 for variable in "${DEPLOYMENTS[@]}"; do
     if grep -q volumeMounts "$variable"; then
-        if ! echo "$variable" | grep -q database; then
-            sed -i "/^    spec:/r /tmp/initcontainers" "$variable"
-        else
+        if echo "$variable" | grep -q database; then
             sed -i "/^    spec:/r /tmp/initcontainers.database" "$variable"
+        elif echo "$variable" | grep -q clamav; then
+            sed -i "/^    spec:/r /tmp/initcontainers.clamav" "$variable"
+        else
+            sed -i "/^    spec:/r /tmp/initcontainers" "$variable"
         fi
         volumeNames="$(grep -A1 mountPath "$variable" | grep -v mountPath | sed 's|.*name: ||' | sed '/^--$/d')"
         mapfile -t volumeNames <<< "$volumeNames"
@@ -101,6 +120,8 @@ for variable in "${DEPLOYMENTS[@]}"; do
                 # Workaround for the database volume
                 if [ "$volumeName" = nextcloud-aio-database ]; then
                     sed -i "/mountPath: \/var\/lib\/postgresql\/data/a\ \ \ \ \ \ \ \ \ \ \ \ \ \ subPath: data" "$variable"
+                elif [ "$volumeName" = nextcloud-aio-clamav ]; then
+                    sed -i "/mountPath: \/var\/lib\/clamav/a\ \ \ \ \ \ \ \ \ \ \ \ \ \ subPath: data" "$variable"
                 fi
                 
             fi
@@ -194,8 +215,6 @@ done
 cat << EOL > /tmp/additional.config
             - name: SMTP_HOST
               value: "{{ .Values.SMTP_HOST }}"
-            - name: SMTP_HOST
-              value: "{{ .Values.SMTP_HOST }}"
             - name: SMTP_SECURE
               value: "{{ .Values.SMTP_SECURE }}"
             - name: SMTP_PORT
@@ -214,6 +233,8 @@ cat << EOL > /tmp/additional.config
               value: "{{ .Values.SUBSCRIPTION_KEY }}"
             - name: APPS_ALLOWLIST
               value: "{{ .Values.APPS_ALLOWLIST }}"
+            - name: ADDITIONAL_TRUSTED_PROXY
+              value: "{{ .Values.ADDITIONAL_TRUSTED_PROXY }}"
 EOL
 # shellcheck disable=SC1083
 find ./ -name '*nextcloud-deployment.yaml' -exec sed -i "/^.*\- env:/r /tmp/additional.config"  \{} \;
@@ -245,8 +266,6 @@ sed -i '/_ENABLED.*/s/ no / "no" /' /tmp/sample.conf
 sed -i 's|^NEXTCLOUD_TRUSTED_CACERTS_DIR: .*|NEXTCLOUD_TRUSTED_CACERTS_DIR:        # Setting this to any value allows to automatically import root certificates into the Nextcloud container|' /tmp/sample.conf
 sed -i 's|10737418240|"10737418240"|' /tmp/sample.conf
 # shellcheck disable=SC2129
-echo "NAMESPACE: default        # By changing this, you can adjust the namespace of the installation which allows to install multiple instances on one kubernetes cluster" >> /tmp/sample.conf
-# shellcheck disable=SC2129
 echo "" >> /tmp/sample.conf
 # shellcheck disable=SC2129
 echo 'STORAGE_CLASS:        # By setting this, you can adjust the storage class for your volumes' >> /tmp/sample.conf
@@ -259,8 +278,10 @@ sed -i "s|NEXTCLOUD_DATA_STORAGE_SIZE: 1Gi|NEXTCLOUD_DATA_STORAGE_SIZE: 5Gi|" /t
 # Additional config
 cat << ADDITIONAL_CONFIG >> /tmp/sample.conf
 
+NAMESPACE: default        # By changing this, you can adjust the namespace of the installation which allows to install multiple instances on one kubernetes cluster
 SUBSCRIPTION_KEY:        # This allows to set the Nextcloud Enterprise key via ENV
 APPS_ALLOWLIST:        # This allows to configure allowed apps that will be shown in Nextcloud's Appstore. You need to enter the app-IDs of the apps here and separate them with spaces. E.g. 'files richdocuments'
+ADDITIONAL_TRUSTED_PROXY:        # Allows to add one additional ip-address to Nextcloud's trusted proxies and to the Office WOPI-allowlist automatically. Set it e.g. like this: 'your.public.ip-address'. You can also use an ip-range here.
 SMTP_HOST:        # (empty by default): The hostname of the SMTP server.
 SMTP_SECURE:         # (empty by default): Set to 'ssl' to use SSL, or 'tls' to use STARTTLS.
 SMTP_PORT:         # (default: '465' for SSL and '25' for non-secure connections): Optional port for the SMTP connection. Use '587' for an alternative port for STARTTLS.
