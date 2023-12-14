@@ -1,9 +1,9 @@
-FROM nats:2.10.6-scratch as nats
+FROM nats:2.10.7-scratch as nats
 FROM eturnal/eturnal:1.12.0 AS eturnal
-FROM strukturag/nextcloud-spreed-signaling:1.2.1 as signaling
+FROM strukturag/nextcloud-spreed-signaling:1.2.2 as signaling
 FROM alpine:3.18.5 as janus
 
-ARG JANUS_VERSION=v0.14.0
+ARG JANUS_VERSION=v0.14.1
 WORKDIR /src
 RUN set -ex; \
     apk add --no-cache \

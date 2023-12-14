@@ -1,4 +1,4 @@
-FROM python:3.12.0-alpine3.18
+FROM python:3.12.1-alpine3.18
 
 COPY --chmod=775 start.sh /start.sh
 
@@ -26,7 +26,7 @@ RUN set -ex; \
         build-base \
         linux-headers; \
     # chromium chromium-chromedriver?
-    apk add --no-cache geckodriver --repository http://dl-cdn.alpinelinux.org/alpine/edge/testing; \
+    apk add --no-cache geckodriver --repository http://dl-cdn.alpinelinux.org/alpine/edge/community; \
     useradd -d /tmp --system recording; \
 # Give root a random password
     echo "root:$(openssl rand -base64 12)" | chpasswd; \
