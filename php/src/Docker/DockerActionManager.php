@@ -522,6 +522,9 @@ class DockerActionManager
             $requestBody['HostConfig']['SecurityOpt'] = ["apparmor:unconfined"];
         }
 
+        // Disable SELinux for AIO containers so that it does not break them
+        $requestBody['HostConfig']['SecurityOpt'] = ["label:disable"];
+
         $mounts = [];
 
         // Special things for the backup container which should not be exposed in the containers.json
@@ -553,9 +556,6 @@ class DockerActionManager
                 }
                 $mounts[] = ["Type" => "bind", "Source" => $volume->name, "Target" => $volume->mountPoint, "ReadOnly" => !$volume->isWritable, "BindOptions" => [ "Propagation" => "rshared"]];
             }
-        // Special things for the watchtower and docker-socket-proxy container which should not be exposed in the containers.json
-        } elseif ($container->GetIdentifier() === 'nextcloud-aio-watchtower' || $container->GetIdentifier() === 'nextcloud-aio-docker-socket-proxy') {
-            $requestBody['HostConfig']['SecurityOpt'] = ["label:disable"];
         }
 
         if (count($mounts) > 0) {
@@ -582,12 +582,19 @@ class DockerActionManager
         $imageName = $this->BuildImageName($container);
         $encodedImageName = urlencode($imageName);
         $url = $this->BuildApiUrl(sprintf('images/create?fromImage=%s', $encodedImageName));
+        $imageIsThere = true;
         try {
-            $this->guzzleClient->post($url);
             $imageUrl = $this->BuildApiUrl(sprintf('images/%s/json', $encodedImageName));
             $this->guzzleClient->get($imageUrl)->getBody()->getContents();
         } catch (\Throwable $e) {
-            throw new \Exception("Could not pull image " . $imageName . ". Please run 'sudo docker exec -it nextcloud-aio-mastercontainer docker pull " . $imageName . "' in order to find out why it failed.");
+            $imageIsThere = false;
+        }
+        try {
+            $this->guzzleClient->post($url);
+        } catch (RequestException $e) {
+            if ($imageIsThere === false) {
+                throw new \Exception("Could not pull image " . $imageName . ". Please run 'sudo docker exec -it nextcloud-aio-mastercontainer docker pull " . $imageName . "' in order to find out why it failed.");
+            }
         }
     }
 
