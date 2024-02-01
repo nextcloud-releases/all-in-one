@@ -37,6 +37,8 @@ spec:
               mountPath: /nextcloud-aio-nextcloud
       containers:
         - env:
+            - name: ADDITIONAL_TRUSTED_DOMAIN
+              value: "{{ .Values.ADDITIONAL_TRUSTED_DOMAIN }}"
             - name: APACHE_MAX_SIZE
               value: "{{ .Values.APACHE_MAX_SIZE }}"
             - name: APACHE_MAX_TIME
@@ -57,7 +59,7 @@ spec:
               value: nextcloud-aio-talk
             - name: TZ
               value: "{{ .Values.TIMEZONE }}"
-          image: nextcloud/aio-apache:20240124_105749-latest
+          image: nextcloud/aio-apache:20240201_120631-latest
           name: nextcloud-aio-apache
           ports:
             - containerPort: {{ .Values.APACHE_PORT }}
