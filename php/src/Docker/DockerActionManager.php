@@ -186,7 +186,11 @@ class DockerActionManager
 
     public function StartContainer(Container $container) : void {
         $url = $this->BuildApiUrl(sprintf('containers/%s/start', urlencode($container->GetIdentifier())));
-        $this->guzzleClient->post($url);
+        try {
+            $this->guzzleClient->post($url);
+        } catch (RequestException $e) {
+            throw new \Exception("Could not start container " . $container->GetIdentifier() . ": " . $e->getMessage());
+        }
     }
 
     public function CreateVolumes(Container $container): void
@@ -578,9 +582,24 @@ class DockerActionManager
                 ]
             );
         } catch (RequestException $e) {
-            throw new \Exception("Could not start container " . $container->GetIdentifier() . ": " . $e->getMessage());
+            throw new \Exception("Could not create container " . $container->GetIdentifier() . ": " . $e->getMessage());
         }
 
+    }
+
+    public function isDockerHubReachable(Container $container) : bool {
+        $tag = $container->GetImageTag();
+        if ($tag === '%AIO_CHANNEL%') {
+            $tag = $this->GetCurrentChannel();
+        }
+
+        $remoteDigest = $this->dockerHubManager->GetLatestDigestOfTag($container->GetContainerName(), $tag);
+
+        if ($remoteDigest === null) {
+            return false;
+        } else {
+            return true;
+        }
     }
 
     public function PullImage(Container $container) : void

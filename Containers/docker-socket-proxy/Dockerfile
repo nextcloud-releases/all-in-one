@@ -1,4 +1,5 @@
-FROM haproxy:2.9.4-alpine3.19
+# syntax=docker/dockerfile:latest
+FROM haproxy:2.9.5-alpine3.19
 
 # hadolint ignore=DL3002
 USER root
