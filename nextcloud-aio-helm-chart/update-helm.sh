@@ -160,7 +160,7 @@ for variable in "${DEPLOYMENTS[@]}"; do
     fi
 done
 # shellcheck disable=SC1083
-find ./ -name '*.yaml' -exec sed -i "s|nextcloud-aio-namespace|\{\{ .Values.NAMESPACE \}\}|" \{} \; 
+find ./ -name '*.yaml' -exec sed -i 's|nextcloud-aio-namespace|"\{\{ .Values.NAMESPACE \}\}"|' \{} \; 
 # shellcheck disable=SC1083
 find ./ -name '*service.yaml' -exec sed -i "/^status:/,$ d" \{} \; 
 # shellcheck disable=SC1083
@@ -349,6 +349,12 @@ for variable in "${ENABLED_VARIABLES[@]}"; do
     # shellcheck disable=SC1083
     find ./ -name "*nextcloud-aio-$name-persistentvolumeclaim.yaml" -exec sed -i "$ a {{- end }}" \{} \; 
 done
+
+# Additional case for FTS volume
+# shellcheck disable=SC1083
+find ./ -name "*nextcloud-aio-elasticsearch-persistentvolumeclaim.yaml" -exec sed -i "1i\\{{- if eq .Values.FULLTEXTSEARCH_ENABLED \"yes\" }}" \{} \; 
+# shellcheck disable=SC1083
+find ./ -name "*nextcloud-aio-elasticsearch-persistentvolumeclaim.yaml" -exec sed -i "$ a {{- end }}" \{} \; 
 
 chmod 777 -R ./
 
