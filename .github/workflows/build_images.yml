@@ -71,6 +71,4 @@ jobs:
           no-cache: true
           push: true
           tags: ${{ steps.metadata.outputs.tags }}
-          provenance: false
-          # Needed since when on default 'application/vnd.oci.image.index.v1+json' is used which does not work with "docker manifest create" (multiarch)
-          # TODO make it work with default value
+          provenance: true
