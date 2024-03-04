@@ -71,4 +71,3 @@ jobs:
           no-cache: true
           push: true
           tags: ${{ steps.metadata.outputs.tags }}
-          provenance: true
