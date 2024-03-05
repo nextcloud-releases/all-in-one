@@ -490,6 +490,10 @@ php /var/www/html/occ config:system:set updatedirectory --value="/nc-updater"
 if [ -n "$SERVERINFO_TOKEN" ] && [ -z "$(php /var/www/html/occ config:app:get serverinfo token)" ]; then
     php /var/www/html/occ config:app:set serverinfo token --value="$SERVERINFO_TOKEN"
 fi
+# Set maintenance window so that no warning is shown in the admin overview
+if [ -z "$(php /var/www/html/occ config:system:get maintenance_window_start)" ]; then
+    php /var/www/html/occ config:system:set maintenance_window_start --type=int --value=100
+fi
 
 # Apply network settings
 echo "Applying network settings..."
@@ -699,6 +703,7 @@ fi
 if [ "$IMAGINARY_ENABLED" = 'yes' ]; then
     php /var/www/html/occ config:system:set enabledPreviewProviders 0 --value="OC\\Preview\\Imaginary"
     php /var/www/html/occ config:system:set preview_imaginary_url --value="http://$IMAGINARY_HOST:9000"
+    php /var/www/html/occ config:system:set preview_imaginary_key --value="$IMAGINARY_SECRET"
 else
     if [ -n "$(php /var/www/html/occ config:system:get preview_imaginary_url)" ]; then
         php /var/www/html/occ config:system:delete enabledPreviewProviders 0

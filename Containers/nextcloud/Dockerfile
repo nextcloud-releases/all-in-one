@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:latest
-FROM php:8.1.27-fpm-alpine3.19
+FROM php:8.2.16-fpm-alpine3.19
 
 ENV PHP_MEMORY_LIMIT 512M
 ENV PHP_UPLOAD_LIMIT 10G
@@ -7,7 +7,7 @@ ENV PHP_MAX_TIME 3600
 ENV SOURCE_LOCATION /usr/src/nextcloud
 
 # AIO settings start # Do not remove or change this line!
-ENV NEXTCLOUD_VERSION 27.1.7
+ENV NEXTCLOUD_VERSION 28.0.3
 ENV AIO_TOKEN 123456
 ENV AIO_URL localhost
 COPY supervisord.conf /supervisord.conf
@@ -169,6 +169,7 @@ RUN set -ex; \
         bz2 \
         imap \
         pgsql \
+        ftp \
     ; \
     pecl install smbclient; \
     docker-php-ext-enable smbclient; \
