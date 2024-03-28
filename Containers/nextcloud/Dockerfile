@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:latest
-FROM php:8.2.16-fpm-alpine3.19
+FROM php:8.2.17-fpm-alpine3.19
 
 ENV PHP_MEMORY_LIMIT 512M
 ENV PHP_UPLOAD_LIMIT 10G
@@ -7,7 +7,7 @@ ENV PHP_MAX_TIME 3600
 ENV SOURCE_LOCATION /usr/src/nextcloud
 
 # AIO settings start # Do not remove or change this line!
-ENV NEXTCLOUD_VERSION 28.0.3
+ENV NEXTCLOUD_VERSION 28.0.4
 ENV AIO_TOKEN 123456
 ENV AIO_URL localhost
 COPY supervisord.conf /supervisord.conf
@@ -116,6 +116,14 @@ RUN set -ex; \
         echo 'max_execution_time=${PHP_MAX_TIME}'; \
         echo 'max_input_time=${PHP_MAX_TIME}'; \
     } > /usr/local/etc/php/conf.d/nextcloud.ini; \
+    \
+    { \
+        echo 'session.save_handler = redis'; \
+        echo 'session.save_path = "tcp://${REDIS_HOST}:${REDIS_HOST_PORT:=6379}?auth=${REDIS_HOST_PASSWORD}"'; \
+        echo 'redis.session.locking_enabled = 1'; \
+        echo 'redis.session.lock_retries = -1'; \
+        echo 'redis.session.lock_wait_time = 10000'; \
+    } > /usr/local/etc/php/conf.d/redis-session.ini; \
     \
     mkdir -p /var/www/data; \
     chown -R www-data:root /var/www; \
