@@ -212,7 +212,11 @@ if ! [ -f "$NEXTCLOUD_DATA_DIR/skip.update" ]; then
 DATADIR_PERMISSION_CONF
 
             echo "Installing with PostgreSQL database"
-            INSTALL_OPTIONS+=(--database pgsql --database-name "$POSTGRES_DB" --database-user "$POSTGRES_USER" --database-pass "$POSTGRES_PASSWORD" --database-host "$POSTGRES_HOST")
+            # Set a default value for POSTGRES_PORT
+            if [ -z "$POSTGRES_PORT" ]; then
+              POSTGRES_PORT=5432
+            fi
+            INSTALL_OPTIONS+=(--database pgsql --database-name "$POSTGRES_DB" --database-user "$POSTGRES_USER" --database-pass "$POSTGRES_PASSWORD" --database-host "$POSTGRES_HOST" --database-port "$POSTGRES_PORT")
 
             echo "Starting Nextcloud installation..."
             if ! php /var/www/html/occ maintenance:install "${INSTALL_OPTIONS[@]}"; then
@@ -290,19 +294,19 @@ DATADIR_PERMISSION_CONF
             # Apply log settings
             echo "Applying default settings..."
             mkdir -p /var/www/html/data
-            php /var/www/html/occ config:system:set loglevel --value=2
-            php /var/www/html/occ config:system:set log_type --value=file
+            php /var/www/html/occ config:system:set loglevel --value="2" --type=integer
+            php /var/www/html/occ config:system:set log_type --value="file"
             php /var/www/html/occ config:system:set logfile --value="/var/www/html/data/nextcloud.log"
-            php /var/www/html/occ config:system:set log_rotate_size --value="10485760"
+            php /var/www/html/occ config:system:set log_rotate_size --value="10485760" --type=integer
             php /var/www/html/occ app:enable admin_audit
             php /var/www/html/occ config:app:set admin_audit logfile --value="/var/www/html/data/audit.log"
             php /var/www/html/occ config:system:set log.condition apps 0 --value="admin_audit"
 
             # Apply preview settings
             echo "Applying preview settings..."
-            php /var/www/html/occ config:system:set preview_max_x --value="2048"
-            php /var/www/html/occ config:system:set preview_max_y --value="2048"
-            php /var/www/html/occ config:system:set jpeg_quality --value="60"
+            php /var/www/html/occ config:system:set preview_max_x --value="2048" --type=integer
+            php /var/www/html/occ config:system:set preview_max_y --value="2048" --type=integer
+            php /var/www/html/occ config:system:set jpeg_quality --value="60" --type=integer
             php /var/www/html/occ config:app:set preview jpeg_quality --value="60"
             php /var/www/html/occ config:system:delete enabledPreviewProviders
             php /var/www/html/occ config:system:set enabledPreviewProviders 1 --value="OC\\Preview\\Image"
@@ -322,7 +326,7 @@ DATADIR_PERMISSION_CONF
             php /var/www/html/occ config:system:set mail_smtpmode --value="smtp"
             php /var/www/html/occ config:system:set trashbin_retention_obligation --value="auto, 30"
             php /var/www/html/occ config:system:set versions_retention_obligation --value="auto, 30"
-            php /var/www/html/occ config:system:set activity_expire_days --value="30"
+            php /var/www/html/occ config:system:set activity_expire_days --value="30" --type=integer
             php /var/www/html/occ config:system:set simpleSignUpLink.shown --type=bool --value=false
             php /var/www/html/occ config:system:set share_folder --value="/Shared"
             # Not needed anymore with the removal of the updatenotification app:
