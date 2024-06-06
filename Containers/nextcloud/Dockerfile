@@ -7,7 +7,7 @@ ENV PHP_MAX_TIME 3600
 ENV SOURCE_LOCATION /usr/src/nextcloud
 
 # AIO settings start # Do not remove or change this line!
-ENV NEXTCLOUD_VERSION 28.0.6
+ENV NEXTCLOUD_VERSION 29.0.2
 ENV AIO_TOKEN 123456
 ENV AIO_URL localhost
 # AIO settings end # Do not remove or change this line!
@@ -118,6 +118,7 @@ RUN set -ex; \
         echo 'post_max_size=${PHP_UPLOAD_LIMIT}'; \
         echo 'max_execution_time=${PHP_MAX_TIME}'; \
         echo 'max_input_time=${PHP_MAX_TIME}'; \
+        echo 'default_socket_timeout=600'; \
     } > /usr/local/etc/php/conf.d/nextcloud.ini; \
     \
     { \
