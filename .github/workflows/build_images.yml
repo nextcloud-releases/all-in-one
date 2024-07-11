@@ -15,8 +15,8 @@ jobs:
       fail-fast: false
       matrix:
         platform: [
-          {arch: 'linux/amd64', tag: 'develop'},
-          {arch: 'linux/arm64', tag: 'develop-arm64'}]
+          {arch: 'linux/amd64', tag: 'develop-4804'},
+          {arch: 'linux/arm64', tag: 'develop-arm64-4804'}]
         container: [
           {name: 'aio-apache', context: './Containers/apache'},
           {name: 'aio-borgbackup', context: './Containers/borgbackup'},
@@ -36,12 +36,15 @@ jobs:
           {name: 'aio-fulltextsearch', context: './Containers/fulltextsearch'},
           {name: 'aio-docker-socket-proxy', context: './Containers/docker-socket-proxy'}]
         exclude:
-          - platform: {arch: 'linux/arm64', tag: 'develop-arm64'}
+          - platform: {arch: 'linux/arm64', tag: 'develop-arm64-4804'}
             container: {name: 'aio-clamav', context: './Containers/clamav'}
 
     steps:
       - name: Check out the repo
         uses: actions/checkout@v3
+        with:
+          repository: timdiels/nextcloud-aio
+          ref: feature/remote-borg-backup3
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
