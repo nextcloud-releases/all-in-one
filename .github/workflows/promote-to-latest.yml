@@ -59,7 +59,7 @@ jobs:
         
         # multiarch
         docker buildx imagetools create --tag nextcloud/$AIO_NAME\:latest nextcloud/$AIO_NAME\:beta
-        docker buildx imagetools create --tag nextcloud/$AIO_NAME\:"$DATE"-latest nextcloud/$AIO_NAME\:beta
+        docker buildx imagetools create --tag nextcloud/$AIO_NAME\:"$DATE" nextcloud/$AIO_NAME\:beta
         
         # arm64
         if [ "$AIO_NAME" != "aio-clamav" ]; then
