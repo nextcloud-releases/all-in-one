@@ -28,7 +28,7 @@ sed -i 's|^|export |' /tmp/sample.conf
 source /tmp/sample.conf
 rm /tmp/sample.conf
 sed -i '/OVERWRITEHOST/d' latest.yml
-sed -i "s|:latest$|:$DOCKER_TAG-latest|" latest.yml
+sed -i "s|:latest$|:$DOCKER_TAG|" latest.yml
 sed -i "s|\${APACHE_IP_BINDING}:||" latest.yml
 sed -i '/APACHE_IP_BINDING/d' latest.yml
 sed -i "s|\${APACHE_PORT}:\${APACHE_PORT}/|$APACHE_PORT:$APACHE_PORT/|" latest.yml
@@ -246,7 +246,7 @@ find ./ \( -not -name '*service.yaml' -name '*.yaml' \) -exec sed -i "/^status:/
 # shellcheck disable=SC1083
 find ./ \( -not -name '*persistentvolumeclaim.yaml' -name '*.yaml' \) -exec sed -i "/resources:/d" \{} \; 
 # shellcheck disable=SC1083
-find ./ -name "*namespace.yaml" -exec sed -i "1i\\{{- if ne .Values.NAMESPACE \"default\" }}" \{} \; 
+find ./ -name "*namespace.yaml" -exec sed -i "1i\\{{- if and \(ne .Values.NAMESPACE \"default\"\) \(ne .Values.NAMESPACE_DISABLED \"yes\"\) }}" \{} \; 
 # shellcheck disable=SC1083
 find ./ -name "*namespace.yaml" -exec sed -i "$ a {{- end }}" \{} \; 
 # shellcheck disable=SC1083
@@ -336,7 +336,6 @@ sed -i 's|= |: |' /tmp/sample.conf
 sed -i '/^NEXTCLOUD_DATADIR/d' /tmp/sample.conf
 sed -i '/^APACHE_IP_BINDING/d' /tmp/sample.conf
 sed -i '/^NEXTCLOUD_MOUNT/d' /tmp/sample.conf
-sed -i '/^IPV6_NETWORK/d' /tmp/sample.conf
 sed -i '/_ENABLED.*/s/ yes / "yes" /' /tmp/sample.conf
 sed -i '/_ENABLED.*/s/ no / "no" /' /tmp/sample.conf
 sed -i 's|^NEXTCLOUD_TRUSTED_CACERTS_DIR: .*|NEXTCLOUD_TRUSTED_CACERTS_DIR:        # Setting this to any value allows to automatically import root certificates into the Nextcloud container|' /tmp/sample.conf
@@ -355,6 +354,7 @@ sed -i "s|NEXTCLOUD_DATA_STORAGE_SIZE: 1Gi|NEXTCLOUD_DATA_STORAGE_SIZE: 5Gi|" /t
 cat << ADDITIONAL_CONFIG >> /tmp/sample.conf
 
 NAMESPACE: default        # By changing this, you can adjust the namespace of the installation which allows to install multiple instances on one kubernetes cluster
+NAMESPACE_DISABLED: "no"        # By setting this to "yes", you can disabled the creation of the namespace so that you can use a pre-created one
 SUBSCRIPTION_KEY:        # This allows to set the Nextcloud Enterprise key via ENV
 SERVERINFO_TOKEN:        # This allows to set the serverinfo app token for monitoring your Nextcloud via the serverinfo app
 APPS_ALLOWLIST:        # This allows to configure allowed apps that will be shown in Nextcloud's Appstore. You need to enter the app-IDs of the apps here and separate them with spaces. E.g. 'files richdocuments'
