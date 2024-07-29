@@ -295,7 +295,6 @@ DATADIR_PERMISSION_CONF
                 php /var/www/html/occ app:disable updatenotification
                 rm -rf /var/www/html/apps/updatenotification
                 php /var/www/html/occ app:enable nextcloud-aio --force
-                php /var/www/html/occ db:add-missing-indices
                 php /var/www/html/occ db:add-missing-columns
                 php /var/www/html/occ db:add-missing-primary-keys
                 yes | php /var/www/html/occ db:convert-filecache-bigint
@@ -423,12 +422,12 @@ DATADIR_PERMISSION_CONF
             # Apply optimization
             echo "Doing some optimizations..."
             php /var/www/html/occ maintenance:repair
-            php /var/www/html/occ db:add-missing-indices
-            php /var/www/html/occ db:add-missing-columns
-            php /var/www/html/occ db:add-missing-primary-keys
-            yes | php /var/www/html/occ db:convert-filecache-bigint
-            php /var/www/html/occ maintenance:mimetype:update-js
-            php /var/www/html/occ maintenance:mimetype:update-db
+            if [ "$NEXTCLOUD_SKIP_DATABASE_OPTIMIZATION" != yes ]; then
+                php /var/www/html/occ db:add-missing-indices
+                php /var/www/html/occ db:add-missing-columns
+                php /var/www/html/occ db:add-missing-primary-keys
+                yes | php /var/www/html/occ db:convert-filecache-bigint
+            fi
         fi
     fi
 
@@ -504,9 +503,10 @@ if [ -n "$SERVERINFO_TOKEN" ] && [ -z "$(php /var/www/html/occ config:app:get se
     php /var/www/html/occ config:app:set serverinfo token --value="$SERVERINFO_TOKEN"
 fi
 # Set maintenance window so that no warning is shown in the admin overview
-if [ -z "$(php /var/www/html/occ config:system:get maintenance_window_start)" ]; then
-    php /var/www/html/occ config:system:set maintenance_window_start --type=int --value=100
+if [ -z "$NEXTCLOUD_MAINTENANCE_WINDOW" ]; then
+    NEXTCLOUD_MAINTENANCE_WINDOW=100
 fi
+php /var/www/html/occ config:system:set maintenance_window_start --type=int --value="$NEXTCLOUD_MAINTENANCE_WINDOW"
 
 # Apply network settings
 echo "Applying network settings..."
