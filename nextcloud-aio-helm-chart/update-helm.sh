@@ -59,11 +59,7 @@ find ./ -name '*networkpolicy.yaml' -exec sed -i "s|manual-install-nextcloud-aio
 cat << EOL > /tmp/initcontainers
       initContainers:
         - name: init-volumes
-          {{- if or .Values.IMAGE_MIRROR_PREFIX .Values.ALPINE_IMAGE_ORG }}
-          image: "{{ .Values.IMAGE_MIRROR_PREFIX }}{{ .Values.ALPINE_IMAGE_ORG}}/alpine"
-          {{- else }}
-          image: alpine
-          {{- end }}
+          image: "{{ .Values.IMAGE_MIRROR_PREFIX }}{{ .Values.ALPINE_IMAGE_ORG }}alpine"
           command:
             - chmod
             - "777"
@@ -72,22 +68,14 @@ EOL
 cat << EOL > /tmp/initcontainers.database
       initContainers:
         - name: init-subpath
-          {{- if or .Values.IMAGE_MIRROR_PREFIX .Values.ALPINE_IMAGE_ORG }}
-          image: "{{ .Values.IMAGE_MIRROR_PREFIX }}{{ .Values.ALPINE_IMAGE_ORG}}/alpine"
-          {{- else }}
-          image: alpine
-          {{- end }}
+          image: "{{ .Values.IMAGE_MIRROR_PREFIX }}{{ .Values.ALPINE_IMAGE_ORG }}alpine"
           command:
             - mkdir
             - "-p"
             - /nextcloud-aio-database/data
           volumeMountsInitContainer:
         - name: init-volumes
-          {{- if or .Values.IMAGE_MIRROR_PREFIX .Values.ALPINE_IMAGE_ORG }}
-          image: "{{ .Values.IMAGE_MIRROR_PREFIX }}{{ .Values.ALPINE_IMAGE_ORG}}/alpine"
-          {{- else }}
-          image: alpine
-          {{- end }}
+          image: "{{ .Values.IMAGE_MIRROR_PREFIX }}{{ .Values.ALPINE_IMAGE_ORG }}alpine"
           command:
             - chown
             - 999:999
@@ -97,22 +85,14 @@ EOL
 cat << EOL > /tmp/initcontainers.clamav
       initContainers:
         - name: init-subpath
-          {{- if or .Values.IMAGE_MIRROR_PREFIX .Values.ALPINE_IMAGE_ORG }}
-          image: "{{ .Values.IMAGE_MIRROR_PREFIX }}{{ .Values.ALPINE_IMAGE_ORG}}/alpine"
-          {{- else }}
-          image: alpine
-          {{- end }}
+          image: "{{ .Values.IMAGE_MIRROR_PREFIX }}{{ .Values.ALPINE_IMAGE_ORG }}alpine"
           command:
             - mkdir
             - "-p"
             - /nextcloud-aio-clamav/data
           volumeMountsInitContainer:
         - name: init-volumes
-          {{- if or .Values.IMAGE_MIRROR_PREFIX .Values.ALPINE_IMAGE_ORG }}
-          image: "{{ .Values.IMAGE_MIRROR_PREFIX }}{{ .Values.ALPINE_IMAGE_ORG}}/alpine"
-          {{- else }}
-          image: alpine
-          {{- end }}
+          image: "{{ .Values.IMAGE_MIRROR_PREFIX }}{{ .Values.ALPINE_IMAGE_ORG }}alpine"
           command:
             - chown
             - 100:100
@@ -122,10 +102,7 @@ EOL
 cat << EOL > /tmp/initcontainers.nextcloud
       initContainers:
         - name: "delete-lost-found"
-          {{- if or .Values.IMAGE_MIRROR_PREFIX .Values.ALPINE_IMAGE_ORG }}
-          image: "{{ .Values.IMAGE_MIRROR_PREFIX }}{{ .Values.ALPINE_IMAGE_ORG}}/alpine"
-          {{- else }}
-          image: alpine
+          image: "{{ .Values.IMAGE_MIRROR_PREFIX }}{{ .Values.ALPINE_IMAGE_ORG }}alpine"
           {{- end }}
           command:
             - rm
@@ -133,11 +110,7 @@ cat << EOL > /tmp/initcontainers.nextcloud
             - "/nextcloud-aio-nextcloud/lost+found"
           volumeMountsInitRmLostFound:
         - name: init-volumes
-          {{- if or .Values.IMAGE_MIRROR_PREFIX .Values.ALPINE_IMAGE_ORG }}
-          image: "{{ .Values.IMAGE_MIRROR_PREFIX }}{{ .Values.ALPINE_IMAGE_ORG}}/alpine"
-          {{- else }}
-          image: alpine
-          {{- end }}
+          image: "{{ .Values.IMAGE_MIRROR_PREFIX }}{{ .Values.ALPINE_IMAGE_ORG }}alpine"
           command:
             - chmod
             - "777"
@@ -399,9 +372,9 @@ MAIL_DOMAIN:         # (not set by default): Set a different domain for the emai
 TALK_MAX_STREAM_BITRATE: "1048576"         # This allows to adjust the max stream bitrate of the talk hpb
 TALK_MAX_SCREEN_BITRATE: "2097152"         # This allows to adjust the max stream bitrate of the talk hpb
 
-IMAGE_MIRROR_PREFIX:          # Setting this allows you to pull Nextcloud images through a mirror registry.
+IMAGE_MIRROR_PREFIX:          # Setting this allows you to pull Nextcloud images through a mirror registry. It needs a trailing slash!
 NEXTCLOUD_IMAGE_ORG: nextcloud          # Setting this allows you to change the image's org name in case a different image needs to be used e.g. for compliance reasons.
-ALPINE_IMAGE_ORG:          # Setting this allows you to change the image's org name in case a different image needs to be used e.g. for compliance reasons.
+ALPINE_IMAGE_ORG:          # Setting this allows you to change the image's org name in case a different image needs to be used e.g. for compliance reasons. It needs a trailing slash!
 ADDITIONAL_CONFIG
 
 mv /tmp/sample.conf ../helm-chart/values.yaml
