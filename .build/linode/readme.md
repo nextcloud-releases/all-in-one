@@ -1,1 +1,1 @@
-The Linode build files are here: https://github.com/linode/Marketplace-Apps/tree/master/Nextcloud. They were created following https://www.linode.com/de/marketplace/app-partners/#submit
+The Linode build files were moved to their own infrastucture that is managed now by ansible. It should always install the latest version and is OS-independent.
