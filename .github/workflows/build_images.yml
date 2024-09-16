@@ -34,7 +34,8 @@ jobs:
           {name: 'aio-imaginary', context: './Containers/imaginary'},
           {name: 'aio-talk-recording', context: './Containers/talk-recording'},
           {name: 'aio-fulltextsearch', context: './Containers/fulltextsearch'},
-          {name: 'aio-docker-socket-proxy', context: './Containers/docker-socket-proxy'}]
+          {name: 'aio-docker-socket-proxy', context: './Containers/docker-socket-proxy'},
+          {name: 'aio-whiteboard', context: './Containers/whiteboard'}]
         exclude:
           - platform: {arch: 'linux/arm64', tag: 'develop-arm64'}
             container: {name: 'aio-clamav', context: './Containers/clamav'}
