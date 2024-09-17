@@ -11,6 +11,8 @@ Included are:
 - Imaginary (optional, for previews of heic, heif, illustrator, pdf, svg, tiff and webp)
 - ClamAV (optional, Antivirus backend for Nextcloud)
 - Fulltextsearch (optional)
+- Whiteboard (optional)
+- Docker Socket Proxy (optional, needed for [Nextcloud App API](https://github.com/cloud-py-api/app_api#nextcloud-appapi))
 <details><summary>And much more:</summary>
 
 - Simple web interface included that enables easy installation and maintenance
@@ -128,6 +130,9 @@ If your firewall/router has port 80 and 8443 open/forwarded and you point a doma
 ## FAQ
 ### How does it work?
 Nextcloud AIO is inspired by projects like Portainer that manage the docker daemon by talking to it through the docker socket directly. This concept allows a user to install only one container with a single command that does the heavy lifting of creating and managing all containers that are needed in order to provide a Nextcloud installation with most features included. It also makes updating a breeze and is not bound to the host system (and its slow updates) anymore as everything is in containers. Additionally, it is very easy to handle from a user perspective because a simple interface for managing your Nextcloud AIO installation is provided.
+
+### How to contribute?
+See [this issue](https://github.com/nextcloud/all-in-one/issues/5251) for a list of feature requests that need help by contributors.
 
 ### Are reverse proxies supported?
 Yes. Please refer to the following documentation on this: [reverse-proxy.md](https://github.com/nextcloud/all-in-one/blob/main/reverse-proxy.md)
