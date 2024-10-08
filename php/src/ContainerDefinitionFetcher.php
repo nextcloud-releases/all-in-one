@@ -9,23 +9,15 @@ use AIO\Container\ContainerPort;
 use AIO\Container\ContainerPorts;
 use AIO\Container\ContainerVolume;
 use AIO\Container\ContainerVolumes;
-use AIO\Container\State\RunningState;
 use AIO\Data\ConfigurationManager;
 use AIO\Data\DataConst;
 use AIO\Docker\DockerActionManager;
 
-class ContainerDefinitionFetcher
-{
-    private ConfigurationManager $configurationManager;
-    private \DI\Container $container;
-
+readonly class ContainerDefinitionFetcher {
     public function __construct(
-        ConfigurationManager $configurationManager,
-        \DI\Container $container
-    )
-    {
-        $this->configurationManager = $configurationManager;
-        $this->container = $container;
+        private ConfigurationManager $configurationManager,
+        private \DI\Container $container
+    ) {
     }
 
     public function GetContainerById(string $id): Container
@@ -103,7 +95,7 @@ class ContainerDefinitionFetcher
 
             $ports = new ContainerPorts();
             if (isset($entry['ports'])) {
-                foreach ($entry['ports'] as $value) {                    
+                foreach ($entry['ports'] as $value) {
                     $ports->AddPort(
                         new ContainerPort(
                             $value['port_number'],
@@ -212,7 +204,7 @@ class ContainerDefinitionFetcher
                     $dependsOn[] = $value;
                 }
             }
-            
+
             $variables = new ContainerEnvironmentVariables();
             if (isset($entry['environment'])) {
                 foreach ($entry['environment'] as $value) {
