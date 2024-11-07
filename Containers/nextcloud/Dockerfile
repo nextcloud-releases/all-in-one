@@ -8,7 +8,7 @@ ENV SOURCE_LOCATION=/usr/src/nextcloud
 ENV REDIS_DB_INDEX=0
 
 # AIO settings start # Do not remove or change this line!
-ENV NEXTCLOUD_VERSION=29.0.8
+ENV NEXTCLOUD_VERSION=29.0.9
 ENV AIO_TOKEN=123456
 ENV AIO_URL=localhost
 # AIO settings end # Do not remove or change this line!
@@ -222,6 +222,7 @@ RUN set -ex; \
         sudo \
         grep \
         nodejs \
+        libreoffice \
         bind-tools \
         imagemagick \
         imagemagick-svg \
@@ -255,10 +256,7 @@ RUN set -ex; \
     \
     mkdir -p /nc-updater; \
     chown -R www-data:www-data /nc-updater; \
-    chmod -R 770 /nc-updater; \
-    \
-# Give root a random password
-    echo "root:$(openssl rand -base64 12)" | chpasswd
+    chmod -R 770 /nc-updater
 
 # hadolint ignore=DL3002
 USER root
