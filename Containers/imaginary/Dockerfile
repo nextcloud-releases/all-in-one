@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:latest
-FROM golang:1.23.3-alpine3.20 AS go
+FROM golang:1.23.4-alpine3.20 AS go
 
 ENV IMAGINARY_HASH=8f36a26c448be8c151a3878404b75fcd1cd3cf0c
 
@@ -30,6 +30,7 @@ RUN set -ex; \
 
 COPY --from=go /go/bin/imaginary /usr/local/bin/imaginary
 COPY --chmod=775 start.sh /start.sh
+COPY --chmod=775 healthcheck.sh /healthcheck.sh
 
 ENV PORT=9000
 
@@ -39,5 +40,5 @@ USER 65534
 ENV MALLOC_ARENA_MAX=2
 ENTRYPOINT ["/start.sh"]
 
-HEALTHCHECK CMD nc -z 127.0.0.1 "$PORT" || exit 1
+HEALTHCHECK CMD /healthcheck.sh
 LABEL com.centurylinklabs.watchtower.enable="false"

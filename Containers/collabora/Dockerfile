@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:latest
 # From a file located probably somewhere here: https://github.com/CollaboraOnline/online/tree/master/docker
-FROM collabora/code:24.04.9.2.1
+FROM collabora/code:24.04.10.1.1
 
 USER root
 ARG DEBIAN_FRONTEND=noninteractive
@@ -15,7 +15,9 @@ RUN set -ex; \
     ; \
     rm -rf /var/lib/apt/lists/*;
 
+COPY --chmod=775 healthcheck.sh /healthcheck.sh
+
 USER 100
 
-HEALTHCHECK CMD nc -z 127.0.0.1 9980 || exit 1
+HEALTHCHECK --start-period=360s CMD /healthcheck.sh
 LABEL com.centurylinklabs.watchtower.enable="false"
