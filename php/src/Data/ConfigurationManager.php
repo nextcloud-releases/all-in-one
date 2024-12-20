@@ -210,6 +210,11 @@ class ConfigurationManager
     }
 
     public function SetFulltextsearchEnabledState(int $value) : void {
+        # Elasticsearch does not work on kernels without seccomp anymore. See https://github.com/nextcloud/all-in-one/discussions/5768
+        if ($this->GetCollaboraSeccompDisabledState() === 'true') {
+            $value = 0;
+        }
+
         $config = $this->GetConfig();
         $config['isFulltextsearchEnabled'] = $value;
         $this->WriteConfig($config);
@@ -981,6 +986,17 @@ class ConfigurationManager
         } else {
             return false;
         }
+    }
+
+    private function GetEnabledNvidiaGpu() : string {
+        $envVariableName = 'ENABLE_NVIDIA_GPU';
+        $configName = 'enable_nvidia_gpu';
+        $defaultValue = '';
+        return $this->GetEnvironmentalVariableOrConfig($envVariableName, $configName, $defaultValue);
+    }
+
+    public function isNvidiaGpuEnabled() : bool {
+        return $this->GetEnabledNvidiaGpu() === 'true';
     }
 
     private function GetKeepDisabledApps() : string {
