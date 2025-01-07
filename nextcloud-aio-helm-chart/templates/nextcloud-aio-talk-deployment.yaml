@@ -52,7 +52,7 @@ spec:
               value: "{{ .Values.TURN_SECRET }}"
             - name: TZ
               value: "{{ .Values.TIMEZONE }}"
-          image: nextcloud/aio-talk:20241216_102930
+          image: nextcloud/aio-talk:20250106_094420
           readinessProbe:
             exec:
               command:
@@ -84,5 +84,4 @@ spec:
               {{- else }}
               drop: ["NET_RAW"]
               {{- end }}
-              add: ["NET_BIND_SERVICE"]
 {{- end }}

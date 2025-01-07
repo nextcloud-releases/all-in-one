@@ -53,7 +53,7 @@ spec:
               value: nextcloud-aio-redis
             - name: REDIS_HOST_PASSWORD
               value: "{{ .Values.REDIS_PASSWORD }}"
-          image: nextcloud/aio-notify-push:20241216_102930
+          image: nextcloud/aio-notify-push:20250106_094420
           readinessProbe:
             exec:
               command:
@@ -81,7 +81,6 @@ spec:
               {{- else }}
               drop: ["NET_RAW"]
               {{- end }}
-              add: ["NET_BIND_SERVICE"]
           volumeMounts:
             - mountPath: /nextcloud
               name: nextcloud-aio-nextcloud

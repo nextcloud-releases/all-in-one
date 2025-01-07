@@ -53,7 +53,6 @@ spec:
               {{- else }}
               drop: ["NET_RAW"]
               {{- end }}
-              add: ["NET_BIND_SERVICE"]
       containers:
         - env:
             - name: CLAMD_STARTUP_TIMEOUT
@@ -62,7 +61,7 @@ spec:
               value: "{{ .Values.NEXTCLOUD_UPLOAD_LIMIT }}"
             - name: TZ
               value: "{{ .Values.TIMEZONE }}"
-          image: nextcloud/aio-clamav:20241216_102930
+          image: nextcloud/aio-clamav:20250106_094420
           readinessProbe:
             exec:
               command:
@@ -92,7 +91,6 @@ spec:
               {{- else }}
               drop: ["NET_RAW"]
               {{- end }}
-              add: ["NET_BIND_SERVICE"]
           volumeMounts:
             - mountPath: /var/lib/clamav
               subPath: data
