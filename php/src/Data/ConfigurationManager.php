@@ -33,6 +33,10 @@ class ConfigurationManager
     }
 
     public function GetAndGenerateSecret(string $secretId) : string {
+        if ($secretId === '') {
+            return '';
+        }
+
         $config = $this->GetConfig();
         if(!isset($config['secrets'][$secretId])) {
             $config['secrets'][$secretId] = bin2hex(random_bytes(24));
@@ -210,7 +214,7 @@ class ConfigurationManager
     }
 
     public function SetFulltextsearchEnabledState(int $value) : void {
-        # Elasticsearch does not work on kernels without seccomp anymore. See https://github.com/nextcloud/all-in-one/discussions/5768
+        // Elasticsearch does not work on kernels without seccomp anymore. See https://github.com/nextcloud/all-in-one/discussions/5768
         if ($this->GetCollaboraSeccompDisabledState() === 'true') {
             $value = 0;
         }
@@ -281,6 +285,12 @@ class ConfigurationManager
         if (!$this->isTalkEnabled()) {
             $value = 0;
         }
+
+        // Currently only works on x64. See https://github.com/nextcloud/nextcloud-talk-recording/issues/17
+        if (!$this->isx64Platform()) {
+            $value = 0;
+        }
+
         $config = $this->GetConfig();
         $config['isTalkRecordingEnabled'] = $value;
         $this->WriteConfig($config);
