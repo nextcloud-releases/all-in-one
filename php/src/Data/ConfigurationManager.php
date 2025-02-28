@@ -170,10 +170,10 @@ class ConfigurationManager
 
     public function isWhiteboardEnabled() : bool {
         $config = $this->GetConfig();
-        if (isset($config['isWhiteboardEnabled']) && $config['isWhiteboardEnabled'] === 1) {
-            return true;
-        } else {
+        if (isset($config['isWhiteboardEnabled']) && $config['isWhiteboardEnabled'] === 0) {
             return false;
+        } else {
+            return true;
         }
     }
 
@@ -974,10 +974,6 @@ class ConfigurationManager
         }
 
         return $config['collabora_additional_options'];
-    }
-
-    public function GetAdditionalCollaboraOptionsArray() : array {
-        return explode(' ', $this->GetAdditionalCollaboraOptions());
     }
 
     public function DeleteAdditionalCollaboraOptions() : void {
