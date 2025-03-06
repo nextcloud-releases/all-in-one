@@ -67,6 +67,7 @@ jobs:
           {name: 'aio-redis', context: './Containers/redis'},
           {name: 'aio-talk', context: './Containers/talk'},
           {name: 'aio-watchtower', context: './Containers/watchtower'},
+          {name: 'aio-clamav', context: './Containers/clamav'},
           {name: 'aio-onlyoffice', context: './Containers/onlyoffice'},
           {name: 'aio-imaginary', context: './Containers/imaginary'},
           {name: 'aio-talk-recording', context: './Containers/talk-recording'},
