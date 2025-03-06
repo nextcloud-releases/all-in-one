@@ -44,14 +44,8 @@ jobs:
         AIO_NAME=${{ matrix.name }}
         set +x
         
-        if [ "$AIO_NAME" != "aio-clamav" ]; then
-            # create multiarch image
-            docker buildx imagetools create --tag nextcloud/$AIO_NAME\:beta nextcloud/$AIO_NAME\:develop nextcloud/$AIO_NAME\:develop-arm64
-            
-            # arm64
-            docker buildx imagetools create --tag nextcloud/$AIO_NAME\:beta-arm64 nextcloud/$AIO_NAME\:develop nextcloud/$AIO_NAME\:develop-arm64
-            
-        else
-            # amd64
-            docker buildx imagetools create --tag nextcloud/$AIO_NAME\:beta nextcloud/$AIO_NAME\:develop
-        fi
+        # create multiarch image
+        docker buildx imagetools create --tag nextcloud/$AIO_NAME\:beta nextcloud/$AIO_NAME\:develop nextcloud/$AIO_NAME\:develop-arm64
+        
+        # arm64
+        docker buildx imagetools create --tag nextcloud/$AIO_NAME\:beta-arm64 nextcloud/$AIO_NAME\:develop nextcloud/$AIO_NAME\:develop-arm64

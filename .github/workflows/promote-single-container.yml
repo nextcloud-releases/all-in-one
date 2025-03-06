@@ -52,12 +52,11 @@ jobs:
           set +x
         fi
         docker push nextcloud/$AIO_NAME\:"$TARGET_TAG"
-        if [ "$AIO_NAME" != "aio-clamav" ]; then
-          # arm64 
-          docker pull nextcloud/$AIO_NAME\:"$SOURCE_TAG"-arm64
-          docker tag nextcloud/$AIO_NAME\:"$SOURCE_TAG"-arm64 nextcloud/$AIO_NAME\:"$TARGET_TAG"-arm64
-          docker push nextcloud/$AIO_NAME\:"$TARGET_TAG"-arm64
-          if [ "$AIO_NAME" = "aio-nextcloud" ] && [ "$TARGET_TAG" = latest ]; then
+        # arm64 
+        docker pull nextcloud/$AIO_NAME\:"$SOURCE_TAG"-arm64
+        docker tag nextcloud/$AIO_NAME\:"$SOURCE_TAG"-arm64 nextcloud/$AIO_NAME\:"$TARGET_TAG"-arm64
+        docker push nextcloud/$AIO_NAME\:"$TARGET_TAG"-arm64
+        if [ "$AIO_NAME" = "aio-nextcloud" ] && [ "$TARGET_TAG" = latest ]; then
           set -x
           PHP_VERSION="$(docker inspect nextcloud/aio-nextcloud:beta-arm64 | grep PHP_VERSION | grep -oP '[0-8.]+' | sed 's|\.[0-9]\+$||')"
           if [ -n "$PHP_VERSION" ]; then
@@ -65,5 +64,4 @@ jobs:
             docker push nextcloud/aio-nextcloud\:php"$PHP_VERSION"-latest-arm64
           fi
           set +x
-        fi
         fi
