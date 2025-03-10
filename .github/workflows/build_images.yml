@@ -36,6 +36,9 @@ jobs:
     steps:
       - name: Check out the repo
         uses: actions/checkout@v3
+        with:
+          repository: nextcloud/all-in-one
+          ref: enh/6123/ghcr-io
       - name: Login to DockerHub
         uses: docker/login-action@v2 
         with:
@@ -48,7 +51,7 @@ jobs:
           platforms: linux/amd64
           no-cache: true
           push: true
-          tags: nextcloud/${{ matrix.container.name }}:develop
+          tags: nextcloud/${{ matrix.container.name }}:develop-6134
           
   build-arm64:
     runs-on: ubuntu-24.04-arm
@@ -78,6 +81,9 @@ jobs:
     steps:
       - name: Check out the repo
         uses: actions/checkout@v3
+        with:
+          repository: nextcloud/all-in-one
+          ref: enh/6123/ghcr-io
       - name: Login to DockerHub
         uses: docker/login-action@v2 
         with:
@@ -90,4 +96,4 @@ jobs:
           platforms: linux/arm64
           no-cache: true
           push: true
-          tags: nextcloud/${{ matrix.container.name }}:develop-arm64
+          tags: nextcloud/${{ matrix.container.name }}:develop-arm64-6134
