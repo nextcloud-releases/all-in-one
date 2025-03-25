@@ -32,20 +32,37 @@ jobs:
           'aio-whiteboard']
 
     steps:
-    - name: Login to DockerHub
+    - name: Login to ghcr.io
       uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3
       with:
-        username: ${{ secrets.DOCKERHUB_USERNAME }}
-        password: ${{ secrets.DOCKERHUB_TOKEN }}
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
         
-    - name: Promote images from develop to beta (create multiarch)
+    - name: Promote images from develop to beta (create multiarch) on ghcr.io
       run: |
         set -x
         AIO_NAME=${{ matrix.name }}
         set +x
         
         # create multiarch image
-        docker buildx imagetools create --tag nextcloud/$AIO_NAME\:beta nextcloud/$AIO_NAME\:develop nextcloud/$AIO_NAME\:develop-arm64
+        docker buildx imagetools create --tag ghcr.io/nextcloud-releases/$AIO_NAME\:beta ghcr.io/nextcloud-releases/$AIO_NAME\:develop ghcr.io/nextcloud-releases/$AIO_NAME\:develop-arm64
+
+        # arm64
+        docker buildx imagetools create --tag ghcr.io/nextcloud-releases/$AIO_NAME\:beta-arm64 ghcr.io/nextcloud-releases/$AIO_NAME\:develop ghcr.io/nextcloud-releases/$AIO_NAME\:develop-arm64
+
+    - name: Login to DockerHub
+      if: matrix.name == 'all-in-one'
+      uses: docker/login-action@v2 
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+        
+    - name: Promote images from develop to beta (create multiarch) on docker hub
+      if: matrix.name == 'all-in-one'
+      run: |
+        # create multiarch image
+        docker buildx imagetools create --tag nextcloud/all-in-one\:beta ghcr.io/nextcloud-releases/all-in-one\:develop ghcr.io/nextcloud-releases/all-in-one\:develop-arm64
         
         # arm64
-        docker buildx imagetools create --tag nextcloud/$AIO_NAME\:beta-arm64 nextcloud/$AIO_NAME\:develop nextcloud/$AIO_NAME\:develop-arm64
+        docker buildx imagetools create --tag nextcloud/all-in-one\:beta-arm64 ghcr.io/nextcloud-releases/all-in-one\:develop ghcr.io/nextcloud-releases/all-in-one\:develop-arm64
