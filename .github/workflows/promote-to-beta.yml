@@ -12,6 +12,7 @@ jobs:
       fail-fast: false
       matrix:
         name: [
+          'aio-alpine',
           'aio-apache',
           'aio-borgbackup',
           'aio-collabora',
