@@ -274,7 +274,7 @@ fi
 
 # Check if ghcr.io is reachable
 # Solves issues like https://github.com/nextcloud/all-in-one/discussions/5268
-if ! curl https://ghcr.io &>/dev/null; then
+if ! curl --no-progress-meter https://ghcr.io/v2/ >/dev/null; then
     print_red "Could not reach https://ghcr.io."
     echo "Most likely is something blocking access to it."
     echo "You should be able to fix this by using https://github.com/nextcloud/all-in-one/tree/main/manual-install"
