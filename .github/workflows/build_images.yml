@@ -8,76 +8,13 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-amd64:
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        container: [
-          {name: 'aio-alpine', context: './Containers/alpine'},
-          {name: 'aio-apache', context: './Containers/apache'},
-          {name: 'aio-borgbackup', context: './Containers/borgbackup'},
-          {name: 'aio-collabora', context: './Containers/collabora'},
-          {name: 'aio-domaincheck', context: './Containers/domaincheck'},
-          {name: 'all-in-one', context: './Containers/mastercontainer'},
-          {name: 'aio-nextcloud', context: './Containers/nextcloud'},
-          {name: 'aio-notify-push', context: './Containers/notify-push'},
-          {name: 'aio-postgresql', context: './Containers/postgresql'},
-          {name: 'aio-redis', context: './Containers/redis'},
-          {name: 'aio-talk', context: './Containers/talk'},
-          {name: 'aio-watchtower', context: './Containers/watchtower'},
-          {name: 'aio-clamav', context: './Containers/clamav'},
-          {name: 'aio-onlyoffice', context: './Containers/onlyoffice'},
-          {name: 'aio-imaginary', context: './Containers/imaginary'},
-          {name: 'aio-talk-recording', context: './Containers/talk-recording'},
-          {name: 'aio-fulltextsearch', context: './Containers/fulltextsearch'},
-          {name: 'aio-docker-socket-proxy', context: './Containers/docker-socket-proxy'},
-          {name: 'aio-whiteboard', context: './Containers/whiteboard'}
-        ]
-    steps:
-      - name: Check out the repo
-        uses: actions/checkout@v4
-      - name: Login to ghcr.io
-        uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build docker image and push to ghcr.io
-        uses: docker/build-push-action@471d1dc4e07e5cdedd4c2171150001c434f0b7a4 # v6
-        with:
-          context: ${{ matrix.container.context }}
-          platforms: linux/amd64
-          no-cache: true
-          push: true
-          tags: ghcr.io/nextcloud-releases/${{ matrix.container.name }}:develop
-
   build-arm64:
     runs-on: ubuntu-24.04-arm
     strategy:
       fail-fast: false
       matrix:
         container: [
-          {name: 'aio-alpine', context: './Containers/alpine'},
-          {name: 'aio-apache', context: './Containers/apache'},
-          {name: 'aio-borgbackup', context: './Containers/borgbackup'},
-          {name: 'aio-collabora', context: './Containers/collabora'},
-          {name: 'aio-domaincheck', context: './Containers/domaincheck'},
-          {name: 'all-in-one', context: './Containers/mastercontainer'},
-          {name: 'aio-nextcloud', context: './Containers/nextcloud'},
-          {name: 'aio-notify-push', context: './Containers/notify-push'},
-          {name: 'aio-postgresql', context: './Containers/postgresql'},
-          {name: 'aio-redis', context: './Containers/redis'},
-          {name: 'aio-talk', context: './Containers/talk'},
-          {name: 'aio-watchtower', context: './Containers/watchtower'},
-          {name: 'aio-clamav', context: './Containers/clamav'},
-          {name: 'aio-onlyoffice', context: './Containers/onlyoffice'},
-          {name: 'aio-imaginary', context: './Containers/imaginary'},
-          {name: 'aio-talk-recording', context: './Containers/talk-recording'},
-          {name: 'aio-fulltextsearch', context: './Containers/fulltextsearch'},
-          {name: 'aio-docker-socket-proxy', context: './Containers/docker-socket-proxy'},
-          {name: 'aio-whiteboard', context: './Containers/whiteboard'}
+          {name: 'aio-alpine', context: './Containers/alpine'}
         ]
     steps:
       - name: Check out the repo
