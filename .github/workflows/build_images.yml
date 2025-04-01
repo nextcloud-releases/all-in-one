@@ -59,6 +59,7 @@ jobs:
       fail-fast: false
       matrix:
         container: [
+          {name: 'aio-alpine', context: './Containers/alpine'},
           {name: 'aio-apache', context: './Containers/apache'},
           {name: 'aio-borgbackup', context: './Containers/borgbackup'},
           {name: 'aio-collabora', context: './Containers/collabora'},
