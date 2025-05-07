@@ -82,17 +82,29 @@ jobs:
         fi
 
     - name: Login to DockerHub
-      if: matrix.name == 'all-in-one'
       uses: docker/login-action@v2 
       with:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-    - name: Promote images from develop to beta (create multiarch) on docker hub
-      if: matrix.name == 'all-in-one'
+    - name: Publish images on docker hub
       run: |
-        # multiarch
-        docker buildx imagetools create --tag nextcloud/all-in-one\:latest nextcloud/all-in-one\:beta
-        
-        # arm64
-        docker buildx imagetools create --tag nextcloud/all-in-one\:latest-arm64 nextcloud/all-in-one\:beta-arm64
+        set -x
+        AIO_NAME=${{ matrix.name }}
+        DATE="${{needs.get_time.outputs.output1}}"
+        if [ -z "$DATE" ]; then
+          exit 1
+        fi
+        set +x
+
+        # Handle all-in-one image seperately
+        if [ "$AIO_NAME" = "all-in-one" ]; then
+          # multiarch
+          docker buildx imagetools create --tag nextcloud/all-in-one\:latest nextcloud/all-in-one\:beta
+          
+          # arm64
+          docker buildx imagetools create --tag nextcloud/all-in-one\:latest-arm64 nextcloud/all-in-one\:beta-arm64
+        else
+          # Publish date images also on docker hub
+          docker buildx imagetools create --tag nextcloud/$AIO_NAME\:"$DATE" ghcr.io/nextcloud-releases/$AIO_NAME\:beta
+        fi
