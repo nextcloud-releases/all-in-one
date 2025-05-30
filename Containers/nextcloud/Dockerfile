@@ -8,7 +8,7 @@ ENV SOURCE_LOCATION=/usr/src/nextcloud
 ENV REDIS_DB_INDEX=0
 
 # AIO settings start # Do not remove or change this line!
-ENV NEXTCLOUD_VERSION=30.0.11
+ENV NEXTCLOUD_VERSION=31.0.5
 ENV AIO_TOKEN=123456
 ENV AIO_URL=localhost
 # AIO settings end # Do not remove or change this line!
@@ -118,7 +118,10 @@ RUN set -ex; \
         echo 'opcache.jit_buffer_size=8M'; \
     } > /usr/local/etc/php/conf.d/opcache-recommended.ini; \
     \
-    echo 'apc.enable_cli=1' >> /usr/local/etc/php/conf.d/docker-php-ext-apcu.ini; \
+    { \
+        echo 'apc.enable_cli=1'; \
+        echo 'apc.shm_size=64M'; \
+    } >> /usr/local/etc/php/conf.d/docker-php-ext-apcu.ini; \
     \
     { \
         echo 'memory_limit=${PHP_MEMORY_LIMIT}'; \
@@ -224,6 +227,7 @@ RUN set -ex; \
         grep \
         nodejs \
         libreoffice \
+        pandoc-cli \
         bind-tools \
         imagemagick \
         imagemagick-svg \
