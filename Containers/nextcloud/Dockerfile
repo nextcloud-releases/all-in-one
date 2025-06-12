@@ -8,7 +8,7 @@ ENV SOURCE_LOCATION=/usr/src/nextcloud
 ENV REDIS_DB_INDEX=0
 
 # AIO settings start # Do not remove or change this line!
-ENV NEXTCLOUD_VERSION=31.0.5
+ENV NEXTCLOUD_VERSION=31.0.6
 ENV AIO_TOKEN=123456
 ENV AIO_URL=localhost
 # AIO settings end # Do not remove or change this line!
@@ -256,7 +256,6 @@ RUN set -ex; \
     chmod 777 -R /usr/local/etc/php/conf.d && \
     chmod 777 -R /usr/local/etc/php-fpm.d && \
     chmod -R 777 /tmp; \
-    rm -rf /usr/src/nextcloud/apps/updatenotification; \
     \
     mkdir -p /nc-updater; \
     chmod -R 777 /nc-updater
