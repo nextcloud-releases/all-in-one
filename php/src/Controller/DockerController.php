@@ -22,6 +22,7 @@ readonly class DockerController {
     private function PerformRecursiveContainerStart(string $id, bool $pullImage = true) : void {
         $container = $this->containerDefinitionFetcher->GetContainerById($id);
 
+        // Start all dependencies first and then itself
         foreach($container->GetDependsOn() as $dependency) {
             $this->PerformRecursiveContainerStart($dependency, $pullImage);
         }
@@ -33,31 +34,30 @@ readonly class DockerController {
             return;
         }
 
-        // Skip database image pull if the last shutdown was not clean
-        if ($id === 'nextcloud-aio-database') {
-            if ($this->dockerActionManager->GetDatabasecontainerExitCode() > 0) {
-                $pullImage = false;
-                error_log('Not pulling the latest database image because the container was not correctly shut down.');
-            }
-        }
-
-        // Check if registry is reachable in order to make sure that we do not try to pull an image if it is down
-        // and try to mitigate issues that are arising due to that
-        if ($pullImage) {
-            if (!$this->dockerActionManager->isRegistryReachable($container)) {
-                $pullImage = false;
-                error_log('Not pulling the ' . $container->GetContainerName() . ' image for the ' . $container->GetIdentifier() . ' container because the registry does not seem to be reachable.');
-            }
-        }
-
         $this->dockerActionManager->DeleteContainer($container);
         $this->dockerActionManager->CreateVolumes($container);
-        if ($pullImage) {
-            $this->dockerActionManager->PullImage($container);
-        }
+        $this->dockerActionManager->PullImage($container, $pullImage);
         $this->dockerActionManager->CreateContainer($container);
         $this->dockerActionManager->StartContainer($container);
         $this->dockerActionManager->ConnectContainerToNetwork($container);
+    }
+
+    private function PerformRecursiveImagePull(string $id) : void {
+        $container = $this->containerDefinitionFetcher->GetContainerById($id);
+
+        // Pull all dependencies first and then itself
+        foreach($container->GetDependsOn() as $dependency) {
+            $this->PerformRecursiveImagePull($dependency);
+        }
+
+        $this->dockerActionManager->PullImage($container, true);
+    }
+
+    public function PullAllContainerImages(): void {
+
+        $id = self::TOP_CONTAINER;
+
+        $this->PerformRecursiveImagePull($id);
     }
 
     public function GetLogs(Request $request, Response $response, array $args) : Response
@@ -227,13 +227,19 @@ readonly class DockerController {
     private function PerformRecursiveContainerStop(string $id) : void
     {
         $container = $this->containerDefinitionFetcher->GetContainerById($id);
+
+        // This is a hack but no better solution was found for the meantime
+        // Stop Collabora first to make sure it force-saves
+        // See https://github.com/nextcloud/richdocuments/issues/3799
+        if ($id === self::TOP_CONTAINER) {
+            $this->PerformRecursiveContainerStop('nextcloud-aio-collabora');
+        }
+
+        // Stop itself first and then all the dependencies
+        $this->dockerActionManager->StopContainer($container);
         foreach($container->GetDependsOn() as $dependency) {
             $this->PerformRecursiveContainerStop($dependency);
         }
-
-        // Disconnecting is not needed. This also allows to start the containers manually via docker-cli
-        //$this->dockerActionManager->DisconnectContainerFromNetwork($container);
-        $this->dockerActionManager->StopContainer($container);
     }
 
     public function StopContainer(Request $request, Response $response, array $args) : Response
