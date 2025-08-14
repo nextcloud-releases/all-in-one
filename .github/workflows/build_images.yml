@@ -14,25 +14,25 @@ jobs:
       fail-fast: false
       matrix:
         container: [
-          {name: 'aio-alpine', context: './Containers/alpine'},
-          {name: 'aio-apache', context: './Containers/apache'},
-          {name: 'aio-borgbackup', context: './Containers/borgbackup'},
-          {name: 'aio-collabora', context: './Containers/collabora'},
-          {name: 'aio-domaincheck', context: './Containers/domaincheck'},
-          {name: 'all-in-one', context: './Containers/mastercontainer'},
-          {name: 'aio-nextcloud', context: './Containers/nextcloud'},
-          {name: 'aio-notify-push', context: './Containers/notify-push'},
-          {name: 'aio-postgresql', context: './Containers/postgresql'},
-          {name: 'aio-redis', context: './Containers/redis'},
-          {name: 'aio-talk', context: './Containers/talk'},
-          {name: 'aio-watchtower', context: './Containers/watchtower'},
-          {name: 'aio-clamav', context: './Containers/clamav'},
-          {name: 'aio-onlyoffice', context: './Containers/onlyoffice'},
-          {name: 'aio-imaginary', context: './Containers/imaginary'},
-          {name: 'aio-talk-recording', context: './Containers/talk-recording'},
-          {name: 'aio-fulltextsearch', context: './Containers/fulltextsearch'},
-          {name: 'aio-docker-socket-proxy', context: './Containers/docker-socket-proxy'},
-          {name: 'aio-whiteboard', context: './Containers/whiteboard'}
+          {name: 'aio-alpine', context: './Containers/alpine', file: './Containers/alpine/Dockerfile'},
+          {name: 'aio-apache', context: './Containers/apache', file: './Containers/apache/Dockerfile'},
+          {name: 'aio-borgbackup', context: './Containers/borgbackup', file: './Containers/borgbackup/Dockerfile'},
+          {name: 'aio-collabora', context: './Containers/collabora', file: './Containers/collabora/Dockerfile'},
+          {name: 'aio-domaincheck', context: './Containers/domaincheck', file: './Containers/domaincheck/Dockerfile'},
+          {name: 'all-in-one', context: '.', file: './Containers/mastercontainer/Dockerfile'},
+          {name: 'aio-nextcloud', context: '.', file: './Containers/nextcloud/Dockerfile'},
+          {name: 'aio-notify-push', context: './Containers/notify-push', file: './Containers/notify-push/Dockerfile'},
+          {name: 'aio-postgresql', context: './Containers/postgresql', file: './Containers/postgresql/Dockerfile'},
+          {name: 'aio-redis', context: './Containers/redis', file: './Containers/redis/Dockerfile'},
+          {name: 'aio-talk', context: './Containers/talk', file: './Containers/talk/Dockerfile'},
+          {name: 'aio-watchtower', context: './Containers/watchtower', file: './Containers/watchtower/Dockerfile'},
+          {name: 'aio-clamav', context: './Containers/clamav', file: './Containers/clamav/Dockerfile'},
+          {name: 'aio-onlyoffice', context: './Containers/onlyoffice', file: './Containers/onlyoffice/Dockerfile'},
+          {name: 'aio-imaginary', context: './Containers/imaginary', file: './Containers/imaginary/Dockerfile'},
+          {name: 'aio-talk-recording', context: './Containers/talk-recording', file: './Containers/talk-recording/Dockerfile'},
+          {name: 'aio-fulltextsearch', context: './Containers/fulltextsearch', file: './Containers/fulltextsearch/Dockerfile'},
+          {name: 'aio-docker-socket-proxy', context: './Containers/docker-socket-proxy', file: './Containers/docker-socket-proxy/Dockerfile'},
+          {name: 'aio-whiteboard', context: './Containers/whiteboard', file: './Containers/whiteboard/Dockerfile'}
         ]
     steps:
       - name: Check out the repo
@@ -48,6 +48,7 @@ jobs:
         uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6
         with:
           context: ${{ matrix.container.context }}
+          file: ${{ matrix.container.file }}
           platforms: linux/amd64
           no-cache: true
           push: true
@@ -59,25 +60,25 @@ jobs:
       fail-fast: false
       matrix:
         container: [
-          {name: 'aio-alpine', context: './Containers/alpine'},
-          {name: 'aio-apache', context: './Containers/apache'},
-          {name: 'aio-borgbackup', context: './Containers/borgbackup'},
-          {name: 'aio-collabora', context: './Containers/collabora'},
-          {name: 'aio-domaincheck', context: './Containers/domaincheck'},
-          {name: 'all-in-one', context: './Containers/mastercontainer'},
-          {name: 'aio-nextcloud', context: './Containers/nextcloud'},
-          {name: 'aio-notify-push', context: './Containers/notify-push'},
-          {name: 'aio-postgresql', context: './Containers/postgresql'},
-          {name: 'aio-redis', context: './Containers/redis'},
-          {name: 'aio-talk', context: './Containers/talk'},
-          {name: 'aio-watchtower', context: './Containers/watchtower'},
-          {name: 'aio-clamav', context: './Containers/clamav'},
-          {name: 'aio-onlyoffice', context: './Containers/onlyoffice'},
-          {name: 'aio-imaginary', context: './Containers/imaginary'},
-          {name: 'aio-talk-recording', context: './Containers/talk-recording'},
-          {name: 'aio-fulltextsearch', context: './Containers/fulltextsearch'},
-          {name: 'aio-docker-socket-proxy', context: './Containers/docker-socket-proxy'},
-          {name: 'aio-whiteboard', context: './Containers/whiteboard'}
+          {name: 'aio-alpine', context: './Containers/alpine', file: './Containers/alpine/Dockerfile'},
+          {name: 'aio-apache', context: './Containers/apache', file: './Containers/apache/Dockerfile'},
+          {name: 'aio-borgbackup', context: './Containers/borgbackup', file: './Containers/borgbackup/Dockerfile'},
+          {name: 'aio-collabora', context: './Containers/collabora', file: './Containers/collabora/Dockerfile'},
+          {name: 'aio-domaincheck', context: './Containers/domaincheck', file: './Containers/domaincheck/Dockerfile'},
+          {name: 'all-in-one', context: '.', file: './Containers/mastercontainer/Dockerfile'},
+          {name: 'aio-nextcloud', context: '.', file: './Containers/nextcloud/Dockerfile'},
+          {name: 'aio-notify-push', context: './Containers/notify-push', file: './Containers/notify-push/Dockerfile'},
+          {name: 'aio-postgresql', context: './Containers/postgresql', file: './Containers/postgresql/Dockerfile'},
+          {name: 'aio-redis', context: './Containers/redis', file: './Containers/redis/Dockerfile'},
+          {name: 'aio-talk', context: './Containers/talk', file: './Containers/talk/Dockerfile'},
+          {name: 'aio-watchtower', context: './Containers/watchtower', file: './Containers/watchtower/Dockerfile'},
+          {name: 'aio-clamav', context: './Containers/clamav', file: './Containers/clamav/Dockerfile'},
+          {name: 'aio-onlyoffice', context: './Containers/onlyoffice', file: './Containers/onlyoffice/Dockerfile'},
+          {name: 'aio-imaginary', context: './Containers/imaginary', file: './Containers/imaginary/Dockerfile'},
+          {name: 'aio-talk-recording', context: './Containers/talk-recording', file: './Containers/talk-recording/Dockerfile'},
+          {name: 'aio-fulltextsearch', context: './Containers/fulltextsearch', file: './Containers/fulltextsearch/Dockerfile'},
+          {name: 'aio-docker-socket-proxy', context: './Containers/docker-socket-proxy', file: './Containers/docker-socket-proxy/Dockerfile'},
+          {name: 'aio-whiteboard', context: './Containers/whiteboard', file: './Containers/whiteboard/Dockerfile'}
         ]
     steps:
       - name: Check out the repo
@@ -93,6 +94,7 @@ jobs:
         uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6
         with:
           context: ${{ matrix.container.context }}
+          file: ${{ matrix.container.file }}
           platforms: linux/arm64
           no-cache: true
           push: true
