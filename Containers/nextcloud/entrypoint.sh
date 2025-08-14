@@ -234,6 +234,7 @@ DATADIR_PERMISSION_CONF
             if [ -z "$POSTGRES_PORT" ]; then
               POSTGRES_PORT=5432
             fi
+            # shellcheck disable=SC2153
             INSTALL_OPTIONS+=(--database "$DATABASE_TYPE" --database-name "$POSTGRES_DB" --database-user "$POSTGRES_USER" --database-pass "$POSTGRES_PASSWORD" --database-host "$POSTGRES_HOST" --database-port "$POSTGRES_PORT")
 
             echo "Starting Nextcloud installation..."
@@ -577,6 +578,24 @@ else
 fi
 # AIO app end # Do not remove or change this line!
 
+# Allow to add custom certs to Nextcloud's trusted cert store
+if env | grep -q NEXTCLOUD_TRUSTED_CERTIFICATES_; then
+    set -x
+    TRUSTED_CERTIFICATES="$(env | grep NEXTCLOUD_TRUSTED_CERTIFICATES_ | grep -oP '^[A-Z_a-z0-9]+')"
+    mapfile -t TRUSTED_CERTIFICATES <<< "$TRUSTED_CERTIFICATES"
+    CERTIFICATES_ROOT_DIR="/var/www/html/data/certificates"
+    mkdir -p "$CERTIFICATES_ROOT_DIR"
+    for certificate in "${TRUSTED_CERTIFICATES[@]}"; do
+        # shellcheck disable=SC2001
+        CERTIFICATE_NAME="$(echo "$certificate" | sed 's|^NEXTCLOUD_TRUSTED_CERTIFICATES_||')"
+        if ! [ -f "$CERTIFICATES_ROOT_DIR/$CERTIFICATE_NAME" ]; then
+            echo "${!certificate}" > "$CERTIFICATES_ROOT_DIR/$CERTIFICATE_NAME"
+            php /var/www/html/occ security:certificates:import "$CERTIFICATES_ROOT_DIR/$CERTIFICATE_NAME"
+        fi
+    done
+    set +x
+fi
+
 # Notify push
 if ! [ -d "/var/www/html/custom_apps/notify_push" ]; then
     php /var/www/html/occ app:install notify_push
@@ -809,45 +828,54 @@ fi
 
 # Fulltextsearch
 if [ "$FULLTEXTSEARCH_ENABLED" = 'yes' ]; then
-    while ! nc -z "$FULLTEXTSEARCH_HOST" "$FULLTEXTSEARCH_PORT"; do
+    count=0
+    while ! nc -z "$FULLTEXTSEARCH_HOST" "$FULLTEXTSEARCH_PORT" && [ "$count" -lt 90 ]; do
         echo "waiting for Fulltextsearch to become available..."
+        count=$((count+5))
         sleep 5
     done
-    if ! [ -d "/var/www/html/custom_apps/fulltextsearch" ]; then
-        php /var/www/html/occ app:install fulltextsearch
-    elif [ "$(php /var/www/html/occ config:app:get fulltextsearch enabled)" != "yes" ]; then
-        php /var/www/html/occ app:enable fulltextsearch
-    elif [ "$SKIP_UPDATE" != 1 ]; then
-        php /var/www/html/occ app:update fulltextsearch
-    fi    
-    if ! [ -d "/var/www/html/custom_apps/fulltextsearch_elasticsearch" ]; then
-        php /var/www/html/occ app:install fulltextsearch_elasticsearch
-    elif [ "$(php /var/www/html/occ config:app:get fulltextsearch_elasticsearch enabled)" != "yes" ]; then
-        php /var/www/html/occ app:enable fulltextsearch_elasticsearch
-    elif [ "$SKIP_UPDATE" != 1 ]; then
-        php /var/www/html/occ app:update fulltextsearch_elasticsearch
-    fi    
-    if ! [ -d "/var/www/html/custom_apps/files_fulltextsearch" ]; then
-        php /var/www/html/occ app:install files_fulltextsearch
-    elif [ "$(php /var/www/html/occ config:app:get files_fulltextsearch enabled)" != "yes" ]; then
-        php /var/www/html/occ app:enable files_fulltextsearch
-    elif [ "$SKIP_UPDATE" != 1 ]; then
-        php /var/www/html/occ app:update files_fulltextsearch
-    fi
-    php /var/www/html/occ fulltextsearch:configure '{"search_platform":"OCA\\FullTextSearch_Elasticsearch\\Platform\\ElasticSearchPlatform"}'
-    php /var/www/html/occ fulltextsearch_elasticsearch:configure "{\"elastic_host\":\"http://$FULLTEXTSEARCH_USER:$FULLTEXTSEARCH_PASSWORD@$FULLTEXTSEARCH_HOST:$FULLTEXTSEARCH_PORT\",\"elastic_index\":\"$FULLTEXTSEARCH_INDEX\"}"
-    php /var/www/html/occ files_fulltextsearch:configure "{\"files_pdf\":\"1\",\"files_office\":\"1\"}"
+    if [ "$count" -ge 90 ]; then
+        echo "Fulltextsearch did not start in time. Skipping initialization and disabling fulltextsearch apps."
+        php /var/www/html/occ app:disable fulltextsearch
+        php /var/www/html/occ app:disable fulltextsearch_elasticsearch
+        php /var/www/html/occ app:disable files_fulltextsearch
+    else
+        if ! [ -d "/var/www/html/custom_apps/fulltextsearch" ]; then
+            php /var/www/html/occ app:install fulltextsearch
+        elif [ "$(php /var/www/html/occ config:app:get fulltextsearch enabled)" != "yes" ]; then
+            php /var/www/html/occ app:enable fulltextsearch
+        elif [ "$SKIP_UPDATE" != 1 ]; then
+            php /var/www/html/occ app:update fulltextsearch
+        fi    
+        if ! [ -d "/var/www/html/custom_apps/fulltextsearch_elasticsearch" ]; then
+            php /var/www/html/occ app:install fulltextsearch_elasticsearch
+        elif [ "$(php /var/www/html/occ config:app:get fulltextsearch_elasticsearch enabled)" != "yes" ]; then
+            php /var/www/html/occ app:enable fulltextsearch_elasticsearch
+        elif [ "$SKIP_UPDATE" != 1 ]; then
+            php /var/www/html/occ app:update fulltextsearch_elasticsearch
+        fi    
+        if ! [ -d "/var/www/html/custom_apps/files_fulltextsearch" ]; then
+            php /var/www/html/occ app:install files_fulltextsearch
+        elif [ "$(php /var/www/html/occ config:app:get files_fulltextsearch enabled)" != "yes" ]; then
+            php /var/www/html/occ app:enable files_fulltextsearch
+        elif [ "$SKIP_UPDATE" != 1 ]; then
+            php /var/www/html/occ app:update files_fulltextsearch
+        fi
+        php /var/www/html/occ fulltextsearch:configure '{"search_platform":"OCA\\FullTextSearch_Elasticsearch\\Platform\\ElasticSearchPlatform"}'
+        php /var/www/html/occ fulltextsearch_elasticsearch:configure "{\"elastic_host\":\"http://$FULLTEXTSEARCH_USER:$FULLTEXTSEARCH_PASSWORD@$FULLTEXTSEARCH_HOST:$FULLTEXTSEARCH_PORT\",\"elastic_index\":\"$FULLTEXTSEARCH_INDEX\"}"
+        php /var/www/html/occ files_fulltextsearch:configure "{\"files_pdf\":\"1\",\"files_office\":\"1\"}"
 
-    # Do the index
-    if ! [ -f "$NEXTCLOUD_DATA_DIR/fts-index.done" ]; then
-        echo "Waiting 10s before activating FTS..."
-        sleep 10
-        echo "Activating fulltextsearch..."
-        if php /var/www/html/occ fulltextsearch:test && php /var/www/html/occ fulltextsearch:index "{\"errors\": \"reset\"}" --no-readline; then
-            touch "$NEXTCLOUD_DATA_DIR/fts-index.done"
-        else
-            echo "Fulltextsearch failed. Could not index."
-            echo "Feel free to follow https://github.com/nextcloud/all-in-one/discussions/1709 if you want to skip the indexing in the future."
+        # Do the index
+        if ! [ -f "$NEXTCLOUD_DATA_DIR/fts-index.done" ]; then
+            echo "Waiting 10s before activating FTS..."
+            sleep 10
+            echo "Activating fulltextsearch..."
+            if php /var/www/html/occ fulltextsearch:test && php /var/www/html/occ fulltextsearch:index "{\"errors\": \"reset\"}" --no-readline; then
+                touch "$NEXTCLOUD_DATA_DIR/fts-index.done"
+            else
+                echo "Fulltextsearch failed. Could not index."
+                echo "Feel free to follow https://github.com/nextcloud/all-in-one/discussions/1709 if you want to skip the indexing in the future."
+            fi
         fi
     fi
 else

@@ -1,12 +1,12 @@
 # syntax=docker/dockerfile:latest
 # Docker CLI is a requirement
-FROM docker:28.3.2-cli AS docker
+FROM docker:28.3.3-cli AS docker
 
 # Caddy is a requirement
 FROM caddy:2.10.0-alpine AS caddy
 
 # From https://github.com/docker-library/php/blob/master/8.4/alpine3.22/fpm/Dockerfile
-FROM php:8.4.10-fpm-alpine3.22
+FROM php:8.4.11-fpm-alpine3.22
 
 ARG AIO_GIT_URL="https://github.com/nextcloud-releases/all-in-one.git"
 ARG AIO_GIT_BRANCH="main"
@@ -45,7 +45,7 @@ RUN set -ex; \
     apk add --no-cache --virtual .build-deps \
         autoconf \
         build-base; \
-    pecl install APCu-5.1.24; \
+    pecl install APCu-5.1.26; \
     docker-php-ext-enable apcu; \
     rm -r /tmp/pear; \
     runDeps="$( \
