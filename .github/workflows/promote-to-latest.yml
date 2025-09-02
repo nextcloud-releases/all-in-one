@@ -26,6 +26,7 @@ jobs:
           'aio-apache',
           'aio-borgbackup',
           'aio-collabora',
+          'aio-collabora-online',
           'aio-domaincheck',
           'all-in-one',
           'aio-nextcloud',

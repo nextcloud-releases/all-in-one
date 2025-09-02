@@ -15,6 +15,7 @@ jobs:
           'aio-alpine',
           'aio-apache',
           'aio-borgbackup',
+          'aio-collabora-online',
           'aio-collabora',
           'aio-domaincheck',
           'all-in-one',
