@@ -14,10 +14,12 @@ jobs:
       fail-fast: false
       matrix:
         container: [
+          # This whole block needs to stay in sync with the block with arm64 runners further below
           {name: 'aio-alpine', context: './Containers/alpine', file: './Containers/alpine/Dockerfile'},
           {name: 'aio-apache', context: './Containers/apache', file: './Containers/apache/Dockerfile'},
           {name: 'aio-borgbackup', context: './Containers/borgbackup', file: './Containers/borgbackup/Dockerfile'},
           {name: 'aio-collabora', context: './Containers/collabora', file: './Containers/collabora/Dockerfile'},
+          {name: 'aio-collabora-online', context: './Containers/collabora-online', file: './Containers/collabora-online/Dockerfile'},
           {name: 'aio-domaincheck', context: './Containers/domaincheck', file: './Containers/domaincheck/Dockerfile'},
           {name: 'all-in-one', context: '.', file: './Containers/mastercontainer/Dockerfile'},
           {name: 'aio-nextcloud', context: '.', file: './Containers/nextcloud/Dockerfile'},
@@ -60,10 +62,12 @@ jobs:
       fail-fast: false
       matrix:
         container: [
+          # This whole block needs to stay in sync with the block with amd64 runners further up
           {name: 'aio-alpine', context: './Containers/alpine', file: './Containers/alpine/Dockerfile'},
           {name: 'aio-apache', context: './Containers/apache', file: './Containers/apache/Dockerfile'},
           {name: 'aio-borgbackup', context: './Containers/borgbackup', file: './Containers/borgbackup/Dockerfile'},
           {name: 'aio-collabora', context: './Containers/collabora', file: './Containers/collabora/Dockerfile'},
+          {name: 'aio-collabora-online', context: './Containers/collabora-online', file: './Containers/collabora-online/Dockerfile'},
           {name: 'aio-domaincheck', context: './Containers/domaincheck', file: './Containers/domaincheck/Dockerfile'},
           {name: 'all-in-one', context: '.', file: './Containers/mastercontainer/Dockerfile'},
           {name: 'aio-nextcloud', context: '.', file: './Containers/nextcloud/Dockerfile'},
