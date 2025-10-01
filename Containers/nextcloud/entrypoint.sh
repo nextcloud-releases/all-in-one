@@ -241,6 +241,12 @@ if ! [ -f "$NEXTCLOUD_DATA_DIR/skip.update" ]; then
 );
 DATADIR_PERMISSION_CONF
 
+            # Write out postgres root cert
+            if [ -n "$NEXTCLOUD_TRUSTED_CERTIFICATES_POSTGRES" ]; then
+                mkdir /var/www/html/data/certificates
+                echo "$NEXTCLOUD_TRUSTED_CERTIFICATES_POSTGRES" > "/var/www/html/data/certificates/POSTGRES"
+            fi
+
             echo "Installing with $DATABASE_TYPE database"
             # Set a default value for POSTGRES_PORT
             if [ -z "$POSTGRES_PORT" ]; then
@@ -814,6 +820,9 @@ if [ "$CLAMAV_ENABLED" = 'yes' ]; then
         php /var/www/html/occ config:app:set files_antivirus av_stream_max_length --value="$CLAMAV_MAX_SIZE"
         php /var/www/html/occ config:app:set files_antivirus av_max_file_size --value="$CLAMAV_MAX_SIZE"
         php /var/www/html/occ config:app:set files_antivirus av_infected_action --value="only_log"
+        if [ -n "$CLAMAV_BLOCKLISTED_DIRECTORIES" ]; then
+            php /var/www/html/occ config:app:set files_antivirus av_blocklisted_directories --value="$CLAMAV_BLOCKLISTED_DIRECTORIES"
+        fi
     fi
 else
     if [ "$REMOVE_DISABLED_APPS" = yes ] && [ -d "/var/www/html/custom_apps/files_antivirus" ]; then
