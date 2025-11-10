@@ -1,6 +1,7 @@
 # syntax=docker/dockerfile:latest
-# From a file located probably somewhere here: https://github.com/CollaboraOnline/online/blob/master/docker/from-packages/Dockerfile
-FROM collabora/code:25.04.7.1.1
+# From https://gitlab.collabora.com/collabora-online/docker
+# hadolint ignore=DL3007
+FROM registry.gitlab.collabora.com/collabora-online/docker:latest
 
 USER root
 ARG DEBIAN_FRONTEND=noninteractive

@@ -87,6 +87,7 @@ $app->get('/containers', function (Request $request, Response $response, array $
     $params = $request->getQueryParams();
     $bypass_mastercontainer_update = isset($params['bypass_mastercontainer_update']);
     $bypass_container_update = isset($params['bypass_container_update']);
+    $skip_domain_validation = isset($params['skip_domain_validation']);
 
     return $view->render($response, 'containers.twig', [
         'domain' => $configurationManager->GetDomain(),
@@ -116,7 +117,7 @@ $app->get('/containers', function (Request $request, Response $response, array $
         'daily_backup_time' => $configurationManager->GetDailyBackupTime(),
         'is_daily_backup_running' => $configurationManager->isDailyBackupRunning(),
         'timezone' => $configurationManager->GetTimezone(),
-        'skip_domain_validation' => $configurationManager->shouldDomainValidationBeSkipped(),
+        'skip_domain_validation' => $configurationManager->shouldDomainValidationBeSkipped($skip_domain_validation),
         'talk_port' => $configurationManager->GetTalkPort(),
         'collabora_dictionaries' => $configurationManager->GetCollaboraDictionaries(),
         'collabora_additional_options' => $configurationManager->GetAdditionalCollaboraOptions(),
@@ -178,17 +179,17 @@ $app->get('/', function (\Psr\Http\Message\RequestInterface $request, Response $
     $setup = $container->get(\AIO\Data\Setup::class);
     if($setup->CanBeInstalled()) {
         return $response
-            ->withHeader('Location', '/setup')
+            ->withHeader('Location', 'setup')
             ->withStatus(302);
     }
 
     if($authManager->IsAuthenticated()) {
         return $response
-            ->withHeader('Location', '/containers')
+            ->withHeader('Location', 'containers')
             ->withStatus(302);
     } else {
         return $response
-            ->withHeader('Location', '/login')
+            ->withHeader('Location', 'login')
             ->withStatus(302);
     }
 });

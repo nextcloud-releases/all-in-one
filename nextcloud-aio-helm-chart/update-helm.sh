@@ -27,7 +27,7 @@ cp latest.yml latest.yml.backup
 
 # Additional config
 # shellcheck disable=SC1083
-sed -i -E '/^( *- )(NET_RAW|SYS_NICE|MKNOD|SYS_ADMIN|CHOWN|SYS_CHROOT|FOWNER)$/!s/( *- )([A-Z_]+)$/\1\2=${\2}/' latest.yml
+sed -i -E '/^( *- )(NET_RAW|SYS_NICE|MKNOD|SYS_ADMIN|CHOWN|SYS_CHROOT|FOWNER|MAC_OVERRIDE|BLOCK_SUSPEND|AUDIT_READ)$/!s/( *- )([A-Z_]+)$/\1\2=${\2}/' latest.yml
 cp sample.conf /tmp/
 sed -i 's|^|export |' /tmp/sample.conf
 # shellcheck disable=SC1091
@@ -252,7 +252,7 @@ find ./ -name '*talk-service.yaml' -exec grep -v '{{ .Values.TALK.*}}\|protocol:
 # shellcheck disable=SC1083
 find ./ -name '*talk-service.yaml' -exec mv /tmp/talk-service.copy \{} \;
 # shellcheck disable=SC1083
-find ./ -name '*service.yaml' -exec sed -i "/type: LoadBalancer/a\ \ externalTrafficPolicy: Local" \{} \;
+find ./ -name '*apache-service.yaml' -exec sed -i "/type: LoadBalancer/a\ \ externalTrafficPolicy: Local" \{} \;
 # shellcheck disable=SC1083
 find ./ -name '*service.yaml' -exec sed -i "/^spec:/a\ \ ipFamilyPolicy: PreferDualStack" \{} \;
 # shellcheck disable=SC1083
@@ -342,6 +342,21 @@ cat << EOL > /tmp/additional-talk.config
 EOL
 # shellcheck disable=SC1083
 find ./ -name '*talk-deployment.yaml' -exec sed -i "/^.*\- env:/r /tmp/additional-talk.config"  \{} \;
+
+# Additional collabora config
+# shellcheck disable=SC1083
+find ./ -name '*collabora-deployment.yaml' -exec sed -i "s/image: ghcr.io.*/IMAGE_PLACEHOLDER/"  \{} \;
+cat << EOL > /tmp/additional-collabora.config
+          {{- if contains "--o:support_key=" (join " " (.Values.ADDITIONAL_COLLABORA_OPTIONS | default list)) }}
+          image: ghcr.io/nextcloud-releases/aio-collabora-online:$DOCKER_TAG
+          {{- else }}
+          image: ghcr.io/nextcloud-releases/aio-collabora:$DOCKER_TAG
+          {{- end }}
+EOL
+# shellcheck disable=SC1083
+find ./ -name '*collabora-deployment.yaml' -exec sed -i "/IMAGE_PLACEHOLDER/r /tmp/additional-collabora.config"  \{} \;
+# shellcheck disable=SC1083
+find ./ -name '*collabora-deployment.yaml' -exec sed -i "/IMAGE_PLACEHOLDER/d"  \{} \;
 
 cat << EOL > templates/nextcloud-aio-networkpolicy.yaml
 {{- if eq .Values.NETWORK_POLICY_ENABLED "yes" }}

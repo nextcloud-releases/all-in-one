@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:latest
-FROM php:8.3.26-fpm-alpine3.22
+FROM php:8.3.27-fpm-alpine3.22
 
 ENV PHP_MEMORY_LIMIT=512M
 ENV PHP_UPLOAD_LIMIT=16G
@@ -8,7 +8,7 @@ ENV SOURCE_LOCATION=/usr/src/nextcloud
 ENV REDIS_DB_INDEX=0
 
 # AIO settings start # Do not remove or change this line!
-ENV NEXTCLOUD_VERSION=31.0.10
+ENV NEXTCLOUD_VERSION=32.0.1
 ENV AIO_TOKEN=123456
 ENV AIO_URL=localhost
 # AIO settings end # Do not remove or change this line!
@@ -85,7 +85,7 @@ RUN set -ex; \
     pecl install -o igbinary-3.2.16; \
     pecl install APCu-5.1.27; \
     pecl install -D 'enable-memcached-igbinary="yes"' memcached-3.4.0; \
-    pecl install -oD 'enable-redis-igbinary="yes" enable-redis-zstd="yes" enable-redis-lz4="yes"' redis-6.2.0; \
+    pecl install -oD 'enable-redis-igbinary="yes" enable-redis-zstd="yes" enable-redis-lz4="yes"' redis-6.3.0; \
    pecl install -o imagick-3.8.0; \
     \
     docker-php-ext-enable \
@@ -230,7 +230,6 @@ RUN set -ex; \
         sudo \
         grep \
         nodejs \
-        libreoffice \
         bind-tools \
         imagemagick \
         imagemagick-svg \

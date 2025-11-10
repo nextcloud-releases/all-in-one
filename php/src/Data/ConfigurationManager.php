@@ -13,7 +13,7 @@ class ConfigurationManager
     {
         if(file_exists(DataConst::GetConfigFile()))
         {
-            $configContent = file_get_contents(DataConst::GetConfigFile());
+            $configContent = (string)file_get_contents(DataConst::GetConfigFile());
             return json_decode($configContent, true, 512, JSON_THROW_ON_ERROR);
         }
 
@@ -80,10 +80,7 @@ class ConfigurationManager
             return '';
         }
 
-        $content = file_get_contents(DataConst::GetBackupArchivesList());
-        if ($content === '') {
-            return '';
-        }
+        $content = (string)file_get_contents(DataConst::GetBackupArchivesList());
 
         $lastBackupLines = explode("\n", $content);
         $lastBackupLine = "";
@@ -108,10 +105,7 @@ class ConfigurationManager
             return [];
         }
 
-        $content = file_get_contents(DataConst::GetBackupArchivesList());
-        if ($content === '') {
-            return [];
-        }
+        $content = (string)file_get_contents(DataConst::GetBackupArchivesList());
 
         $backupLines = explode("\n", $content);
         $backupTimes = [];
@@ -294,7 +288,7 @@ class ConfigurationManager
     /**
      * @throws InvalidSettingConfigurationException
      */
-    public function SetDomain(string $domain) : void {
+    public function SetDomain(string $domain, bool $skipDomainValidation) : void {
         // Validate that at least one dot is contained
         if (!str_contains($domain, '.')) {
             throw new InvalidSettingConfigurationException("Domain must contain at least one dot!");
@@ -321,7 +315,7 @@ class ConfigurationManager
         }
 
         // Skip domain validation if opted in to do so
-        if (!$this->shouldDomainValidationBeSkipped()) {
+        if (!$this->shouldDomainValidationBeSkipped($skipDomainValidation)) {
 
             $dnsRecordIP = gethostbyname($domain);
             if ($dnsRecordIP === $domain) {
@@ -636,7 +630,7 @@ class ConfigurationManager
             return "";
         }
 
-        return trim(file_get_contents(DataConst::GetBackupPublicKey()));
+        return trim((string)file_get_contents(DataConst::GetBackupPublicKey()));
     }
 
     public function GetBorgRestorePassword() : string {
@@ -795,7 +789,7 @@ class ConfigurationManager
         if (!file_exists(DataConst::GetDailyBackupTimeFile())) {
             return '';
         }
-        $dailyBackupFile = file_get_contents(DataConst::GetDailyBackupTimeFile());
+        $dailyBackupFile = (string)file_get_contents(DataConst::GetDailyBackupTimeFile());
         $dailyBackupFileArray = explode("\n", $dailyBackupFile);
         return $dailyBackupFileArray[0];
     }
@@ -804,7 +798,7 @@ class ConfigurationManager
         if (!file_exists(DataConst::GetDailyBackupTimeFile())) {
             return false;
         }
-        $dailyBackupFile = file_get_contents(DataConst::GetDailyBackupTimeFile());
+        $dailyBackupFile = (string)file_get_contents(DataConst::GetDailyBackupTimeFile());
         $dailyBackupFileArray = explode("\n", $dailyBackupFile);
         if (isset($dailyBackupFileArray[1]) && $dailyBackupFileArray[1] === 'automaticUpdatesAreNotEnabled') {
             return false;
@@ -855,8 +849,7 @@ class ConfigurationManager
         if (!file_exists(DataConst::GetAdditionalBackupDirectoriesFile())) {
             return '';
         }
-        $additionalBackupDirectories = file_get_contents(DataConst::GetAdditionalBackupDirectoriesFile());
-        return $additionalBackupDirectories;
+        return (string)file_get_contents(DataConst::GetAdditionalBackupDirectoriesFile());
     }
 
     public function GetAdditionalBackupDirectoriesArray() : array {
@@ -905,8 +898,9 @@ class ConfigurationManager
         $this->WriteConfig($config);
     }
 
-    public function shouldDomainValidationBeSkipped() : bool {
-        if (getenv('SKIP_DOMAIN_VALIDATION') === 'true') {
+    public function shouldDomainValidationBeSkipped(bool $skipDomainValidation) : bool {
+        if ($skipDomainValidation || getenv('SKIP_DOMAIN_VALIDATION') === 'true') {
+            error_log('Skipping domain validation');
             return true;
         }
         return false;
@@ -978,6 +972,13 @@ class ConfigurationManager
         return $config['collabora_additional_options'];
     }
 
+    public function isCollaboraSubscriptionEnabled() : bool {
+        if (str_contains($this->GetAdditionalCollaboraOptions(), '--o:support_key=')) {
+            return true;
+        }
+        return false;
+    }
+
     public function DeleteAdditionalCollaboraOptions() : void {
         $config = $this->GetConfig();
         $config['collabora_additional_options'] = '';
@@ -1040,7 +1041,7 @@ class ConfigurationManager
                     apcu_add($filePath, $fileContents);
                 }
             } 
-            $json = is_string($fileContents) ? json_decode($fileContents, true) : false;
+            $json = is_string($fileContents) ? json_decode($fileContents, true, 512, JSON_THROW_ON_ERROR) : false;
             if(is_array($json) && is_array($json['aio_services_v1'])) {
                 foreach ($json['aio_services_v1'] as $service) {
                     $documentation = is_string($service['documentation']) ? $service['documentation'] : '';
