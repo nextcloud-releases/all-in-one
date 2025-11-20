@@ -26,7 +26,13 @@ readonly class DockerActionManager {
     }
 
     private function BuildApiUrl(string $url): string {
-        return sprintf('http://127.0.0.1/%s/%s', self::API_VERSION, $url);
+        $apiVersion = getenv('DOCKER_API_VERSION');
+        if ($apiVersion === false || empty($apiVersion)) {
+            $apiVersion = self::API_VERSION;
+        } else {
+            $apiVersion = 'v'. $apiVersion;
+        }
+        return sprintf('http://127.0.0.1/%s/%s', $apiVersion, $url);
     }
 
     private function BuildImageName(Container $container): string {
@@ -225,6 +231,7 @@ readonly class DockerActionManager {
         $aioVariables = $container->GetAioVariables()->GetVariables();
         foreach ($aioVariables as $variable) {
             $config = $this->configurationManager->GetConfig();
+            $variable = $this->replaceEnvPlaceholders($variable);
             $variableArray = explode('=', $variable);
             $config[$variableArray[0]] = $variableArray[1];
             $this->configurationManager->WriteConfig($config);
@@ -283,8 +290,8 @@ readonly class DockerActionManager {
                     }
                 } else if ($port === '%TALK_PORT%') {
                     $port = $this->configurationManager->GetTalkPort();
-                    // Skip publishing talk port if it is set to the same value like the apache port
-                    if ($port === $this->configurationManager->GetApachePort()) {
+                    // Skip publishing talk port if it is set to 443
+                    if ($port === '443') {
                         continue;
                     }
                 }
