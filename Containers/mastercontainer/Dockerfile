@@ -1,7 +1,6 @@
 # syntax=docker/dockerfile:latest
 # Docker CLI is a requirement
-# Needs to stay on v28 for now until Synology upgrades their docker version to at least v25
-FROM docker:28.5.2-cli AS docker
+FROM docker:29.0.2-cli AS docker
 
 # Caddy is a requirement
 FROM caddy:2.10.2-alpine AS caddy
@@ -75,8 +74,8 @@ RUN set -ex; \
     rm -r ./php/tests; \
     chown www-data:www-data -R /var/www/docker-aio; \
     cd php; \
-    sudo -u www-data composer install --no-dev; \
-    sudo -u www-data composer clear-cache; \
+    sudo -E -u www-data composer install --no-dev; \
+    sudo -E -u www-data composer clear-cache; \
     cd ..; \
     rm -f /usr/local/bin/composer; \
     chmod -R 770 /var/www/docker-aio; \
