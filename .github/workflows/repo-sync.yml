@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     name: Sync latest commits from upstream repo
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
     - name: Sync files
       run: |
         mkdir -p ../tmp
