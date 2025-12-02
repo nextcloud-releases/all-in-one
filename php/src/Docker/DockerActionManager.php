@@ -155,11 +155,11 @@ readonly class DockerActionManager {
         $response = "";
         $separator = "\r\n";
         $line = strtok($responseBody, $separator);
-        $response = substr($line, 8) . $separator;
+        $response = substr((string)$line, 8) . $separator;
 
         while ($line !== false) {
             $line = strtok($separator);
-            $response .= substr($line, 8) . $separator;
+            $response .= substr((string)$line, 8) . $separator;
         }
 
         return $response;
@@ -433,7 +433,8 @@ readonly class DockerActionManager {
 
         // All AIO-managed containers should not be updated externally via watchtower but gracefully by AIO's backup and update feature.
         // Also DIUN should not send update notifications. See https://crazymax.dev/diun/providers/docker/#docker-labels 
-        $requestBody['Labels'] = ["com.centurylinklabs.watchtower.enable" => "false", "diun.enable" => "false", "org.label-schema.vendor" => "Nextcloud"];
+        // Additionally set a default org.label-schema.vendor and com.docker.compose.project
+        $requestBody['Labels'] = ["com.centurylinklabs.watchtower.enable" => "false", "diun.enable" => "false", "org.label-schema.vendor" => "Nextcloud", "com.docker.compose.project" => "nextcloud-aio"];
 
         // Containers should have a fixed host name. See https://github.com/nextcloud/all-in-one/discussions/6589
         $requestBody['Hostname'] = $container->GetIdentifier();
@@ -550,6 +551,7 @@ readonly class DockerActionManager {
             'SELECTED_RESTORE_TIME' => $this->configurationManager->GetSelectedRestoreTime(),
             'RESTORE_EXCLUDE_PREVIEWS' => $this->configurationManager->GetRestoreExcludePreviews(),
             'APACHE_PORT' => $this->configurationManager->GetApachePort(),
+            'APACHE_IP_BINDING' => $this->configurationManager->GetApacheIPBinding(),
             'TALK_PORT' => $this->configurationManager->GetTalkPort(),
             'TURN_DOMAIN' => $this->configurationManager->GetTurnDomain(),
             'NEXTCLOUD_MOUNT' => $this->configurationManager->GetNextcloudMount(),

@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:latest
 # Docker CLI is a requirement
-FROM docker:29.0.2-cli AS docker
+FROM docker:29.1.1-cli AS docker
 
 # Caddy is a requirement
 FROM caddy:2.10.2-alpine AS caddy
@@ -125,7 +125,9 @@ RUN set -ex; \
     mkdir /var/log/supervisord; \
     mkdir /var/run/supervisord;
 
-LABEL org.label-schema.vendor="Nextcloud"
+# hadolint ignore=DL3048
+LABEL org.label-schema.vendor="Nextcloud" \
+    com.docker.compose.project="nextcloud-aio"
 
 # hadolint ignore=DL3002
 USER root
