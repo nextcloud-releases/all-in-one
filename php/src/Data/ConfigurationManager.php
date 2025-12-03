@@ -426,6 +426,12 @@ class ConfigurationManager
         return $config['backup-mode'];
     }
 
+    public function SetBackupMode(string $mode) : void {
+        $config = $this->GetConfig();
+        $config['backup-mode'] = $mode;
+        $this->WriteConfig($config);
+    }
+
     public function GetSelectedRestoreTime() : string {
         $config = $this->GetConfig();
         if(!isset($config['selected-restore-time'])) {
@@ -506,11 +512,19 @@ class ConfigurationManager
         }
     }
 
-    public function DeleteBorgBackupLocationVars() : void {
+    public function DeleteBorgBackupLocationItems() : void {
+        // Delete the variables
         $config = $this->GetConfig();
         $config['borg_backup_host_location'] = '';
         $config['borg_remote_repo'] = '';
         $this->WriteConfig($config);
+
+        // Also delete the borg config file to be able to start over
+        if (file_exists(DataConst::GetBackupKeyFile())) {
+            if (unlink(DataConst::GetBackupKeyFile())) {
+                error_log('borg.config file deleted to be able to start over.');
+            }
+        }
     }
 
     /**
@@ -665,15 +679,6 @@ class ConfigurationManager
             return true;
         }
         return false;
-    }
-
-    public function GetBorgBackupMode() : string {
-        $config = $this->GetConfig();
-        if(!isset($config['backup-mode'])) {
-            $config['backup-mode'] = '';
-        }
-
-        return $config['backup-mode'];
     }
 
     public function GetNextcloudMount() : string {
