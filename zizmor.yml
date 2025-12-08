@@ -1,6 +1,3 @@
 rules:
   excessive-permissions:
     disable: true
-  dangerous-triggers:
-    ignore:
-      - build_images.yml
