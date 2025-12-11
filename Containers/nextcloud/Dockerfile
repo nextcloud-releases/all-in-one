@@ -8,7 +8,7 @@ ENV SOURCE_LOCATION=/usr/src/nextcloud
 ENV REDIS_DB_INDEX=0
 
 # AIO settings start # Do not remove or change this line!
-ENV NEXTCLOUD_VERSION=32.0.2
+ENV NEXTCLOUD_VERSION=32.0.3
 ENV AIO_TOKEN=123456
 ENV AIO_URL=localhost
 # AIO settings end # Do not remove or change this line!
@@ -83,7 +83,7 @@ RUN set -ex; \
     \
 # pecl will claim success even if one install fails, so we need to perform each install separately
     pecl install -o igbinary-3.2.16; \
-    pecl install APCu-5.1.27; \
+    pecl install APCu-5.1.28; \
     pecl install -D 'enable-memcached-igbinary="yes"' memcached-3.4.0; \
     pecl install -oD 'enable-redis-igbinary="yes" enable-redis-zstd="yes" enable-redis-lz4="yes"' redis-6.3.0; \
    pecl install -o imagick-3.8.1; \
@@ -138,7 +138,7 @@ RUN set -ex; \
     \
     { \
         echo 'session.save_handler = redis'; \
-        echo 'session.save_path = "tcp://${REDIS_HOST}:6379?database=${REDIS_DB_INDEX}${REDIS_USER_AUTH}&auth[]=${REDIS_HOST_PASSWORD}"'; \
+        echo 'session.save_path = "tcp://${REDIS_HOST}:${REDIS_PORT}?database=${REDIS_DB_INDEX}${REDIS_USER_AUTH}&auth[]=${REDIS_HOST_PASSWORD}"'; \
         echo 'redis.session.locking_enabled = 1'; \
         echo 'redis.session.lock_retries = -1'; \
         echo 'redis.session.lock_wait_time = 10000'; \
@@ -251,6 +251,7 @@ RUN set -ex; \
     chmod 777 -R /usr/local/etc/php/conf.d && \
     chmod 777 -R /usr/local/etc/php-fpm.d && \
     chmod -R 777 /tmp; \
+    chmod -R 777 /etc/openldap; \
     \
     mkdir -p /nc-updater; \
     chmod -R 777 /nc-updater
