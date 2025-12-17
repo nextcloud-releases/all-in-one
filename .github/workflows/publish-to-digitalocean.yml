@@ -20,6 +20,7 @@ jobs:
       run: |
         cd ./.build/digitalocean
         chmod +x -R ./files/var/lib/cloud/scripts
+        packer plugins install github.com/digitalocean/digitalocean
         export DIGITALOCEAN_TOKEN=${{ secrets.DIGITALOCEAN_TOKEN }}
         packer validate marketplace-image.json
         packer build marketplace-image.json
