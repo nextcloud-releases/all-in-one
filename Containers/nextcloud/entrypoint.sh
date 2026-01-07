@@ -20,13 +20,6 @@ run_upgrade_if_needed_due_to_app_update() {
     fi
 }
 
-set_global_ca_bundle_path() {
-    # Only run if env is set
-    if env | grep -q NEXTCLOUD_TRUSTED_CERTIFICATES_; then
-        php /var/www/html/occ config:system:set default_certificates_bundle_path --value="$CERTIFICATE_BUNDLE"
-    fi
-}
-
 # Create cert bundle
 if env | grep -q NEXTCLOUD_TRUSTED_CERTIFICATES_; then
 
@@ -246,8 +239,6 @@ if ! [ -f "$NEXTCLOUD_DATA_DIR/skip.update" ]; then
 
             run_upgrade_if_needed_due_to_app_update
 
-            set_global_ca_bundle_path
-
             php /var/www/html/occ maintenance:mode --off
 
             echo "Getting and backing up the status of apps for later; this might take a while..."
@@ -380,8 +371,6 @@ EOF
 
             # Try to force generation of appdata dir:
             php /var/www/html/occ maintenance:repair
-
-            set_global_ca_bundle_path
 
             if [ -z "$OBJECTSTORE_S3_BUCKET" ] && [ -z "$OBJECTSTORE_SWIFT_URL" ]; then
                 max_retries=10
@@ -598,8 +587,6 @@ else
 fi
 
 run_upgrade_if_needed_due_to_app_update
-
-set_global_ca_bundle_path
 
 if [ -z "$OBJECTSTORE_S3_BUCKET" ] && [ -z "$OBJECTSTORE_SWIFT_URL" ]; then
     # Check if appdata is present
@@ -844,6 +831,7 @@ if [ "$ONLYOFFICE_ENABLED" = 'yes' ]; then
         fi
 
         # Set OnlyOffice configuration
+        php /var/www/html/occ config:system:set onlyoffice editors_check_interval --value="0" --type=integer 
         php /var/www/html/occ config:system:set onlyoffice jwt_secret --value="$ONLYOFFICE_SECRET"
         php /var/www/html/occ config:app:set onlyoffice jwt_secret --value="$ONLYOFFICE_SECRET"
         php /var/www/html/occ config:system:set onlyoffice jwt_header --value="AuthorizationJwt"
@@ -985,6 +973,9 @@ if [ "$FULLTEXTSEARCH_ENABLED" = 'yes' ]; then
         php /var/www/html/occ app:disable fulltextsearch_elasticsearch
         php /var/www/html/occ app:disable files_fulltextsearch
     else
+        if [ -z "$FULLTEXTSEARCH_PROTOCOL" ]; then
+            FULLTEXTSEARCH_PROTOCOL="http"
+        fi
         if ! [ -d "/var/www/html/custom_apps/fulltextsearch" ]; then
             php /var/www/html/occ app:install fulltextsearch
         elif [ "$(php /var/www/html/occ config:app:get fulltextsearch enabled)" != "yes" ]; then
@@ -1007,7 +998,7 @@ if [ "$FULLTEXTSEARCH_ENABLED" = 'yes' ]; then
             php /var/www/html/occ app:update files_fulltextsearch
         fi
         php /var/www/html/occ fulltextsearch:configure '{"search_platform":"OCA\\FullTextSearch_Elasticsearch\\Platform\\ElasticSearchPlatform"}'
-        php /var/www/html/occ fulltextsearch_elasticsearch:configure "{\"elastic_host\":\"http://$FULLTEXTSEARCH_USER:$FULLTEXTSEARCH_PASSWORD@$FULLTEXTSEARCH_HOST:$FULLTEXTSEARCH_PORT\",\"elastic_index\":\"$FULLTEXTSEARCH_INDEX\"}"
+        php /var/www/html/occ fulltextsearch_elasticsearch:configure "{\"elastic_host\":\"$FULLTEXTSEARCH_PROTOCOL://$FULLTEXTSEARCH_USER:$FULLTEXTSEARCH_PASSWORD@$FULLTEXTSEARCH_HOST:$FULLTEXTSEARCH_PORT\",\"elastic_index\":\"$FULLTEXTSEARCH_INDEX\"}"
         php /var/www/html/occ files_fulltextsearch:configure "{\"files_pdf\":true,\"files_office\":true}"
 
         # Do the index

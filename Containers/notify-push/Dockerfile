@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:latest
-FROM alpine:3.22.2
+FROM alpine:3.23.2
 
 COPY --chmod=775 start.sh /start.sh
 COPY --chmod=775 healthcheck.sh /healthcheck.sh
@@ -11,6 +11,7 @@ RUN set -ex; \
         netcat-openbsd \
         tzdata \
         bash \
+        jq \
         openssl; \
 # Give root a random password
     echo "root:$(openssl rand -base64 12)" | chpasswd; \

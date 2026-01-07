@@ -237,6 +237,7 @@
         "PHP_MEMORY_LIMIT=%NEXTCLOUD_MEMORY_LIMIT%",
         "FULLTEXTSEARCH_ENABLED=%FULLTEXTSEARCH_ENABLED%",
         "FULLTEXTSEARCH_HOST=nextcloud-aio-fulltextsearch",
+        "FULLTEXTSEARCH_PROTOCOL=http",
         "FULLTEXTSEARCH_PORT=9200",
         "FULLTEXTSEARCH_USER=elastic",
         "FULLTEXTSEARCH_INDEX=nextcloud-aio",
@@ -722,10 +723,6 @@
         "ONLYOFFICE_SECRET"
       ],
       "restart": "unless-stopped",
-      "nextcloud_exec_commands": [
-        "echo 'Activating OnlyOffice config...'",
-        "php /var/www/html/occ onlyoffice:documentserver --check"
-      ],
       "profiles": [
         "onlyoffice"
       ],
