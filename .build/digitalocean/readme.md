@@ -2,4 +2,4 @@ The Digital Ocean build was created following https://marketplace.digitalocean.c
 
 You can go here: https://github.com/nextcloud-releases/all-in-one/actions/workflows/publish-to-digitalocean.yml to create a new image.
 
-Then open the DO [web interface](https://cloud.digitalocean.com/images/snapshots) and update the Marketplace 1-click app with the just created snapshot.
+Then open the DO [web interface](https://cloud.digitalocean.com/images/snapshots) and click on `More` next to the new snapshot and update the Marketplace 1-click app with the just created snapshot.
