@@ -1,7 +1,7 @@
 {
   "variables": {
     "do_token": "{{env `DIGITALOCEAN_TOKEN`}}",
-    "image_name": "nextcloud-22-04-snapshot-{{timestamp}}",
+    "image_name": "nextcloud-24-04-snapshot-{{timestamp}}",
     "apt_packages": "software-properties-common ufw",
     "application_name": "Nextcloud",
     "application_version": "1.0.1"
@@ -11,7 +11,7 @@
     {
       "type": "digitalocean",
       "api_token": "{{user `do_token`}}",
-      "image": "ubuntu-22-04-x64",
+      "image": "ubuntu-24-04-x64",
       "region": "nyc3",
       "size": "s-1vcpu-1gb",
       "ssh_username": "root",
