@@ -10,3 +10,5 @@ updates:
   labels:
   - 3. to review
   - dependencies
+  cooldown:
+    default-days: 7
