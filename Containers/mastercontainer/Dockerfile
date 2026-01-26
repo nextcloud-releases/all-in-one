@@ -1,12 +1,12 @@
 # syntax=docker/dockerfile:latest
 # Docker CLI is a requirement
-FROM docker:29.1.4-cli AS docker
+FROM docker:29.1.5-cli AS docker
 
 # Caddy is a requirement
 FROM caddy:2.10.2-alpine AS caddy
 
 # From https://github.com/docker-library/php/blob/master/8.4/alpine3.23/fpm/Dockerfile
-FROM php:8.4.16-fpm-alpine3.23
+FROM php:8.4.17-fpm-alpine3.23
 
 EXPOSE 80
 EXPOSE 8080
@@ -127,6 +127,7 @@ RUN set -ex; \
 
 # hadolint ignore=DL3048
 LABEL org.label-schema.vendor="Nextcloud" \
+    wud.watch="false" \
     com.docker.compose.project="nextcloud-aio"
 
 # hadolint ignore=DL3002

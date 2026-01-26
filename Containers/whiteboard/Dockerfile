@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:latest
 # Probably from this file: https://github.com/nextcloud/whiteboard/blob/main/Dockerfile
-FROM ghcr.io/nextcloud-releases/whiteboard:v1.5.1
+FROM ghcr.io/nextcloud-releases/whiteboard:v1.5.3
 
 USER root
 RUN set -ex; \
@@ -23,4 +23,5 @@ WORKDIR /tmp
 ENTRYPOINT ["/start.sh"]
 
 LABEL com.centurylinklabs.watchtower.enable="false" \
+    wud.watch="false" \
     org.label-schema.vendor="Nextcloud"
