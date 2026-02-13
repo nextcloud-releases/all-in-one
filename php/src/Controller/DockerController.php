@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace AIO\Controller;
 
@@ -178,7 +179,7 @@ readonly class DockerController {
         }
 
         if (isset($request->getParsedBody()['install_latest_major'])) {
-            $installLatestMajor = '32';
+            $installLatestMajor = '33';
         } else {
             $installLatestMajor = '';
         }
