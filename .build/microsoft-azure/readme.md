@@ -3,7 +3,7 @@
 This appliance was created following https://github.com/Azure/azvmimagebuilder/tree/main/quickquickstarts/0_Creating_a_Custom_Linux_Managed_Image
 
 ### How to run this?
-Simply clone this repo, go into this folder, run `curl -L https://aka.ms/InstallAzureCli | bash` to install az cli and run `sudo chmod +x build-vm.sh && ./build-vm.sh` (it should not take longer than 15min to build a new version)
+Simply clone this repo, go into this folder, run `curl -L https://aka.ms/InstallAzureCli | bash` to install az cli; alternatively follow https://documentation.ubuntu.com/azure/azure-how-to/instances/install-azure-cli/. Then run `sudo chmod +x build-vm.sh && ./build-vm.sh` (it should not take longer than 15min to build a new version)
 
 ### Ho to publish?
 
