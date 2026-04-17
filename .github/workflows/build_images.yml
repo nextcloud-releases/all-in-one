@@ -22,9 +22,9 @@ jobs:
           {name: 'aio-collabora-online', context: './Containers/collabora-online', file: './Containers/collabora-online/Dockerfile'},
           {name: 'aio-domaincheck', context: './Containers/domaincheck', file: './Containers/domaincheck/Dockerfile'},
           {name: 'all-in-one', context: '.', file: './Containers/mastercontainer/Dockerfile'},
-          {name: 'aio-nextcloud', context: '.', file: './Containers/nextcloud/Dockerfile'},
+          {name: 'aio-nextcloud', context: '.', file: './Containers/nextcloud/Dockerfile', buildContexts: 'aio-container-tools=./aio-container-tools'},
           {name: 'aio-notify-push', context: './Containers/notify-push', file: './Containers/notify-push/Dockerfile'},
-          {name: 'aio-postgresql', context: './Containers/postgresql', file: './Containers/postgresql/Dockerfile'},
+          {name: 'aio-postgresql', context: './Containers/postgresql', file: './Containers/postgresql/Dockerfile', buildContexts: 'aio-container-tools=./aio-container-tools'},
           {name: 'aio-redis', context: './Containers/redis', file: './Containers/redis/Dockerfile'},
           {name: 'aio-talk', context: './Containers/talk', file: './Containers/talk/Dockerfile'},
           {name: 'aio-watchtower', context: './Containers/watchtower', file: './Containers/watchtower/Dockerfile'},
@@ -51,6 +51,7 @@ jobs:
         with:
           context: ${{ matrix.container.context }}
           file: ${{ matrix.container.file }}
+          build-contexts: ${{ matrix.container.buildContexts || '' }}
           platforms: linux/amd64
           no-cache: true
           push: true
@@ -70,9 +71,9 @@ jobs:
           {name: 'aio-collabora-online', context: './Containers/collabora-online', file: './Containers/collabora-online/Dockerfile'},
           {name: 'aio-domaincheck', context: './Containers/domaincheck', file: './Containers/domaincheck/Dockerfile'},
           {name: 'all-in-one', context: '.', file: './Containers/mastercontainer/Dockerfile'},
-          {name: 'aio-nextcloud', context: '.', file: './Containers/nextcloud/Dockerfile'},
+          {name: 'aio-nextcloud', context: '.', file: './Containers/nextcloud/Dockerfile', buildContexts: 'aio-container-tools=./aio-container-tools'},
           {name: 'aio-notify-push', context: './Containers/notify-push', file: './Containers/notify-push/Dockerfile'},
-          {name: 'aio-postgresql', context: './Containers/postgresql', file: './Containers/postgresql/Dockerfile'},
+          {name: 'aio-postgresql', context: './Containers/postgresql', file: './Containers/postgresql/Dockerfile', buildContexts: 'aio-container-tools=./aio-container-tools'},
           {name: 'aio-redis', context: './Containers/redis', file: './Containers/redis/Dockerfile'},
           {name: 'aio-talk', context: './Containers/talk', file: './Containers/talk/Dockerfile'},
           {name: 'aio-watchtower', context: './Containers/watchtower', file: './Containers/watchtower/Dockerfile'},
@@ -99,6 +100,7 @@ jobs:
         with:
           context: ${{ matrix.container.context }}
           file: ${{ matrix.container.file }}
+          build-contexts: ${{ matrix.container.buildContexts || '' }}
           platforms: linux/arm64
           no-cache: true
           push: true
