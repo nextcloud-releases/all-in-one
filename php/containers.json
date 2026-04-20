@@ -267,6 +267,7 @@
       ],
       "stop_grace_period": 600,
       "restart": "unless-stopped",
+      "shm_size": 134217728,
       "devices": [
         "/dev/dri"
       ],
@@ -813,6 +814,9 @@
         "http.port=9200",
         "xpack.license.self_generated.type=basic",
         "xpack.security.enabled=false",
+        "indices.fielddata.cache.size=20%",
+        "indices.memory.index_buffer_size=20%",
+        "thread_pool.write.queue_size=1000",
         "FULLTEXTSEARCH_PASSWORD=%FULLTEXTSEARCH_PASSWORD%"
       ],
       "volumes": [

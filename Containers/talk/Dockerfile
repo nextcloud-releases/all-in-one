@@ -4,7 +4,7 @@ FROM eturnal/eturnal:1.12.2-alpine AS eturnal
 FROM strukturag/nextcloud-spreed-signaling:2.1.1 AS signaling
 FROM alpine:3.23.4 AS janus
 
-ARG JANUS_VERSION=v1.4.0
+ARG JANUS_VERSION=v1.4.1
 WORKDIR /src
 RUN set -ex; \
     apk upgrade --no-cache -a; \
@@ -82,7 +82,9 @@ RUN set -ex; \
     touch \
         /etc/nats.conf \
         /etc/eturnal.yml; \
-    echo "listen: 127.0.0.1:4222" | tee /etc/nats.conf; \
+# write_deadline: "10s" — without a write deadline, a lagging subscriber can stall the broker indefinitely, blocking all other signaling messages.
+# max_payload: 8MB — the default is 1 MB; signaling payloads in large meetings (many participants, ICE candidates) can exceed this, causing dropped messages.
+    printf 'listen: 127.0.0.1:4222\nwrite_deadline: "10s"\nmax_payload: 8MB\n' | tee /etc/nats.conf; \
     mkdir -p \
         /var/tmp \
         /conf \

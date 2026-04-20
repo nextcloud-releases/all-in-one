@@ -114,18 +114,18 @@ RUN set -ex; \
 # set recommended PHP.ini settings
 # see https://docs.nextcloud.com/server/stable/admin_manual/installation/server_tuning.html#enable-php-opcache and below
     { \
-        echo 'opcache.max_accelerated_files=10000'; \
+        echo 'opcache.max_accelerated_files=20000'; \
         echo 'opcache.memory_consumption=256'; \
         echo 'opcache.interned_strings_buffer=64'; \
         echo 'opcache.save_comments=1'; \
         echo 'opcache.revalidate_freq=60'; \
         echo 'opcache.jit=1255'; \
-        echo 'opcache.jit_buffer_size=8M'; \
+        echo 'opcache.jit_buffer_size=128M'; \
     } > /usr/local/etc/php/conf.d/opcache-recommended.ini; \
     \
     { \
         echo 'apc.enable_cli=1'; \
-        echo 'apc.shm_size=64M'; \
+        echo 'apc.shm_size=128M'; \
     } >> /usr/local/etc/php/conf.d/docker-php-ext-apcu.ini; \
     \
     { \
@@ -135,6 +135,9 @@ RUN set -ex; \
         echo 'max_execution_time=${PHP_MAX_TIME}'; \
         echo 'max_input_time=-1'; \
         echo 'default_socket_timeout=${PHP_MAX_TIME}'; \
+        echo 'output_buffering=0'; \
+        echo 'realpath_cache_size=8M'; \
+        echo 'realpath_cache_ttl=600'; \
     } > /usr/local/etc/php/conf.d/nextcloud.ini; \
     \
     { \
@@ -142,7 +145,10 @@ RUN set -ex; \
         echo 'session.save_path = "tcp://${REDIS_HOST}:${REDIS_PORT}?database=${REDIS_DB_INDEX}${REDIS_USER_AUTH}&auth[]=${REDIS_HOST_PASSWORD}"'; \
         echo 'redis.session.locking_enabled = 1'; \
         echo 'redis.session.lock_retries = -1'; \
-        echo 'redis.session.lock_wait_time = 10000'; \
+        echo '; 100ms in microseconds - prevents timeout on long requests such as large file uploads'; \
+        echo 'redis.session.lock_wait_time = 100000'; \
+        echo '; prevents stale locks from crashed workers (seconds)'; \
+        echo 'redis.session.lock_expire = 60'; \
         echo 'session.gc_maxlifetime = 86400'; \
     } > /usr/local/etc/php/conf.d/redis-session.ini; \
     \
@@ -238,12 +244,27 @@ RUN set -ex; \
         imagemagick-tiff \
         coreutils; \
     \
-    grep -q '^pm = dynamic' /usr/local/etc/php-fpm.d/www.conf; \
-    sed -i 's/^pm = dynamic/pm = ondemand/' /usr/local/etc/php-fpm.d/www.conf; \
-# Sync this with max db connections and MaxRequestWorkers
-# We don't actually expect so many children but don't want to limit it artificially because people will report issues otherwise.
-# Also children will usually be terminated again after the process is done due to the ondemand setting
+# Use dynamic pm mode: spare workers stay alive between requests so every request is served immediately
+# without waiting for a new process to spawn (unlike ondemand which forks on every request when idle).
+# pm.max_children: upper bound on worker processes; synced with max DB connections and MaxRequestWorkers.
+# Set high so users never hit an artificial limit under peak load — spare-server bounds keep idle memory usage low.
     sed -i 's/^pm.max_children =.*/pm.max_children = 5000/' /usr/local/etc/php-fpm.d/www.conf; \
+# pm.start_servers: number of workers pre-forked at container startup.
+# Having 2 workers ready immediately means the first requests after boot are served without any spawn delay.
+    sed -i '/^;pm.start_servers/s/^;//' /usr/local/etc/php-fpm.d/www.conf; \
+    sed -i 's/^pm.start_servers =.*/pm.start_servers = 2/' /usr/local/etc/php-fpm.d/www.conf; \
+# pm.min_spare_servers: floor of idle workers kept alive at all times.
+# Guarantees at least 1 ready worker so a sudden burst of requests is handled without any fork wait.
+    sed -i '/^;pm.min_spare_servers/s/^;//' /usr/local/etc/php-fpm.d/www.conf; \
+    sed -i 's/^pm.min_spare_servers =.*/pm.min_spare_servers = 1/' /usr/local/etc/php-fpm.d/www.conf; \
+# pm.max_spare_servers: ceiling of idle workers kept alive during quiet periods.
+# Capping at 3 limits idle memory consumption while still keeping a small ready pool.
+    sed -i '/^;pm.max_spare_servers/s/^;//' /usr/local/etc/php-fpm.d/www.conf; \
+    sed -i 's/^pm.max_spare_servers =.*/pm.max_spare_servers = 3/' /usr/local/etc/php-fpm.d/www.conf; \
+# pm.max_requests: recycle each worker after handling 500 requests.
+# PHP extensions and apps can leak memory over time; recycling prevents those leaks from accumulating indefinitely.
+    sed -i '/^;pm.max_requests/s/^;//' /usr/local/etc/php-fpm.d/www.conf; \
+    sed -i 's/^pm.max_requests =.*/pm.max_requests = 500/' /usr/local/etc/php-fpm.d/www.conf; \
     sed -i 's|access.log = /proc/self/fd/2|access.log = /proc/self/fd/1|' /usr/local/etc/php-fpm.d/docker.conf; \
     \
     echo "[ -n \"\$TERM\" ] && [ -f /root.motd ] && cat /root.motd" >> /root/.bashrc; \
