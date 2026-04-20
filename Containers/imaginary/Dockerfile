@@ -14,7 +14,7 @@ RUN set -ex; \
         build-base; \
     go install github.com/h2non/imaginary@"$IMAGINARY_HASH";
 
-FROM alpine:3.23.3
+FROM alpine:3.23.4
 RUN set -ex; \
     apk upgrade --no-cache -a; \
     apk add --no-cache \
@@ -44,4 +44,9 @@ ENTRYPOINT ["/start.sh"]
 HEALTHCHECK CMD /healthcheck.sh
 LABEL com.centurylinklabs.watchtower.enable="false" \
     wud.watch="false" \
-    org.label-schema.vendor="Nextcloud"
+    org.opencontainers.image.title="Imaginary for Nextcloud AIO" \
+    org.opencontainers.image.description="High-performance image processing service for Nextcloud All-in-One" \
+    org.opencontainers.image.url="https://github.com/nextcloud/all-in-one" \
+    org.opencontainers.image.source="https://github.com/nextcloud/all-in-one" \
+    org.opencontainers.image.vendor="Nextcloud" \
+    org.opencontainers.image.documentation="https://github.com/nextcloud/all-in-one/blob/main/readme.md"

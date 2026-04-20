@@ -328,6 +328,22 @@ readonly class DockerController {
         return $nonbufResp;
     }
 
+    public function SystemPrune(Request $request, Response $response, array $args) : Response {
+        // Get streaming response start and closure
+        $nonbufResp = $this->startStreamingResponse($response);
+
+        $body = $nonbufResp->getBody();
+        $addToStreamingResponseBody = function (string $message) use ($body) : void {
+            $body->write("<div>$message</div>");
+        };
+
+        $this->dockerActionManager->SystemPrune($addToStreamingResponseBody);
+
+        // End streaming response
+        $this->finalizeStreamingResponse($nonbufResp);
+        return $nonbufResp;
+    }
+
     public function stopTopContainer() : void {
         $id = self::TOP_CONTAINER;
         $this->PerformRecursiveContainerStop($id);
@@ -381,17 +397,7 @@ readonly class DockerController {
         <html lang="en" class="overlay-iframe">
             <head>
                 <link rel="stylesheet" href="../../style.css?v8" media="all" />
-                <script>
-                    const observer = new MutationObserver((records) => {
-                        const node = records[0]?.addedNodes[0];
-                        // Text nodes also appear here but can't be scrolled to, so we have to check for the
-                        // function being present.
-                        if (node && typeof(node.scrollIntoView) === 'function') {
-                            node.scrollIntoView();
-                        }
-                    });
-                    observer.observe(document, {childList: true, subtree: true});
-                </script>
+                <script type="text/javascript" src="../../scroll-into-view.js"></script>
             </head>
             <body>
             
