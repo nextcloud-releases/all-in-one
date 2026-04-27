@@ -10,6 +10,10 @@ on:
 jobs:
   build-amd64:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
     strategy:
       fail-fast: false
       matrix:
@@ -46,7 +50,11 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Install cosign
+        uses: sigstore/cosign-installer@cad07c2e89fa2edd6e2d7bab4c1aa38e53f76003 # v4.1.1
+
       - name: Build docker image and push to ghcr.io
+        id: build
         uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
         with:
           context: ${{ matrix.container.context }}
@@ -56,8 +64,16 @@ jobs:
           push: true
           tags: ghcr.io/nextcloud-releases/${{ matrix.container.name }}:develop
 
+      - name: Sign the image with cosign
+        run: |
+          cosign sign --yes ghcr.io/nextcloud-releases/${{ matrix.container.name }}@${{ steps.build.outputs.digest }}
+
   build-arm64:
     runs-on: ubuntu-24.04-arm
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
     strategy:
       fail-fast: false
       matrix:
@@ -94,7 +110,11 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Install cosign
+        uses: sigstore/cosign-installer@cad07c2e89fa2edd6e2d7bab4c1aa38e53f76003 # v4.1.1
+
       - name: Build docker image and push to ghcr.io
+        id: build
         uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
         with:
           context: ${{ matrix.container.context }}
@@ -103,3 +123,7 @@ jobs:
           no-cache: true
           push: true
           tags: ghcr.io/nextcloud-releases/${{ matrix.container.name }}:develop-arm64
+
+      - name: Sign the image with cosign
+        run: |
+          cosign sign --yes ghcr.io/nextcloud-releases/${{ matrix.container.name }}@${{ steps.build.outputs.digest }}

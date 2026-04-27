@@ -7,7 +7,9 @@ jobs:
   promote_to_latest:
     runs-on: ubuntu-latest
     name: Promote from develop to beta 
-    
+    permissions:
+      id-token: write
+      packages: write
     strategy:
       fail-fast: false
       matrix:
@@ -40,6 +42,9 @@ jobs:
         registry: ghcr.io
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Install cosign
+      uses: sigstore/cosign-installer@cad07c2e89fa2edd6e2d7bab4c1aa38e53f76003 # v4.1.1
         
     - name: Promote images from develop to beta (create multiarch) on ghcr.io
       run: |
@@ -49,9 +54,11 @@ jobs:
         
         # create multiarch image
         docker buildx imagetools create --tag ghcr.io/nextcloud-releases/$AIO_NAME\:beta ghcr.io/nextcloud-releases/$AIO_NAME\:develop ghcr.io/nextcloud-releases/$AIO_NAME\:develop-arm64
+        cosign sign --yes ghcr.io/nextcloud-releases/$AIO_NAME:beta
 
         # arm64
         docker buildx imagetools create --tag ghcr.io/nextcloud-releases/$AIO_NAME\:beta-arm64 ghcr.io/nextcloud-releases/$AIO_NAME\:develop ghcr.io/nextcloud-releases/$AIO_NAME\:develop-arm64
+        cosign sign --yes ghcr.io/nextcloud-releases/$AIO_NAME:beta-arm64
 
     - name: Login to DockerHub
       if: matrix.name == 'all-in-one'
@@ -65,6 +72,8 @@ jobs:
       run: |
         # create multiarch image
         docker buildx imagetools create --tag nextcloud/all-in-one\:beta ghcr.io/nextcloud-releases/all-in-one\:develop ghcr.io/nextcloud-releases/all-in-one\:develop-arm64
+        cosign sign --yes nextcloud/all-in-one:beta
         
         # arm64
         docker buildx imagetools create --tag nextcloud/all-in-one\:beta-arm64 ghcr.io/nextcloud-releases/all-in-one\:develop ghcr.io/nextcloud-releases/all-in-one\:develop-arm64
+        cosign sign --yes nextcloud/all-in-one:beta-arm64
