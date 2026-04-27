@@ -6,6 +6,8 @@ on:
 jobs:
   promote_to_latest:
     runs-on: ubuntu-latest
+    permissions:
+      packages: write
     name: Promote from develop to beta 
     
     strategy:

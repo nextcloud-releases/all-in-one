@@ -1,15 +1,19 @@
 name: Build docker images
 
 on:
-  workflow_run:
-    workflows: ["Repo Sync"]
-    types:
-      - completed
+  push:
+    branches:
+      - main
   workflow_dispatch:
+
+permissions: {}
 
 jobs:
   build-amd64:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     strategy:
       fail-fast: false
       matrix:
@@ -58,6 +62,9 @@ jobs:
 
   build-arm64:
     runs-on: ubuntu-24.04-arm
+    permissions:
+      contents: read
+      packages: write
     strategy:
       fail-fast: false
       matrix:
