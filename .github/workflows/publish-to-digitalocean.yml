@@ -12,15 +12,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-    - name: Install Packer
-      run: |
-        curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
-        sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
-        sudo apt-get update && sudo apt-get install packer
-        packer --version
-    - name: Create Image
-      run: |
-        cd ./.build/digitalocean
+      with:
+        persist-credentials: false
         chmod +x -R ./files/var/lib/cloud/scripts
         packer plugins install github.com/digitalocean/digitalocean
         export DIGITALOCEAN_TOKEN=${{ secrets.DIGITALOCEAN_TOKEN }}
