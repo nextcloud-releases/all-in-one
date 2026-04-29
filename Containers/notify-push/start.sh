@@ -1,5 +1,11 @@
 #!/bin/bash
 
+if [ "$AIO_LOG_LEVEL" = 'debug' ]; then
+    set -x
+fi
+
+export RUST_LOG="$AIO_LOG_LEVEL"
+
 if [ -z "$NEXTCLOUD_HOST" ]; then
     echo "NEXTCLOUD_HOST needs to be provided. Exiting!"
     exit 1
@@ -39,8 +45,6 @@ fi
 echo "notify-push was started"
 
 # Run it
-/var/www/html/custom_apps/notify_push/bin/"$CPU_ARCH"/notify_push \
+exec /var/www/html/custom_apps/notify_push/bin/"$CPU_ARCH"/notify_push \
     --port 7867 \
     /var/www/html/config/config.php
-
-exec "$@"

@@ -142,7 +142,7 @@ RUN set -ex; \
     \
     { \
         echo 'session.save_handler = redis'; \
-        echo 'session.save_path = "tcp://${REDIS_HOST}:${REDIS_PORT}?database=${REDIS_DB_INDEX}${REDIS_USER_AUTH}&auth[]=${REDIS_HOST_PASSWORD}"'; \
+        echo 'session.save_path = "tcp://${REDIS_HOST}:${REDIS_PORT}?database=${REDIS_DB_INDEX}${REDIS_USER_AUTH}&auth[]=${REDIS_HOST_PASSWORD}&timeout=3.0&read_timeout=10.0"'; \
         echo 'redis.session.locking_enabled = 1'; \
         echo 'redis.session.lock_retries = -1'; \
         echo '; 100ms in microseconds - prevents timeout on long requests such as large file uploads'; \
@@ -244,27 +244,27 @@ RUN set -ex; \
         imagemagick-tiff \
         coreutils; \
     \
-# Use dynamic pm mode: spare workers stay alive between requests so every request is served immediately
-# without waiting for a new process to spawn (unlike ondemand which forks on every request when idle).
-# pm.max_children: upper bound on worker processes; synced with max DB connections and MaxRequestWorkers.
-# Set high so users never hit an artificial limit under peak load — spare-server bounds keep idle memory usage low.
+    grep -q '^pm = dynamic' /usr/local/etc/php-fpm.d/www.conf; \
+    sed -i 's/^pm = dynamic/pm = ondemand/' /usr/local/etc/php-fpm.d/www.conf; \
+# Sync this with max db connections and MaxRequestWorkers
+# We don't actually expect so many children but don't want to limit it artificially because people will report issues otherwise.
+# Also children will usually be terminated again after the process is done due to the ondemand setting
     sed -i 's/^pm.max_children =.*/pm.max_children = 5000/' /usr/local/etc/php-fpm.d/www.conf; \
-# pm.start_servers: number of workers pre-forked at container startup.
-# Having 2 workers ready immediately means the first requests after boot are served without any spawn delay.
-    sed -i '/^;pm.start_servers/s/^;//' /usr/local/etc/php-fpm.d/www.conf; \
-    sed -i 's/^pm.start_servers =.*/pm.start_servers = 2/' /usr/local/etc/php-fpm.d/www.conf; \
-# pm.min_spare_servers: floor of idle workers kept alive at all times.
-# Guarantees at least 1 ready worker so a sudden burst of requests is handled without any fork wait.
-    sed -i '/^;pm.min_spare_servers/s/^;//' /usr/local/etc/php-fpm.d/www.conf; \
-    sed -i 's/^pm.min_spare_servers =.*/pm.min_spare_servers = 1/' /usr/local/etc/php-fpm.d/www.conf; \
-# pm.max_spare_servers: ceiling of idle workers kept alive during quiet periods.
-# Capping at 3 limits idle memory consumption while still keeping a small ready pool.
-    sed -i '/^;pm.max_spare_servers/s/^;//' /usr/local/etc/php-fpm.d/www.conf; \
-    sed -i 's/^pm.max_spare_servers =.*/pm.max_spare_servers = 3/' /usr/local/etc/php-fpm.d/www.conf; \
-# pm.max_requests: recycle each worker after handling 500 requests.
-# PHP extensions and apps can leak memory over time; recycling prevents those leaks from accumulating indefinitely.
-    sed -i '/^;pm.max_requests/s/^;//' /usr/local/etc/php-fpm.d/www.conf; \
-    sed -i 's/^pm.max_requests =.*/pm.max_requests = 500/' /usr/local/etc/php-fpm.d/www.conf; \
+# With pm = ondemand, workers are killed after pm.process_idle_timeout seconds
+# of inactivity.  The upstream default is 10 s, which is aggressive: after a
+# brief quiet period (e.g. desktop-sync clients polling every few seconds), all
+# workers are reaped and the next request burst must wait for fresh forks.  On
+# a loaded host that spawn latency can push Apache past its FastCGI timeout and
+# produce a 502.  300 s (5 min) keeps a warm pool through normal sync-client
+# polling cycles while still reclaiming memory during genuinely idle periods.
+    sed -i 's/^;*pm.process_idle_timeout\s*=.*/pm.process_idle_timeout = 300s/' /usr/local/etc/php-fpm.d/www.conf; \
+# Set request_terminate_timeout so that PHP-FPM forcibly kills workers that
+# exceed the wall-clock limit.  Without this (default = 0 = disabled) a worker
+# stuck on a slow DB query, a stalled Redis connection, or a hung syscall is
+# never reaped.  Over time these zombies fill up pm.max_children, leaving no
+# free slots for legitimate requests and causing Apache to return 502 Bad
+# Gateway upstream.
+    sed -i "s|^;*request_terminate_timeout = .*|request_terminate_timeout = \${PHP_MAX_TIME}|" /usr/local/etc/php-fpm.d/www.conf; \
     sed -i 's|access.log = /proc/self/fd/2|access.log = /proc/self/fd/1|' /usr/local/etc/php-fpm.d/docker.conf; \
     \
     echo "[ -n \"\$TERM\" ] && [ -f /root.motd ] && cat /root.motd" >> /root/.bashrc; \

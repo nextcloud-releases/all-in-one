@@ -5,6 +5,8 @@ namespace AIO\Data;
 
 use AIO\Auth\PasswordGenerator;
 use AIO\Controller\DockerController;
+use GuzzleHttp\Client;
+use GuzzleHttp\Exception\TransferException;
 
 class ConfigurationManager
 {
@@ -253,6 +255,11 @@ class ConfigurationManager
         set { $this->set('docker_socket_path', $value); }
     }
 
+    public string $aioLogLevel {
+        get => $this->getEnvironmentalVariableOrConfig('AIO_LOG_LEVEL', 'aio_log_level', 'warn');
+        set { $this->set('aio_log_level', $value); }
+    }
+
     public string $trustedCacertsDir {
         get => $this->getEnvironmentalVariableOrConfig('NEXTCLOUD_TRUSTED_CACERTS_DIR', 'trusted_cacerts_dir', '');
         set { $this->set('trusted_cacerts_dir', $value); }
@@ -302,6 +309,9 @@ class ConfigurationManager
         if ($this->config === [] && file_exists(DataConst::GetConfigFile()))
         {
             $configContent = (string)file_get_contents(DataConst::GetConfigFile());
+            if ($configContent === '') {
+                throw new \RuntimeException("The config file " . DataConst::GetConfigFile() . " is empty. It may have been truncated due to low disk space. Please restore it from a backup.");
+            }
             $this->config = json_decode($configContent, true, 512, JSON_THROW_ON_ERROR);
         }
 
@@ -360,7 +370,7 @@ class ConfigurationManager
     }
 
     public function getRegisteredSecret(string $secretId) : string {
-        if ($this->secrets[$secretId]) {
+        if (isset($this->secrets[$secretId])) {
             return $this->getAndGenerateSecret($secretId);
         }
         throw new \Exception("The secret " . $secretId . " was not registered. Please check if it is defined in secrets of containers.json.");
@@ -527,23 +537,22 @@ class ConfigurationManager
             }
 
             // Check if response is correct
-            $ch = curl_init();
-            if ($ch === false) {
-                throw new InvalidSettingConfigurationException('Could not init curl! Please check the logs!');
-            }
             $testUrl = $protocol . $domain . ':443';
-            curl_setopt($ch, CURLOPT_URL, $testUrl);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
-            curl_setopt($ch, CURLOPT_TIMEOUT, 10);
-            $response = (string)curl_exec($ch);
-            # Get rid of trailing \n
-            $response = str_replace("\n", "", $response);
+            $errorMessage = '';
+            $guzzleClient = new Client(['connect_timeout' => 10, 'timeout' => 10, 'http_errors' => false]);
+            try {
+                $guzzleResponse = $guzzleClient->get($testUrl);
+                # Get rid of trailing \n
+                $response = str_replace("\n", "", (string)$guzzleResponse->getBody());
+            } catch (TransferException $e) {
+                $response = '';
+                $errorMessage = 'The error message was: ' . $e->getMessage();
+            }
 
             if ($response !== $instanceID) {
                 error_log('The response of the connection attempt to "' . $testUrl . '" was: ' . $response);
                 error_log('Expected was: ' . $instanceID);
-                error_log('The error message was: ' . curl_error($ch));
+                error_log($errorMessage);
                 $notice = "Domain does not point to this server or the reverse proxy is not configured correctly. See the mastercontainer logs for more details. ('sudo docker logs -f nextcloud-aio-mastercontainer')";
                 if ($port === '443') {
                     $notice .= " If you should be using Cloudflare, make sure to disable the Cloudflare Proxy feature as it might block the domain validation. Same for any other firewall or service that blocks unencrypted access on port 443.";
@@ -560,7 +569,6 @@ class ConfigurationManager
         $this->set('domain', $domain);
         // Reset the borg restore password when setting the domain
         $this->borgRestorePassword = '';
-        $this->startTransaction();
         $this->commitTransaction();
     }
 
@@ -702,7 +710,21 @@ class ConfigurationManager
         if ($df !== false && (int)$df < $size) {
             throw new InvalidSettingConfigurationException(DataConst::GetDataDirectory() . " does not have enough space for writing the config file! Not writing it back!");
         }
-        file_put_contents(DataConst::GetConfigFile(), $content);
+        // Write to a temp file first to avoid truncating the config file if the
+        // disk fills up mid-write. rename() is atomic on POSIX filesystems, so the
+        // original config is never touched until the new content is fully on disk.
+        $tempFile = DataConst::GetConfigFile() . '.tmp';
+        if (file_put_contents($tempFile, $content) === false) {
+            // The file probably wasn't created, but better check nonetheless.
+            if (file_exists($tempFile)) {
+                unlink($tempFile);
+            }
+            throw new InvalidSettingConfigurationException("Failed to write temporary config file: " . $tempFile);
+        }
+        if (!rename($tempFile, DataConst::GetConfigFile())) {
+            unlink($tempFile);
+            throw new InvalidSettingConfigurationException("Failed to rename " . $tempFile . " to " . DataConst::GetConfigFile());
+        }
         $this->config = [];
     }
 
@@ -1049,6 +1071,7 @@ class ConfigurationManager
             'NC_DOMAIN' => $this->domain,
             'NC_BASE_DN' => $this->getBaseDN(),
             'AIO_TOKEN' => $this->aioToken,
+            'AIO_LOG_LEVEL' => $this->aioLogLevel,
             'BORGBACKUP_REMOTE_REPO' => $this->borgRemoteRepo,
             'BORGBACKUP_MODE' => $this->backupMode,
             'AIO_URL' => $this->aioUrl,
