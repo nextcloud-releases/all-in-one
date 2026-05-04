@@ -892,7 +892,6 @@
       "environment": [
         "HP_SHARED_KEY=%HP_SHARED_KEY%",
         "NC_INSTANCE_URL=https://%NC_DOMAIN%",
-        "HP_LOG_LEVEL=%COLLABORA_LOG_LEVEL%",
         "HP_FRP_DISABLE_TLS=true",
         "TZ=%TIMEZONE%"
       ],
