@@ -2,7 +2,6 @@
 FROM golang:1.26.3-alpine3.23 AS go
 
 ENV WATCHTOWER_COMMIT_HASH=652c89577076f6bc6f2af4465217589641216ee3	
-ENV AIO_LOG_LEVEL="warn"
 
 RUN set -ex; \
     apk upgrade --no-cache -a; \
@@ -22,6 +21,8 @@ COPY --chmod=775 start.sh /start.sh
 
 # hadolint ignore=DL3002
 USER root
+
+ENV AIO_LOG_LEVEL="warn"
 
 ENTRYPOINT ["/start.sh"]
 LABEL com.centurylinklabs.watchtower.enable="false" \
