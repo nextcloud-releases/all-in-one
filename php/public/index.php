@@ -181,8 +181,10 @@ $app->get('/containers', function (Request $request, Response $response, array $
         'community_containers' => $configurationManager->listAvailableCommunityContainers(),
         'community_containers_enabled' => $configurationManager->aioCommunityContainers,
         'bypass_container_update' => $bypass_container_update,
-    ]);
+    // Do not cache the page as it shows credentials
+    ])->withHeader('Cache-Control', 'no-store');
 })->setName('profile');
+
 $app->get('/login', function (Request $request, Response $response, array $args) use ($container) {
     $view = Twig::fromRequest($request);
     /** @var \AIO\Docker\DockerActionManager $dockerActionManager */
@@ -191,6 +193,7 @@ $app->get('/login', function (Request $request, Response $response, array $args)
         'is_login_allowed' => $dockerActionManager->isLoginAllowed(),
     ]);
 });
+
 $app->get('/setup', function (Request $request, Response $response, array $args) use ($container) {
     $view = Twig::fromRequest($request);
     /** @var \AIO\Data\Setup $setup */
@@ -209,8 +212,10 @@ $app->get('/setup', function (Request $request, Response $response, array $args)
         [
             'password' => $setup->Setup(),
         ]
-    );
+    // Do not cache the page as it shows credentials
+    )->withHeader('Cache-Control', 'no-store');
 });
+
 $app->get('/log', function (Request $request, Response $response, array $args) use ($container) {
     $params = $request->getQueryParams();
     $id = $params['id'] ?? '';
@@ -218,7 +223,13 @@ $app->get('/log', function (Request $request, Response $response, array $args) u
         throw new DI\NotFoundException();
     }
     $view = Twig::fromRequest($request);
-    return $view->render($response, 'log.twig', ['id' => $id]);
+    return $view->render(
+        $response, 'log.twig', 
+        [
+            'id' => $id
+        ]
+    // Do not cache the page as it might shows credentials
+    )->withHeader('Cache-Control', 'no-store');
 });
 
 // Auth Redirector
@@ -245,6 +256,7 @@ $app->get('/', function (\Psr\Http\Message\RequestInterface $request, Response $
     }
 });
 
+// Default error handler
 $errorMiddleware = $app->addErrorMiddleware(false, true, true);
 
 // Set a custom Not Found handler, which doesn't pollute the app output with 404 errors.
@@ -254,6 +266,17 @@ $errorMiddleware->setErrorHandler(
         $response = $app->getResponseFactory()->createResponse();
         $response->getBody()->write('Not Found');
         return $response->withStatus(404);
-    });
+    }
+);
+
+// Set another custom error handler, which doesn't pollute the app output with 405 errors.
+$errorMiddleware->setErrorHandler(
+    \Slim\Exception\HttpMethodNotAllowedException::class,
+    function (Request $request, Throwable $exception, bool $displayErrorDetails) use ($app) {
+        $response = $app->getResponseFactory()->createResponse();
+        $response->getBody()->write('Method not allowed');
+        return $response->withStatus(405);
+    }
+);
 
 $app->run();
