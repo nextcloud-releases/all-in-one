@@ -17,7 +17,9 @@ jobs:
     needs: get_time
     runs-on: ubuntu-latest
     name: Promote from beta to latest 
-    
+    permissions:
+      id-token: write
+      packages: write
     strategy:
       fail-fast: false
       matrix:
@@ -50,6 +52,9 @@ jobs:
         registry: ghcr.io
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Install cosign
+      uses: sigstore/cosign-installer@cad07c2e89fa2edd6e2d7bab4c1aa38e53f76003 # v4.1.1
         
     - name: Promote images from beta to latest on ghcr.io
       run: |
@@ -63,10 +68,13 @@ jobs:
         
         # multiarch
         docker buildx imagetools create --tag ghcr.io/nextcloud-releases/$AIO_NAME\:latest ghcr.io/nextcloud-releases/$AIO_NAME\:beta
+        cosign sign --yes ghcr.io/nextcloud-releases/$AIO_NAME:latest
         docker buildx imagetools create --tag ghcr.io/nextcloud-releases/$AIO_NAME\:"$DATE" ghcr.io/nextcloud-releases/$AIO_NAME\:beta
+        cosign sign --yes "ghcr.io/nextcloud-releases/$AIO_NAME:$DATE"
         
         # arm64
         docker buildx imagetools create --tag ghcr.io/nextcloud-releases/$AIO_NAME\:latest-arm64 ghcr.io/nextcloud-releases/$AIO_NAME\:beta-arm64
+        cosign sign --yes ghcr.io/nextcloud-releases/$AIO_NAME:latest-arm64
         
         if [ "$AIO_NAME" == "aio-nextcloud" ]; then
             set -x
@@ -76,8 +84,10 @@ jobs:
             if [ -n "$PHP_VERSION" ]; then
                 # multiarch
                 docker buildx imagetools create --tag ghcr.io/nextcloud-releases/$AIO_NAME\:php"$PHP_VERSION"-latest ghcr.io/nextcloud-releases/$AIO_NAME\:beta
+                cosign sign --yes "ghcr.io/nextcloud-releases/$AIO_NAME:php${PHP_VERSION}-latest"
                 # arm64
                 docker buildx imagetools create --tag ghcr.io/nextcloud-releases/$AIO_NAME\:php"$PHP_VERSION"-latest-arm64 ghcr.io/nextcloud-releases/$AIO_NAME\:beta-arm64
+                cosign sign --yes "ghcr.io/nextcloud-releases/$AIO_NAME:php${PHP_VERSION}-latest-arm64"
             fi
             set +x
         fi
@@ -102,10 +112,13 @@ jobs:
         if [ "$AIO_NAME" = "all-in-one" ]; then
           # multiarch
           docker buildx imagetools create --tag nextcloud/all-in-one\:latest nextcloud/all-in-one\:beta
+          cosign sign --yes nextcloud/all-in-one:latest
           
           # arm64
           docker buildx imagetools create --tag nextcloud/all-in-one\:latest-arm64 nextcloud/all-in-one\:beta-arm64
+          cosign sign --yes nextcloud/all-in-one:latest-arm64
         else
           # Publish date images also on docker hub
           docker buildx imagetools create --tag nextcloud/$AIO_NAME\:"$DATE" ghcr.io/nextcloud-releases/$AIO_NAME\:beta
+          cosign sign --yes "nextcloud/$AIO_NAME:$DATE"
         fi
