@@ -1,9 +1,10 @@
 name: Build docker images
 
 on:
-  push:
-    branches:
-      - main
+  workflow_run:
+    workflows: ["Repo Sync"]
+    types:
+      - completed
   workflow_dispatch:
 
 permissions: {}
