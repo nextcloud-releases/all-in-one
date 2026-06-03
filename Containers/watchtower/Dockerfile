@@ -1,13 +1,13 @@
 # syntax=docker/dockerfile:latest
 FROM golang:1.26.3-alpine3.23 AS go
 
-ENV WATCHTOWER_COMMIT_HASH=652c89577076f6bc6f2af4465217589641216ee3	
+ENV WATCHTOWER_COMMIT_HASH=9d0048403a7242943084bede951f6f966f7691ba	
 
 RUN set -ex; \
     apk upgrade --no-cache -a; \
     apk add --no-cache \
         build-base; \
-    go install github.com/nicholas-fedor/watchtower@$WATCHTOWER_COMMIT_HASH # v1.16.1
+    go install github.com/nicholas-fedor/watchtower@$WATCHTOWER_COMMIT_HASH # v1.17.2
 
 FROM alpine:3.23.4
 
@@ -27,6 +27,7 @@ ENV AIO_LOG_LEVEL="warn"
 ENTRYPOINT ["/start.sh"]
 LABEL com.centurylinklabs.watchtower.enable="false" \
     wud.watch="false" \
+    dockhand.update="false" \
     org.opencontainers.image.title="Watchtower for Nextcloud AIO" \
     org.opencontainers.image.description="Watchtower auto-update service for Nextcloud All-in-One containers" \
     org.opencontainers.image.url="https://github.com/nextcloud/all-in-one" \

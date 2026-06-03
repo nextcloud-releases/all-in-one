@@ -37,7 +37,7 @@
             {% set isBackupOrRestoreRunning = false %}
             {% set isApacheStarting = false %}
             {# Setting newMajorVersion to '' will hide corresponding options/elements, can be set to an integer like 26 in order to show corresponding elements. If set, also increase installLatestMajor in https://github.com/nextcloud/all-in-one/blob/main/php/src/Controller/DockerController.php #}
-            {% set newMajorVersionString = '' %}
+            {% set newMajorVersionString = '26 Spring' %}
             {% set oldMajorVersionString = '25 Autumn' %}
 
             {% if is_backup_container_running == true %}
@@ -298,7 +298,12 @@
                                 {% if newMajorVersionString != '' and isAnyRunning == true and isApacheStarting != true %}
                                     <details>
                                     <summary>Note about <strong>Nextcloud Hub {{ newMajorVersionString }}</strong></summary>
-                                        <p>If you haven't upgraded to Nextcloud Hub {{ newMajorVersionString }} yet and want to do that now, feel free to follow <strong><a target="_blank" href="https://github.com/nextcloud/all-in-one/discussions/7523">this documentation</a></strong></p>
+<p>If you haven't upgraded to Nextcloud Hub {{ newMajorVersionString }} yet and want to do that now, feel free to click the button below. ⚠️ Warning: make sure to create a backup before clicking the button as the update can go wrong and will leave your instance in a broken state!</p>
+                                        <form method="POST" action="api/docker/nextcloud-upgrade-to-latest-major" target="overlay-log">
+                                            <input type="hidden" name="{{csrf.keys.name}}" value="{{csrf.name}}">
+                                            <input type="hidden" name="{{csrf.keys.value}}" value="{{csrf.value}}">
+                                            <input type="submit" value="Upgrade to Nextcloud Hub {{ newMajorVersionString }}" data-confirm="Upgrade to Nextcloud Hub {{ newMajorVersionString }}? You should consider creating a backup first." />
+                                        </form>
                                     </details>
                                 {% endif %}
                             {% endif %}
