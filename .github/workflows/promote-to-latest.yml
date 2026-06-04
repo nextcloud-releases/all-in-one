@@ -42,6 +42,7 @@ jobs:
           'aio-watchtower',
           'aio-clamav',
           'aio-onlyoffice',
+          'aio-eurooffice',
           'aio-imaginary',
           'aio-talk-recording',
           'aio-fulltextsearch',
