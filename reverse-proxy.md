@@ -108,7 +108,7 @@ To make your Nextcloud AIO instance accessible from the public Internet (not jus
 ## Configuration and Deployment
 
 > [!NOTE]
-> These instructions assume you already have a domain name pointing to your server's public IP address. If you don't have a domain yet, see the recommendations below.
+> These instructions assume you already have a domain name pointing to your server's public IP address. If you don't have a domain yet, AIO can register a free dynamic-DNS subdomain under `dedyn.io` for you via the built-in [deSEC integration](https://github.com/nextcloud/all-in-one#how-to-get-a-free-domain-via-desec) — no external setup needed. Alternatively, see the recommendations below.
 
 ### Quick overview
 
@@ -121,7 +121,7 @@ To run Nextcloud AIO behind an external reverse proxy or secure tunneling/proxyi
 The sections below provide detailed instructions for each step.
 
 > [!TIP]
-> If you don't have a domain yet, we recommend using [an approach using Tailscale](https://github.com/nextcloud/all-in-one/discussions/6817). If you don't have an external reverse proxy yet, we recommend [Caddy](https://github.com/nextcloud/all-in-one/discussions/575).
+> If you don't have a domain yet, AIO can register a free `*.dedyn.io` subdomain for you via [deSEC](https://desec.io) directly from the AIO interface — see [How to get a free domain via deSEC](https://github.com/nextcloud/all-in-one#how-to-get-a-free-domain-via-desec). This is the recommended option. Alternatively, you can use [Tailscale](https://github.com/nextcloud/all-in-one/discussions/6817). If you don't have an external reverse proxy yet, we recommend [Caddy](https://github.com/nextcloud/all-in-one/discussions/575).
 
 ### Step-by-Step Instructions
 
@@ -218,6 +218,8 @@ Add this as a new Apache site config:
     RewriteEngine On
     ProxyPreserveHost On
     RequestHeader set X-Real-IP %{REMOTE_ADDR}s
+    # Added to support Euro-office
+    RequestHeader set X-Forwarded-Proto "https"
     AllowEncodedSlashes NoDecode
     
     # Adjust the two lines below to match APACHE_PORT and APACHE_IP_BINDING. See https://github.com/nextcloud/all-in-one/blob/main/reverse-proxy.md#adapting-the-sample-web-server-configurations-below
@@ -898,6 +900,8 @@ The examples below define the dynamic configuration in YAML files. If you rather
             hostsProxyHeaders:
               - "X-Forwarded-Host"
             referrerPolicy: "same-origin"
+            customRequestHeaders:
+              X-Forwarded-Proto: "https"
 
         https-redirect:
           redirectscheme:
@@ -993,6 +997,8 @@ The examples below define the dynamic configuration in YAML files. If you rather
             hostsProxyHeaders:
               - "X-Forwarded-Host"
             referrerPolicy: "same-origin"
+            customRequestHeaders:
+              X-Forwarded-Proto: "https"
 
         https-redirect:
           redirectscheme:
