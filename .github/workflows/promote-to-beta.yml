@@ -33,6 +33,7 @@ jobs:
           'aio-talk-recording',
           'aio-fulltextsearch',
           'aio-docker-socket-proxy',
+          'aio-harp',
           'aio-whiteboard']
 
     steps:
