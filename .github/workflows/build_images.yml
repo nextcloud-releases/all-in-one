@@ -39,6 +39,7 @@ jobs:
           {name: 'aio-talk-recording', context: './Containers/talk-recording', file: './Containers/talk-recording/Dockerfile'},
           {name: 'aio-fulltextsearch', context: './Containers/fulltextsearch', file: './Containers/fulltextsearch/Dockerfile'},
           {name: 'aio-docker-socket-proxy', context: './Containers/docker-socket-proxy', file: './Containers/docker-socket-proxy/Dockerfile'},
+          {name: 'aio-harp', context: './Containers/harp', file: './Containers/harp/Dockerfile'},
           {name: 'aio-whiteboard', context: './Containers/whiteboard', file: './Containers/whiteboard/Dockerfile'}
         ]
     steps:
@@ -92,6 +93,7 @@ jobs:
           {name: 'aio-talk-recording', context: './Containers/talk-recording', file: './Containers/talk-recording/Dockerfile'},
           {name: 'aio-fulltextsearch', context: './Containers/fulltextsearch', file: './Containers/fulltextsearch/Dockerfile'},
           {name: 'aio-docker-socket-proxy', context: './Containers/docker-socket-proxy', file: './Containers/docker-socket-proxy/Dockerfile'},
+          {name: 'aio-harp', context: './Containers/harp', file: './Containers/harp/Dockerfile'},
           {name: 'aio-whiteboard', context: './Containers/whiteboard', file: './Containers/whiteboard/Dockerfile'}
         ]
     steps:
