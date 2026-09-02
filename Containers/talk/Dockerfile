@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:latest
-FROM nats:2.14.5-scratch AS nats
+FROM nats:2.14.6-scratch AS nats
 FROM eturnal/eturnal:1.12.2-alpine AS eturnal
 FROM strukturag/nextcloud-spreed-signaling:2.1.1 AS signaling
 FROM alpine:3.24.1 AS janus
@@ -72,12 +72,13 @@ RUN set -ex; \
     chmod 777 -R \
         /tmp \
         /conf; \
+    chmod 777 /run; \
     ln -s /opt/eturnal/bin/stun /usr/local/bin/stun; \
     ln -s /opt/eturnal/bin/eturnalctl /usr/local/bin/eturnalctl
 
 USER eturnal:eturnal
 ENTRYPOINT ["/start.sh"]
-CMD ["dinit", "--system", "--container", "--socket-path", "/tmp/dinitctl", "nats-server", "eturnal", "janus", "signaling"]
+CMD ["dinit", "--system", "--container", "nats-server", "eturnal", "janus", "signaling"]
 
 HEALTHCHECK CMD ["/healthcheck.sh"]
 LABEL com.centurylinklabs.watchtower.enable="false" \
