@@ -5,17 +5,10 @@ SPDX-License-Identifier: MIT
 
 ## Submitting issues
 
-If you have questions about how to install or use Nextcloud, please direct these to our [forum][forum].
+If you have issues or questions about how to install or use Nextcloud, please direct these to our [forum][forum].
 
-### Guidelines
-* Please search the existing issues first, it's likely that your issue was already reported or even fixed.
-  - Go to one of the repositories, click "issues" and type any word in the top search/command bar.
-  - More info on [search syntax within github](https://help.github.com/articles/searching-issues)
 * __SECURITY__: Report any potential security bug to us via [our HackerOne page](https://hackerone.com/nextcloud) following our [security policy](https://nextcloud.com/security/) instead of filing an issue in our bug tracker.
-* The issues in other components should be reported in their respective repositories: You will find them in our [GitHub Organization](https://github.com/nextcloud/)
-* Report the issue using one of our templates, they include all the information we need to track down the issue.
-
-Help us to maximize the effort we can spend fixing issues and adding new features, by not reporting duplicate issues.
+* Issues in other components should be reported in their respective repositories: You will find them in our [GitHub Organization](https://github.com/nextcloud/)
 
 [forum]: https://help.nextcloud.com/
 
