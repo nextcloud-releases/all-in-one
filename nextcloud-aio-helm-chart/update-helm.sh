@@ -27,7 +27,7 @@ cp latest.yml latest.yml.backup
 
 # Additional config
 # shellcheck disable=SC1083
-sed -i -E '/^( *- )(NET_RAW|SYS_NICE|MKNOD|SYS_ADMIN|CHOWN|SYS_CHROOT|FOWNER|MAC_OVERRIDE|BLOCK_SUSPEND|AUDIT_READ)$/!s/( *- )([A-Z_]+)$/\1\2=${\2}/' latest.yml
+sed -i -E '/^( *- )(NET_RAW|SYS_NICE|MKNOD|SYS_ADMIN|CHOWN|SYS_CHROOT|FOWNER|MAC_OVERRIDE|BLOCK_SUSPEND|AUDIT_READ|CMD)$/!s/( *- )([A-Z_]+)$/\1\2=${\2}/' latest.yml
 cp sample.conf /tmp/
 sed -i 's|^|export |' /tmp/sample.conf
 # shellcheck disable=SC1091
@@ -231,7 +231,7 @@ find ./ -name '*deployment.yaml' -exec sed -i "/restartPolicy:/d" \{} \;
 # Effectively disable the progress deadline (max int32) so that slow container startups
 # are never reported as failed rollouts
 # shellcheck disable=SC1083
-find ./ -name '*deployment.yaml' -exec sed -i "/^  replicas: 1$/a\ \ progressDeadlineSeconds: 2147483647" \{} \;
+find ./ -name '*deployment.yaml' -exec sed -i "/^  replicas: 1$/a\ \ # 2147483647 (max int32, ~68 years) effectively disables the progress deadline so that\n\ \ # slow rollouts, e.g. large image pulls or long database upgrades, never count as failed\n\ \ progressDeadlineSeconds: 2147483647" \{} \;
 # shellcheck disable=SC1083
 find ./ -name '*apache*' -exec sed -i "s|$APACHE_PORT|{{ .Values.APACHE_PORT }}|" \{} \;
 # shellcheck disable=SC1083

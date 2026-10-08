@@ -1,17 +1,17 @@
 # syntax=docker/dockerfile:latest
 # Docker CLI is a requirement
-FROM docker:29.8.1-cli AS docker
+FROM docker:29.8.2-cli AS docker
 
 ARG CADDY_REMOTE_HOST_HASH=e80a9931765a8dbcbb47db415863387f0df0e1b3
 
 # Caddy is a requirement
-FROM caddy:2.11.4-builder-alpine AS caddy
+FROM caddy:2.11.6-builder-alpine AS caddy
 RUN set -ex; \
     xcaddy build --with github.com/muety/caddy-remote-host@"$CADDY_REMOTE_HOST_HASH"; \
     /usr/bin/caddy list-modules
 
 # From https://github.com/docker-library/php/blob/master/8.5/alpine3.24/fpm/Dockerfile
-FROM php:8.5.10-fpm-alpine3.24
+FROM php:8.5.11-fpm-alpine3.24
 
 EXPOSE 80
 EXPOSE 8080
@@ -111,6 +111,8 @@ LABEL org.opencontainers.image.title="Nextcloud All-in-One Mastercontainer" \
 # hadolint ignore=DL3002
 USER root:root
 
+# The php-fpm base image sets STOPSIGNAL SIGQUIT, which dinit ignores, so the container would never stop gracefully
+STOPSIGNAL SIGTERM
 ENTRYPOINT ["/start.sh"]
 
 HEALTHCHECK CMD ["/healthcheck.sh"]

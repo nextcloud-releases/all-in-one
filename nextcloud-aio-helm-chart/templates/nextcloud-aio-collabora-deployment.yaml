@@ -10,6 +10,8 @@ metadata:
   namespace: "{{ .Values.NAMESPACE }}"
 spec:
   replicas: 1
+  # 2147483647 (max int32, ~68 years) effectively disables the progress deadline so that
+  # slow rollouts, e.g. large image pulls or long database upgrades, never count as failed
   progressDeadlineSeconds: 2147483647
   selector:
     matchLabels:
@@ -38,11 +40,13 @@ spec:
               value: --o:ssl.enable=false --o:ssl.termination=true --o:logging.disable_server_audit=true --o:welcome.enable=false --o:fetch_update_check=0 --o:allow_update_popup=false --o:logging.level={{ .Values.COLLABORA_LOG_LEVEL }} --o:logging.level_startup={{ .Values.COLLABORA_LOG_LEVEL }} --o:remote_font_config.url=https://{{ .Values.NC_DOMAIN }}/apps/richdocuments/settings/fonts.json --o:net.post_allow.host[0]=.+
             - name: server_name
               value: "{{ .Values.NC_DOMAIN }}"
-          image: ghcr.io/nextcloud-releases/aio-collabora:20260916_075031
+          image: ghcr.io/nextcloud-releases/aio-collabora:20260929_105435
           readinessProbe:
             exec:
               command:
-                - /usr/bin/coolwsd --probe --use-env-vars
+                - /usr/bin/coolwsd
+                - --probe
+                - --use-env-vars
             failureThreshold: 9
             initialDelaySeconds: 60
             periodSeconds: 30
@@ -50,7 +54,9 @@ spec:
           livenessProbe:
             exec:
               command:
-                - /usr/bin/coolwsd --probe --use-env-vars
+                - /usr/bin/coolwsd
+                - --probe
+                - --use-env-vars
             failureThreshold: 9
             initialDelaySeconds: 60
             periodSeconds: 30

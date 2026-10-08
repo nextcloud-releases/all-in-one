@@ -14,7 +14,7 @@ This file provides instructions for AI coding agents (Claude Code, GitHub Copilo
 All contributions generated or assisted by this agent must fully comply with:
 
 - **[AI Contribution Policy](https://github.com/nextcloud/.github/blob/master/AI_POLICY.md)** - the primary reference for AI-specific rules, covering disclosure, author accountability, communication, security, licensing, code quality, and autonomous agent behavior.
-- **[Contribution Guidelines](https://github.com/nextcloud/all-in-one/blob/master/CONTRIBUTING.md)** - covering testing requirements, the Developer Certificate of Origin (DCO), license headers, conventional commits, and translations. These apply in full to all contributions regardless of how they were produced.
+- **[Contribution Guidelines](https://github.com/nextcloud/all-in-one/blob/main/CONTRIBUTING.md)** - covering testing requirements, the Developer Certificate of Origin (DCO), license headers, conventional commits, and translations. These apply in full to all contributions regardless of how they were produced.
 
 ### What this agent must always do
 
@@ -88,6 +88,10 @@ Every new file must include the correct SPDX license header. For AGPL-3.0-or-lat
 ```
 
 See [HowToApplyALicense.md](https://github.com/nextcloud/server/blob/master/contribute/HowToApplyALicense.md) for details on per-language formats. AI-generated code must not include material from sources incompatible with AGPL-3.0-or-later.
+
+### Browser compatibility
+
+JavaScript, CSS and HTML in the AIO interface (`php/public/`, `php/templates/`) must only use web features that are [Baseline "widely available"](https://web.dev/baseline). Do not add polyfills or transpilation for older browsers, and do not use features that are only "newly available" or not yet Baseline. Check a feature's Baseline status on [MDN](https://developer.mozilla.org/) or [caniuse.com](https://caniuse.com/) before using it.
 
 ### Security
 
