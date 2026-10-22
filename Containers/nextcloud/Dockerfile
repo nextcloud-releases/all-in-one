@@ -16,7 +16,7 @@ ENV SOURCE_LOCATION=/usr/src/nextcloud
 ENV REDIS_DB_INDEX=0
 
 # AIO settings start # Do not remove or change this line!
-ENV NEXTCLOUD_VERSION=34.0.5
+ENV NEXTCLOUD_VERSION=35.0.2
 # Required to stop hadolint from complaining about potentially sensitive data in an environment variable. 
 # It might be a good idea to reconsider using and env var for this at one point,
 # but the actual value here is just a dummy and not relevant, so we silence the warning for now.
@@ -62,10 +62,6 @@ RUN set -ex; \
         icu-dev \
         imagemagick-dev \
         imagemagick-svg \
-# Additional Imagick dependencies 1 start # Do not remove or change this line!
-        imagemagick-heic \
-        imagemagick-tiff \
-# Additional Imagick dependencies 1 end # Do not remove or change this line!
         libevent-dev \
         libjpeg-turbo-dev \
         libmcrypt-dev \
@@ -283,10 +279,6 @@ RUN set -ex; \
         bind-tools \
         imagemagick \
         imagemagick-svg \
-# Additional Imagick dependencies 2 start # Do not remove or change this line!
-        imagemagick-heic \
-        imagemagick-tiff \
-# Additional Imagick dependencies 2 end # Do not remove or change this line!
         coreutils; \
     \
     grep -q '^pm = dynamic' /usr/local/etc/php-fpm.d/www.conf; \
