@@ -1,0 +1,164 @@
+# SPDX-FileCopyrightText: 2026 Nextcloud GmbH and Nextcloud contributors
+# SPDX-License-Identifier: AGPL-3.0-or-later
+#
+# Rebuilds latest from the exact commit it was built from, so only OS packages change,
+# and promotes images whose fixable HIGH/CRITICAL vulnerability count went down.
+# Version bumps still go through develop -> beta -> latest.
+name: Security rebuild
+
+on:
+  schedule:
+  - cron: '00 04 * * *'
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: security-rebuild
+
+jobs:
+  images:
+    permissions:
+      contents: read
+    uses: ./.github/workflows/image-list.yml
+
+  scan:
+    name: Scan latest images for fixable vulnerabilities
+    needs: images
+    runs-on: ubuntu-latest
+    permissions: {}
+    outputs:
+      images: ${{ steps.scan.outputs.images }}
+      ref: ${{ steps.scan.outputs.ref }}
+      date: ${{ steps.scan.outputs.date }}
+    steps:
+    - uses: aquasecurity/setup-trivy@81e514348e19b6112ce2a7e3ecbafe19c1e1f567 # v0.3.1
+      with:
+        version: v0.76.0
+    - name: Run trivy
+      id: scan
+      shell: bash
+      env:
+        IMAGES: ${{ needs.images.outputs.names }}
+      run: |
+        images="$(jq -r '.[]' <<<"$IMAGES")"
+
+        ref="$(docker buildx imagetools inspect ghcr.io/nextcloud-releases/all-in-one:latest --format '{{json .Image}}' \
+          | jq -r '(.["linux/amd64"] // .).config.Labels["org.opencontainers.image.revision"] // empty')"
+        fixable=()
+        failed=()
+        if [ -z "$ref" ]; then
+          echo "::warning::all-in-one:latest has no revision label yet, skipping until the next regular release"
+        else
+          trivy image --download-db-only
+          for image in $images; do
+            echo "::group::$image"
+            count="$(trivy image --quiet --skip-db-update --ignore-unfixed --severity HIGH,CRITICAL --format json \
+              "ghcr.io/nextcloud-releases/$image:latest" | jq '[.Results[]?.Vulnerabilities[]?] | length')" || count=""
+            if [ -z "$count" ]; then
+              failed+=("$image")
+            elif [ "$count" -gt 0 ]; then
+              fixable+=("$image")
+            fi
+            # Large images (collabora, onlyoffice) would otherwise fill the runner disk
+            trivy clean --scan-cache
+            echo "::endgroup::"
+          done
+        fi
+        {
+          echo "ref=$ref"
+          echo "date=$(date +"%Y%m%d_%H%M%S")"
+          echo "images=$(jq -cn '$ARGS.positional' --args "${fixable[@]}")"
+        } >> "$GITHUB_OUTPUT"
+        {
+          echo "Rebuild commit: ${ref:-none}"
+          echo "Images with fixable HIGH/CRITICAL vulnerabilities: ${fixable[*]:-none}"
+          echo "Images that could not be scanned: ${failed[*]:-none}"
+        } >> "$GITHUB_STEP_SUMMARY"
+
+  build:
+    needs: scan
+    if: needs.scan.outputs.images != '[]'
+    permissions:
+      contents: read
+      packages: write
+    uses: ./.github/workflows/build_images.yml
+    with:
+      ref: ${{ needs.scan.outputs.ref }}
+      tag: security
+      images: ${{ needs.scan.outputs.images }}
+
+  promote:
+    name: Promote improved images to latest
+    needs: [scan, build]
+    runs-on: ubuntu-latest
+    # Configure required reviewers on this environment to gate promotion manually
+    environment: security-fast-track
+    permissions:
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        name: ${{ fromJSON(needs.scan.outputs.images) }}
+    env:
+      AIO_NAME: ${{ matrix.name }}
+      DATE: ${{ needs.scan.outputs.date }}
+    steps:
+    - uses: aquasecurity/setup-trivy@81e514348e19b6112ce2a7e3ecbafe19c1e1f567 # v0.3.1
+      with:
+        version: v0.76.0
+
+    - name: Compare rebuilt image with latest
+      id: verify
+      shell: bash
+      run: |
+        count() {
+          trivy image --quiet --ignore-unfixed --severity HIGH,CRITICAL --format json "$1" | jq '[.Results[]?.Vulnerabilities[]?] | length'
+        }
+        old="$(count "ghcr.io/nextcloud-releases/$AIO_NAME:latest")"
+        new="$(count "ghcr.io/nextcloud-releases/$AIO_NAME:security")"
+        echo "$AIO_NAME: $old -> $new fixable HIGH/CRITICAL vulnerabilities" | tee -a "$GITHUB_STEP_SUMMARY"
+        if [ "$new" -lt "$old" ]; then
+          echo "improved=true" >> "$GITHUB_OUTPUT"
+        fi
+
+    - name: Login to ghcr.io
+      if: steps.verify.outputs.improved
+      uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Promote rebuilt image to latest on ghcr.io
+      if: steps.verify.outputs.improved
+      run: |
+        IMAGE="ghcr.io/nextcloud-releases/$AIO_NAME"
+        docker buildx imagetools create --tag "$IMAGE:latest" --tag "$IMAGE:latest-arm64" --tag "$IMAGE:$DATE" \
+          "$IMAGE:security" "$IMAGE:security-arm64"
+
+        if [ "$AIO_NAME" = "aio-nextcloud" ]; then
+          PHP_VERSION="$(docker buildx imagetools inspect "$IMAGE:latest" --format '{{json .Image}}' \
+            | jq -r '.["linux/amd64"].config.Env[] | select(startswith("PHP_VERSION=")) | ltrimstr("PHP_VERSION=")' \
+            | sed 's|\.[0-9]\+$||')"
+          if [ -n "$PHP_VERSION" ]; then
+            docker buildx imagetools create --tag "$IMAGE:php$PHP_VERSION-latest" --tag "$IMAGE:php$PHP_VERSION-latest-arm64" "$IMAGE:latest"
+          fi
+        fi
+
+    - name: Login to DockerHub
+      if: steps.verify.outputs.improved
+      uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+    - name: Publish images on docker hub
+      if: steps.verify.outputs.improved
+      run: |
+        if [ "$AIO_NAME" = "all-in-one" ]; then
+          docker buildx imagetools create --tag nextcloud/all-in-one:latest --tag nextcloud/all-in-one:latest-arm64 \
+            ghcr.io/nextcloud-releases/all-in-one:latest
+        else
+          docker buildx imagetools create --tag "nextcloud/$AIO_NAME:$DATE" "ghcr.io/nextcloud-releases/$AIO_NAME:latest"
+        fi
