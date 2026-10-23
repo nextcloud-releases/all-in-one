@@ -1,0 +1,62 @@
+name: Image list
+
+on:
+  workflow_call:
+    inputs:
+      ref:
+        description: Commit to read .github/images.yml from instead of the default branch
+        type: string
+        default: ''
+      images:
+        description: JSON array of image names to return instead of all of them
+        type: string
+        default: ''
+    outputs:
+      containers:
+        description: JSON array of the selected entries of .github/images.yml
+        value: ${{ jobs.read.outputs.containers }}
+      names:
+        description: JSON array of the selected image names
+        value: ${{ jobs.read.outputs.names }}
+
+permissions: {}
+
+jobs:
+  read:
+    name: Read image list
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      containers: ${{ steps.read.outputs.containers }}
+      names: ${{ steps.read.outputs.names }}
+    steps:
+      - name: Check out the image list
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.ref }}
+          sparse-checkout: .github/images.yml
+          sparse-checkout-cone-mode: false
+          persist-credentials: false
+      - name: Read image list
+        id: read
+        env:
+          IMAGES: ${{ inputs.images }}
+        run: |
+          containers="$(yq -o=json -I=0 '.' .github/images.yml)"
+          if ! jq -e 'all(.[]; .name and .context and .file)' <<<"$containers" >/dev/null; then
+            echo "::error::Every entry in .github/images.yml needs name, context and file"
+            exit 1
+          fi
+          if [ -n "$IMAGES" ]; then
+            unknown="$(jq -nr --argjson c "$containers" --argjson i "$IMAGES" '$i - [$c[].name] | join(" ")')"
+            if [ -n "$unknown" ]; then
+              echo "::error::Unknown images: $unknown"
+              exit 1
+            fi
+            containers="$(jq -nc --argjson c "$containers" --argjson i "$IMAGES" '[$c[] | select(.name | IN($i[]))]')"
+          fi
+          {
+            echo "containers=$containers"
+            echo "names=$(jq -c '[.[].name]' <<<"$containers")"
+          } >> "$GITHUB_OUTPUT"

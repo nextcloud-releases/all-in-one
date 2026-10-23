@@ -17,8 +17,14 @@ concurrency:
   group: security-rebuild
 
 jobs:
+  images:
+    permissions:
+      contents: read
+    uses: ./.github/workflows/image-list.yml
+
   scan:
     name: Scan latest images for fixable vulnerabilities
+    needs: images
     runs-on: ubuntu-latest
     permissions: {}
     outputs:
@@ -32,11 +38,10 @@ jobs:
     - name: Run trivy
       id: scan
       shell: bash
+      env:
+        IMAGES: ${{ needs.images.outputs.names }}
       run: |
-        # Keep in sync with the image list in build_images.yml
-        images="aio-alpine aio-apache aio-borgbackup aio-collabora aio-domaincheck all-in-one aio-nextcloud
-          aio-notify-push aio-postgresql aio-redis aio-talk aio-watchtower aio-clamav aio-onlyoffice aio-eurooffice
-          aio-imaginary aio-talk-recording aio-fulltextsearch aio-docker-socket-proxy aio-harp aio-whiteboard"
+        images="$(jq -r '.[]' <<<"$IMAGES")"
 
         ref="$(docker buildx imagetools inspect ghcr.io/nextcloud-releases/all-in-one:latest --format '{{json .Image}}' \
           | jq -r '(.["linux/amd64"] // .).config.Labels["org.opencontainers.image.revision"] // empty')"
@@ -77,11 +82,11 @@ jobs:
     permissions:
       contents: read
       packages: write
-    # ponytail: rebuilds every image, only the improved ones are promoted below
     uses: ./.github/workflows/build_images.yml
     with:
       ref: ${{ needs.scan.outputs.ref }}
       tag: security
+      images: ${{ needs.scan.outputs.images }}
 
   promote:
     name: Promote improved images to latest
