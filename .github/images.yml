@@ -1,0 +1,89 @@
+# Images built by build_images.yml, scanned by security-rebuild.yml and promoted by promote-to-*.yml.
+# Read through the reusable workflow workflows/image-list.yml.
+#   name:    image name below ghcr.io/nextcloud-releases/
+#   context: docker build context
+#   file:    Dockerfile to build
+
+- name: aio-alpine
+  context: ./Containers/alpine
+  file: ./Containers/alpine/Dockerfile
+
+- name: aio-apache
+  context: ./Containers/apache
+  file: ./Containers/apache/Dockerfile
+
+- name: aio-borgbackup
+  context: ./Containers/borgbackup
+  file: ./Containers/borgbackup/Dockerfile
+
+- name: aio-collabora
+  context: ./Containers/collabora
+  file: ./Containers/collabora/Dockerfile
+
+- name: aio-domaincheck
+  context: ./Containers/domaincheck
+  file: ./Containers/domaincheck/Dockerfile
+
+- name: all-in-one
+  context: .
+  file: ./Containers/mastercontainer/Dockerfile
+
+- name: aio-nextcloud
+  context: .
+  file: ./Containers/nextcloud/Dockerfile
+
+- name: aio-notify-push
+  context: ./Containers/notify-push
+  file: ./Containers/notify-push/Dockerfile
+
+- name: aio-postgresql
+  context: ./Containers/postgresql
+  file: ./Containers/postgresql/Dockerfile
+
+- name: aio-redis
+  context: ./Containers/redis
+  file: ./Containers/redis/Dockerfile
+
+- name: aio-talk
+  context: ./Containers/talk
+  file: ./Containers/talk/Dockerfile
+
+- name: aio-watchtower
+  context: ./Containers/watchtower
+  file: ./Containers/watchtower/Dockerfile
+
+- name: aio-clamav
+  context: ./Containers/clamav
+  file: ./Containers/clamav/Dockerfile
+
+- name: aio-onlyoffice
+  context: ./Containers/onlyoffice
+  file: ./Containers/onlyoffice/Dockerfile
+
+- name: aio-eurooffice
+  context: ./Containers/eurooffice
+  file: ./Containers/eurooffice/Dockerfile
+
+- name: aio-imaginary
+  context: ./Containers/imaginary
+  file: ./Containers/imaginary/Dockerfile
+
+- name: aio-talk-recording
+  context: ./Containers/talk-recording
+  file: ./Containers/talk-recording/Dockerfile
+
+- name: aio-fulltextsearch
+  context: ./Containers/fulltextsearch
+  file: ./Containers/fulltextsearch/Dockerfile
+
+- name: aio-docker-socket-proxy
+  context: ./Containers/docker-socket-proxy
+  file: ./Containers/docker-socket-proxy/Dockerfile
+
+- name: aio-harp
+  context: ./Containers/harp
+  file: ./Containers/harp/Dockerfile
+
+- name: aio-whiteboard
+  context: ./Containers/whiteboard
+  file: ./Containers/whiteboard/Dockerfile
