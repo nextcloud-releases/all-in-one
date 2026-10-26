@@ -16,8 +16,13 @@ jobs:
         id: date
         run: echo "date=$(date +"%Y%m%d_%H%M%S")" >> $GITHUB_OUTPUT
 
+  images:
+    permissions:
+      contents: read
+    uses: ./.github/workflows/image-list.yml
+
   promote_to_latest:
-    needs: get_time
+    needs: [get_time, images]
     runs-on: ubuntu-latest
     permissions:
       packages: write
@@ -26,28 +31,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        name: [
-          'aio-alpine',
-          'aio-apache',
-          'aio-borgbackup',
-          'aio-collabora',
-          'aio-domaincheck',
-          'all-in-one',
-          'aio-nextcloud',
-          'aio-notify-push',
-          'aio-postgresql',
-          'aio-redis',
-          'aio-talk',
-          'aio-watchtower',
-          'aio-clamav',
-          'aio-onlyoffice',
-          'aio-eurooffice',
-          'aio-imaginary',
-          'aio-talk-recording',
-          'aio-fulltextsearch',
-          'aio-docker-socket-proxy',
-          'aio-harp',
-          'aio-whiteboard']
+        name: ${{ fromJSON(needs.images.outputs.names) }}
 
     steps:
     - name: Login to ghcr.io
@@ -58,9 +42,10 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
         
     - name: Promote images from beta to latest on ghcr.io
+      env:
+        AIO_NAME: ${{ matrix.name }}
       run: |
         set -x
-        AIO_NAME=${{ matrix.name }}
         DATE="${{needs.get_time.outputs.output1}}"
         if [ -z "$DATE" ]; then
           exit 1
@@ -95,9 +80,10 @@ jobs:
         password: ${{ secrets.DOCKERHUB_TOKEN }}
 
     - name: Publish images on docker hub
+      env:
+        AIO_NAME: ${{ matrix.name }}
       run: |
         set -x
-        AIO_NAME=${{ matrix.name }}
         DATE="${{needs.get_time.outputs.output1}}"
         if [ -z "$DATE" ]; then
           exit 1

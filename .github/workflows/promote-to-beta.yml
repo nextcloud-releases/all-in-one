@@ -4,7 +4,13 @@ on:
   workflow_dispatch:
 
 jobs:
+  images:
+    permissions:
+      contents: read
+    uses: ./.github/workflows/image-list.yml
+
   promote_to_latest:
+    needs: images
     runs-on: ubuntu-latest
     permissions:
       packages: write
@@ -13,28 +19,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        name: [
-          'aio-alpine',
-          'aio-apache',
-          'aio-borgbackup',
-          'aio-collabora',
-          'aio-domaincheck',
-          'all-in-one',
-          'aio-nextcloud',
-          'aio-notify-push',
-          'aio-postgresql',
-          'aio-redis',
-          'aio-talk',
-          'aio-watchtower',
-          'aio-clamav',
-          'aio-onlyoffice',
-          'aio-eurooffice',
-          'aio-imaginary',
-          'aio-talk-recording',
-          'aio-fulltextsearch',
-          'aio-docker-socket-proxy',
-          'aio-harp',
-          'aio-whiteboard']
+        name: ${{ fromJSON(needs.images.outputs.names) }}
 
     steps:
     - name: Login to ghcr.io
@@ -45,11 +30,9 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
         
     - name: Promote images from develop to beta (create multiarch) on ghcr.io
+      env:
+        AIO_NAME: ${{ matrix.name }}
       run: |
-        set -x
-        AIO_NAME=${{ matrix.name }}
-        set +x
-        
         # create multiarch image
         docker buildx imagetools create --tag ghcr.io/nextcloud-releases/$AIO_NAME\:beta ghcr.io/nextcloud-releases/$AIO_NAME\:develop ghcr.io/nextcloud-releases/$AIO_NAME\:develop-arm64
 

@@ -6,46 +6,49 @@ on:
     types:
       - completed
   workflow_dispatch:
+  workflow_call:
+    inputs:
+      ref:
+        description: "Git commit or ref to build from (default: `main`)"
+        type: string
+        default: ''
+      tag:
+        description: Tag to push (default "develop")
+        type: string
+        default: develop
+      images:
+        description: JSON array of image names to build instead of all of them
+        type: string
+        default: ''
 
 permissions: {}
 
 jobs:
+  select:
+    permissions:
+      contents: read
+    uses: ./.github/workflows/image-list.yml
+    with:
+      ref: ${{ inputs.ref }}
+      images: ${{ inputs.images }}
+
   build-amd64:
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
+    needs: select
+    if: needs.select.outputs.containers != '[]'
     strategy:
       fail-fast: false
       matrix:
-        container: [
-          # This whole block needs to stay in sync with the block with arm64 runners further below
-          {name: 'aio-alpine', context: './Containers/alpine', file: './Containers/alpine/Dockerfile'},
-          {name: 'aio-apache', context: './Containers/apache', file: './Containers/apache/Dockerfile'},
-          {name: 'aio-borgbackup', context: './Containers/borgbackup', file: './Containers/borgbackup/Dockerfile'},
-          {name: 'aio-collabora', context: './Containers/collabora', file: './Containers/collabora/Dockerfile'},
-          {name: 'aio-domaincheck', context: './Containers/domaincheck', file: './Containers/domaincheck/Dockerfile'},
-          {name: 'all-in-one', context: '.', file: './Containers/mastercontainer/Dockerfile'},
-          {name: 'aio-nextcloud', context: '.', file: './Containers/nextcloud/Dockerfile'},
-          {name: 'aio-notify-push', context: './Containers/notify-push', file: './Containers/notify-push/Dockerfile'},
-          {name: 'aio-postgresql', context: './Containers/postgresql', file: './Containers/postgresql/Dockerfile'},
-          {name: 'aio-redis', context: './Containers/redis', file: './Containers/redis/Dockerfile'},
-          {name: 'aio-talk', context: './Containers/talk', file: './Containers/talk/Dockerfile'},
-          {name: 'aio-watchtower', context: './Containers/watchtower', file: './Containers/watchtower/Dockerfile'},
-          {name: 'aio-clamav', context: './Containers/clamav', file: './Containers/clamav/Dockerfile'},
-          {name: 'aio-onlyoffice', context: './Containers/onlyoffice', file: './Containers/onlyoffice/Dockerfile'},
-          {name: 'aio-eurooffice', context: './Containers/eurooffice', file: './Containers/eurooffice/Dockerfile'},
-          {name: 'aio-imaginary', context: './Containers/imaginary', file: './Containers/imaginary/Dockerfile'},
-          {name: 'aio-talk-recording', context: './Containers/talk-recording', file: './Containers/talk-recording/Dockerfile'},
-          {name: 'aio-fulltextsearch', context: './Containers/fulltextsearch', file: './Containers/fulltextsearch/Dockerfile'},
-          {name: 'aio-docker-socket-proxy', context: './Containers/docker-socket-proxy', file: './Containers/docker-socket-proxy/Dockerfile'},
-          {name: 'aio-harp', context: './Containers/harp', file: './Containers/harp/Dockerfile'},
-          {name: 'aio-whiteboard', context: './Containers/whiteboard', file: './Containers/whiteboard/Dockerfile'}
-        ]
+        container: ${{ fromJSON(needs.select.outputs.containers) }}
     steps:
       - name: Check out the repo
+        id: checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          ref: ${{ inputs.ref }}
           persist-credentials: false
       - name: Login to ghcr.io
         uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
@@ -60,46 +63,29 @@ jobs:
           context: ${{ matrix.container.context }}
           file: ${{ matrix.container.file }}
           platforms: linux/amd64
+          pull: true
           no-cache: true
           push: true
-          tags: ghcr.io/nextcloud-releases/${{ matrix.container.name }}:develop
+          labels: org.opencontainers.image.revision=${{ steps.checkout.outputs.commit }}
+          tags: ghcr.io/nextcloud-releases/${{ matrix.container.name }}:${{ inputs.tag || 'develop' }}
 
   build-arm64:
     runs-on: ubuntu-24.04-arm
     permissions:
       contents: read
       packages: write
+    needs: select
+    if: needs.select.outputs.containers != '[]'
     strategy:
       fail-fast: false
       matrix:
-        container: [
-          # This whole block needs to stay in sync with the block with amd64 runners further up
-          {name: 'aio-alpine', context: './Containers/alpine', file: './Containers/alpine/Dockerfile'},
-          {name: 'aio-apache', context: './Containers/apache', file: './Containers/apache/Dockerfile'},
-          {name: 'aio-borgbackup', context: './Containers/borgbackup', file: './Containers/borgbackup/Dockerfile'},
-          {name: 'aio-collabora', context: './Containers/collabora', file: './Containers/collabora/Dockerfile'},
-          {name: 'aio-domaincheck', context: './Containers/domaincheck', file: './Containers/domaincheck/Dockerfile'},
-          {name: 'all-in-one', context: '.', file: './Containers/mastercontainer/Dockerfile'},
-          {name: 'aio-nextcloud', context: '.', file: './Containers/nextcloud/Dockerfile'},
-          {name: 'aio-notify-push', context: './Containers/notify-push', file: './Containers/notify-push/Dockerfile'},
-          {name: 'aio-postgresql', context: './Containers/postgresql', file: './Containers/postgresql/Dockerfile'},
-          {name: 'aio-redis', context: './Containers/redis', file: './Containers/redis/Dockerfile'},
-          {name: 'aio-talk', context: './Containers/talk', file: './Containers/talk/Dockerfile'},
-          {name: 'aio-watchtower', context: './Containers/watchtower', file: './Containers/watchtower/Dockerfile'},
-          {name: 'aio-clamav', context: './Containers/clamav', file: './Containers/clamav/Dockerfile'},
-          {name: 'aio-onlyoffice', context: './Containers/onlyoffice', file: './Containers/onlyoffice/Dockerfile'},
-          {name: 'aio-eurooffice', context: './Containers/eurooffice', file: './Containers/eurooffice/Dockerfile'},
-          {name: 'aio-imaginary', context: './Containers/imaginary', file: './Containers/imaginary/Dockerfile'},
-          {name: 'aio-talk-recording', context: './Containers/talk-recording', file: './Containers/talk-recording/Dockerfile'},
-          {name: 'aio-fulltextsearch', context: './Containers/fulltextsearch', file: './Containers/fulltextsearch/Dockerfile'},
-          {name: 'aio-docker-socket-proxy', context: './Containers/docker-socket-proxy', file: './Containers/docker-socket-proxy/Dockerfile'},
-          {name: 'aio-harp', context: './Containers/harp', file: './Containers/harp/Dockerfile'},
-          {name: 'aio-whiteboard', context: './Containers/whiteboard', file: './Containers/whiteboard/Dockerfile'}
-        ]
+        container: ${{ fromJSON(needs.select.outputs.containers) }}
     steps:
       - name: Check out the repo
+        id: checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          ref: ${{ inputs.ref }}
           persist-credentials: false
       - name: Login to ghcr.io
         uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
@@ -114,6 +100,8 @@ jobs:
           context: ${{ matrix.container.context }}
           file: ${{ matrix.container.file }}
           platforms: linux/arm64
+          pull: true
           no-cache: true
           push: true
-          tags: ghcr.io/nextcloud-releases/${{ matrix.container.name }}:develop-arm64
+          labels: org.opencontainers.image.revision=${{ steps.checkout.outputs.commit }}
+          tags: ghcr.io/nextcloud-releases/${{ matrix.container.name }}:${{ inputs.tag || 'develop' }}-arm64
