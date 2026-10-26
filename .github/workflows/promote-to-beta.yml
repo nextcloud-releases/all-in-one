@@ -30,11 +30,9 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
         
     - name: Promote images from develop to beta (create multiarch) on ghcr.io
+      env:
+        AIO_NAME: ${{ matrix.name }}
       run: |
-        set -x
-        AIO_NAME=${{ matrix.name }}
-        set +x
-        
         # create multiarch image
         docker buildx imagetools create --tag ghcr.io/nextcloud-releases/$AIO_NAME\:beta ghcr.io/nextcloud-releases/$AIO_NAME\:develop ghcr.io/nextcloud-releases/$AIO_NAME\:develop-arm64
 

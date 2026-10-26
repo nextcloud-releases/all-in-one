@@ -42,9 +42,10 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
         
     - name: Promote images from beta to latest on ghcr.io
+      env:
+        AIO_NAME: ${{ matrix.name }}
       run: |
         set -x
-        AIO_NAME=${{ matrix.name }}
         DATE="${{needs.get_time.outputs.output1}}"
         if [ -z "$DATE" ]; then
           exit 1
@@ -79,9 +80,10 @@ jobs:
         password: ${{ secrets.DOCKERHUB_TOKEN }}
 
     - name: Publish images on docker hub
+      env:
+        AIO_NAME: ${{ matrix.name }}
       run: |
         set -x
-        AIO_NAME=${{ matrix.name }}
         DATE="${{needs.get_time.outputs.output1}}"
         if [ -z "$DATE" ]; then
           exit 1
