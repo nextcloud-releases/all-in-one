@@ -2,8 +2,21 @@ name: Promote to latest
 
 on:
   workflow_dispatch:
+    inputs:
+      source:
+        description: 'Tag to promote to latest: beta, or latest-candidate (built by "Build docker images")'
+        default: 'beta'
+        required: true
+        type: choice
+        options:
+          - beta
+          - latest-candidate
 
 permissions: {}
+
+concurrency:
+  group: images-${{ inputs.source }}
+  cancel-in-progress: false
 
 jobs:
   get_time:
@@ -16,38 +29,83 @@ jobs:
         id: date
         run: echo "date=$(date +"%Y%m%d_%H%M%S")" >> $GITHUB_OUTPUT
 
+  verify:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+    outputs:
+      names: ${{ steps.verify.outputs.names || steps.unverified.outputs.names }}
+    steps:
+      - name: Check out this repo
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Login to ghcr.io
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # beta images that were built before the revision label was introduced can't be verified and are promoted as before
+      - name: Read the commit the images were built from
+        id: revision
+        env:
+          SOURCE: ${{ inputs.source }}
+        run: |
+          STATUS=0
+          SHA="$(./verify-images.sh --revision "$SOURCE")" || STATUS=$?
+          if [ "$STATUS" -eq 2 ] && [ "$SOURCE" = "beta" ]; then
+            echo "::warning::The beta images have no revision label, so they are promoted without verifying them."
+            echo "The \`beta\` images have no revision label, so they are promoted without verifying them." >> "$GITHUB_STEP_SUMMARY"
+          elif [ "$STATUS" -ne 0 ]; then
+            exit 1
+          fi
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+
+      - name: Check out nextcloud/all-in-one
+        if: steps.revision.outputs.sha != ''
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: nextcloud/all-in-one
+          ref: ${{ steps.revision.outputs.sha }}
+          path: all-in-one
+          persist-credentials: false
+
+      # Nothing is promoted unless every image of that commit exists for both architectures and was built from it
+      - name: Verify that all images were built from that commit
+        if: steps.revision.outputs.sha != ''
+        id: verify
+        env:
+          SOURCE: ${{ inputs.source }}
+          SHA: ${{ steps.revision.outputs.sha }}
+        run: |
+          NAMES="$(./build-image.sh --list ./all-in-one)"
+          mapfile -t NAME_ARRAY <<< "$NAMES"
+          ./verify-images.sh "$SOURCE" "$SHA" "${NAME_ARRAY[@]}"
+          echo "names=$(jq --raw-input --slurp --compact-output 'split("\n") | map(select(length > 0))' <<< "$NAMES")" >> "$GITHUB_OUTPUT"
+          echo "Promoting \`$SOURCE\` (nextcloud/all-in-one@$SHA) to latest." >> "$GITHUB_STEP_SUMMARY"
+
+      # The images that promote-to-beta.yml promoted before the revision label was introduced
+      # TODO: removed this in a few weeks.
+      - name: Use the previous list of images
+        if: steps.revision.outputs.sha == ''
+        id: unverified
+        run: |
+          echo 'names=["aio-alpine","aio-apache","aio-borgbackup","aio-collabora","aio-domaincheck","all-in-one","aio-nextcloud","aio-notify-push","aio-postgresql","aio-redis","aio-talk","aio-watchtower","aio-clamav","aio-onlyoffice","aio-eurooffice","aio-imaginary","aio-talk-recording","aio-fulltextsearch","aio-docker-socket-proxy","aio-harp","aio-whiteboard"]' >> "$GITHUB_OUTPUT"
+
   promote_to_latest:
-    needs: get_time
+    needs: [get_time, verify]
     runs-on: ubuntu-latest
     permissions:
       packages: write
-    name: Promote from beta to latest 
-    
+    name: Promote to latest
+
     strategy:
       fail-fast: false
       matrix:
-        name: [
-          'aio-alpine',
-          'aio-apache',
-          'aio-borgbackup',
-          'aio-collabora',
-          'aio-domaincheck',
-          'all-in-one',
-          'aio-nextcloud',
-          'aio-notify-push',
-          'aio-postgresql',
-          'aio-redis',
-          'aio-talk',
-          'aio-watchtower',
-          'aio-clamav',
-          'aio-onlyoffice',
-          'aio-eurooffice',
-          'aio-imaginary',
-          'aio-talk-recording',
-          'aio-fulltextsearch',
-          'aio-docker-socket-proxy',
-          'aio-harp',
-          'aio-whiteboard']
+        name: ${{ fromJSON(needs.verify.outputs.names) }}
 
     steps:
     - name: Login to ghcr.io
@@ -56,34 +114,41 @@ jobs:
         registry: ghcr.io
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
-        
-    - name: Promote images from beta to latest on ghcr.io
+
+    # The images are combined from <source> and <source>-arm64. imagetools create unpacks multi-arch sources and merges
+    # entries with the same digest, so this works for the single-arch latest-candidate tags as well as for the already
+    # multi-arch beta tags.
+    - name: Promote images to latest on ghcr.io
+      env:
+        AIO_NAME: ${{ matrix.name }}
+        SOURCE: ${{ inputs.source }}
+        DATE: ${{ needs.get_time.outputs.output1 }}
       run: |
         set -x
-        AIO_NAME=${{ matrix.name }}
-        DATE="${{needs.get_time.outputs.output1}}"
         if [ -z "$DATE" ]; then
           exit 1
         fi
+        SOURCE_AMD64="ghcr.io/nextcloud-releases/$AIO_NAME:$SOURCE"
+        SOURCE_ARM64="ghcr.io/nextcloud-releases/$AIO_NAME:$SOURCE-arm64"
         set +x
-        
+
         # multiarch
-        docker buildx imagetools create --tag ghcr.io/nextcloud-releases/$AIO_NAME\:latest ghcr.io/nextcloud-releases/$AIO_NAME\:beta
-        docker buildx imagetools create --tag ghcr.io/nextcloud-releases/$AIO_NAME\:"$DATE" ghcr.io/nextcloud-releases/$AIO_NAME\:beta
-        
+        docker buildx imagetools create --tag ghcr.io/nextcloud-releases/$AIO_NAME\:latest "$SOURCE_AMD64" "$SOURCE_ARM64"
+        docker buildx imagetools create --tag ghcr.io/nextcloud-releases/$AIO_NAME\:"$DATE" "$SOURCE_AMD64" "$SOURCE_ARM64"
+
         # arm64
-        docker buildx imagetools create --tag ghcr.io/nextcloud-releases/$AIO_NAME\:latest-arm64 ghcr.io/nextcloud-releases/$AIO_NAME\:beta-arm64
-        
+        docker buildx imagetools create --tag ghcr.io/nextcloud-releases/$AIO_NAME\:latest-arm64 "$SOURCE_AMD64" "$SOURCE_ARM64"
+
         if [ "$AIO_NAME" == "aio-nextcloud" ]; then
             set -x
-            docker pull ghcr.io/nextcloud-releases/$AIO_NAME\:beta
-            PHP_VERSION="$(docker inspect ghcr.io/nextcloud-releases/$AIO_NAME\:beta | grep PHP_VERSION | grep -oP '[0-8.]+' | sed 's|\.[0-9]\+$||')"
-            docker image remove --force ghcr.io/nextcloud-releases/$AIO_NAME\:beta
+            docker pull "$SOURCE_AMD64"
+            PHP_VERSION="$(docker inspect "$SOURCE_AMD64" | grep PHP_VERSION | grep -oP '[0-8.]+' | sed 's|\.[0-9]\+$||')"
+            docker image remove --force "$SOURCE_AMD64"
             if [ -n "$PHP_VERSION" ]; then
                 # multiarch
-                docker buildx imagetools create --tag ghcr.io/nextcloud-releases/$AIO_NAME\:php"$PHP_VERSION"-latest ghcr.io/nextcloud-releases/$AIO_NAME\:beta
+                docker buildx imagetools create --tag ghcr.io/nextcloud-releases/$AIO_NAME\:php"$PHP_VERSION"-latest "$SOURCE_AMD64" "$SOURCE_ARM64"
                 # arm64
-                docker buildx imagetools create --tag ghcr.io/nextcloud-releases/$AIO_NAME\:php"$PHP_VERSION"-latest-arm64 ghcr.io/nextcloud-releases/$AIO_NAME\:beta-arm64
+                docker buildx imagetools create --tag ghcr.io/nextcloud-releases/$AIO_NAME\:php"$PHP_VERSION"-latest-arm64 "$SOURCE_AMD64" "$SOURCE_ARM64"
             fi
             set +x
         fi
@@ -95,23 +160,27 @@ jobs:
         password: ${{ secrets.DOCKERHUB_TOKEN }}
 
     - name: Publish images on docker hub
+      env:
+        AIO_NAME: ${{ matrix.name }}
+        SOURCE: ${{ inputs.source }}
+        DATE: ${{ needs.get_time.outputs.output1 }}
       run: |
         set -x
-        AIO_NAME=${{ matrix.name }}
-        DATE="${{needs.get_time.outputs.output1}}"
         if [ -z "$DATE" ]; then
           exit 1
         fi
+        SOURCE_AMD64="ghcr.io/nextcloud-releases/$AIO_NAME:$SOURCE"
+        SOURCE_ARM64="ghcr.io/nextcloud-releases/$AIO_NAME:$SOURCE-arm64"
         set +x
 
         # Handle all-in-one image seperately
         if [ "$AIO_NAME" = "all-in-one" ]; then
           # multiarch
-          docker buildx imagetools create --tag nextcloud/all-in-one\:latest nextcloud/all-in-one\:beta
-          
+          docker buildx imagetools create --tag nextcloud/all-in-one\:latest "$SOURCE_AMD64" "$SOURCE_ARM64"
+
           # arm64
-          docker buildx imagetools create --tag nextcloud/all-in-one\:latest-arm64 nextcloud/all-in-one\:beta-arm64
+          docker buildx imagetools create --tag nextcloud/all-in-one\:latest-arm64 "$SOURCE_AMD64" "$SOURCE_ARM64"
         else
           # Publish date images also on docker hub
-          docker buildx imagetools create --tag nextcloud/$AIO_NAME\:"$DATE" ghcr.io/nextcloud-releases/$AIO_NAME\:beta
+          docker buildx imagetools create --tag nextcloud/$AIO_NAME\:"$DATE" "$SOURCE_AMD64" "$SOURCE_ARM64"
         fi
