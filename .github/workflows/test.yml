@@ -12,8 +12,8 @@ on:
 permissions: {}
 
 jobs:
-  build-image:
-    name: Test build-image.sh
+  scripts:
+    name: Test scripts
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -22,4 +22,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Run tests
-        run: ./tests/test-build-image.sh
+        run: |
+          for TEST in ./tests/test-*.sh; do
+            "$TEST"
+          done

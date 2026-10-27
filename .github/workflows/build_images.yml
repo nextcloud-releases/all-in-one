@@ -3,13 +3,17 @@ name: Build docker images
 on:
   workflow_dispatch:
     inputs:
-      ref:
-        description: 'Branch, tag or commit of nextcloud/all-in-one to build'
+      branch:
+        description: 'Branch of nextcloud/all-in-one to build: main (pushed to develop and promoted via beta), or release-* (pushed to latest-candidate, to test and then promote directly to latest)'
         default: 'main'
         required: true
         type: string
 
 permissions: {}
+
+concurrency:
+  group: images-${{ inputs.branch == 'main' && 'develop' || 'latest-candidate' }}
+  cancel-in-progress: false
 
 jobs:
   resolve:
@@ -19,7 +23,25 @@ jobs:
     outputs:
       sha: ${{ steps.resolve.outputs.sha }}
       names: ${{ steps.resolve.outputs.names }}
+      tag: ${{ steps.tag.outputs.tag }}
     steps:
+      - name: Choose the tag for the branch
+        id: tag
+        env:
+          BRANCH: ${{ inputs.branch }}
+        run: |
+          case "$BRANCH" in
+            main)
+              echo "tag=develop" >> "$GITHUB_OUTPUT"
+              ;;
+            release-*)
+              echo "tag=latest-candidate" >> "$GITHUB_OUTPUT"
+              ;;
+            *)
+              echo "::error::Only main and release-* branches can be built, not $BRANCH."
+              exit 1
+              ;;
+          esac
       - name: Check out this repo
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -28,21 +50,22 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: nextcloud/all-in-one
-          ref: ${{ inputs.ref }}
+          ref: ${{ inputs.branch }}
           path: all-in-one
           persist-credentials: false
 
-      # All build jobs use the same commit and image list, even if the ref moves on while they run
+      # All build jobs use the same commit and image list, even if the branch moves on while they run
       - name: Resolve the commit and the images to build
         id: resolve
         env:
-          REF: ${{ inputs.ref }}
+          BRANCH: ${{ inputs.branch }}
+          TAG: ${{ steps.tag.outputs.tag }}
         run: |
           SHA="$(git -C ./all-in-one rev-parse HEAD)"
           NAMES="$(./build-image.sh --list ./all-in-one | jq --raw-input --slurp --compact-output 'split("\n") | map(select(length > 0))')"
           echo "sha=$SHA" >> "$GITHUB_OUTPUT"
           echo "names=$NAMES" >> "$GITHUB_OUTPUT"
-          echo "Building nextcloud/all-in-one@$SHA (ref: \`$REF\`)." >> "$GITHUB_STEP_SUMMARY"
+          echo "Building nextcloud/all-in-one@$SHA (branch: \`$BRANCH\`) as \`$TAG\` and \`$TAG-arm64\`." >> "$GITHUB_STEP_SUMMARY"
 
   build:
     needs: resolve
@@ -54,8 +77,8 @@ jobs:
       fail-fast: false
       matrix:
         arch: [
-          {runner: 'ubuntu-latest', platform: 'linux/amd64', tag: 'develop'},
-          {runner: 'ubuntu-24.04-arm', platform: 'linux/arm64', tag: 'develop-arm64'}
+          {runner: 'ubuntu-latest', platform: 'linux/amd64', suffix: ''},
+          {runner: 'ubuntu-24.04-arm', platform: 'linux/arm64', suffix: '-arm64'}
         ]
         name: ${{ fromJSON(needs.resolve.outputs.names) }}
     steps:
@@ -80,7 +103,7 @@ jobs:
       - name: Build docker image and push to ghcr.io
         env:
           NAME: ${{ matrix.name }}
-          TAG: ${{ matrix.arch.tag }}
+          TAG: ${{ needs.resolve.outputs.tag }}${{ matrix.arch.suffix }}
           PLATFORM: ${{ matrix.arch.platform }}
           SHA: ${{ needs.resolve.outputs.sha }}
         run: |
