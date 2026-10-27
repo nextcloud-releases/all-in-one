@@ -1,5 +1,0 @@
-type = process
-command = eturnalctl foreground
-term-signal = TERM
-restart = yes
-options = shares-console

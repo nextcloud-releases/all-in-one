@@ -3,9 +3,11 @@
   - SPDX-License-Identifier: AGPL-3.0-or-later
 -->
 
-# Agent Guidelines for Nextcloud All-in-one
+# Agent Guidelines for Nextcloud All-in-one releases
 
 This file provides instructions for AI coding agents (Claude Code, GitHub Copilot, Cursor, Windsurf, and others) operating on this repository. Read it before generating any code, commits, or pull requests.
+
+This repository only contains the workflows and scripts that build and publish the images of [Nextcloud All-in-one](https://github.com/nextcloud/all-in-one). The source code of the images lives there.
 
 ---
 
@@ -51,11 +53,11 @@ Assisted-by: AGENT_NAME:MODEL_VERSION
 ```
 
 Common types: `feat`, `fix`, `refactor`, `test`, `docs`, `chore`, `perf`, `build`, `ci`.  
-The scope should match the affected component (e.g. `AIO-interface`, `Fulltextsearch`, `Database`, `Apache`, `Mastercontainer`, `App`, `community-containers` or else).
+The scope should match the affected component (e.g. `workflows`, `build-image`, `vps` or else).
 
 Example:
 ```
-feat(AIO-interface): allow to prune the docker system via a button
+feat(workflows): allow to build images from any ref of nextcloud/all-in-one
 
 Assisted-by: ClaudeCode:claude-sonnet-4-6
 ```
@@ -64,7 +66,7 @@ Assisted-by: ClaudeCode:claude-sonnet-4-6
 
 - Every changed or added code segment must be covered by unit tests. Pull requests without tests for new or modified logic will not be accepted.
 - In areas where unit testing is currently difficult, refactoring to enable testability is encouraged alongside the bug fix.
-- New features must be manually tested on a live Nextcloud instance by the human contributor before submission. Providing test steps for an agent to execute is not a substitute.
+- Changes to workflows must be tested by the human contributor, e.g. by running them in a fork, before submission. Providing test steps for an agent to execute is not a substitute.
 
 ### Developer Certificate of Origin (DCO)
 
@@ -89,10 +91,6 @@ Every new file must include the correct SPDX license header. For AGPL-3.0-or-lat
 
 See [HowToApplyALicense.md](https://github.com/nextcloud/server/blob/master/contribute/HowToApplyALicense.md) for details on per-language formats. AI-generated code must not include material from sources incompatible with AGPL-3.0-or-later.
 
-### Browser compatibility
-
-JavaScript, CSS and HTML in the AIO interface (`php/public/`, `php/templates/`) must only use web features that are [Baseline "widely available"](https://web.dev/baseline). Do not add polyfills or transpilation for older browsers, and do not use features that are only "newly available" or not yet Baseline. Check a feature's Baseline status on [MDN](https://developer.mozilla.org/) or [caniuse.com](https://caniuse.com/) before using it.
-
 ### Security
 
 - Do not open GitHub issues for potential vulnerabilities. Report them via [HackerOne](https://hackerone.com/nextcloud) following the [security policy](https://nextcloud.com/security/).
@@ -101,16 +99,14 @@ JavaScript, CSS and HTML in the AIO interface (`php/public/`, `php/templates/`) 
 
 ### Scope of this repository
 
-This repository covers the Nextcloud all-in-one and all its included containers and features. Issues and changes for other components belong in their respective repositories under the [Nextcloud GitHub organization](https://github.com/nextcloud/).
+This repository covers building and publishing the images of Nextcloud All-in-one. Changes to the images themselves, their containers and features belong in [nextcloud/all-in-one](https://github.com/nextcloud/all-in-one). Issues and changes for other components belong in their respective repositories under the [Nextcloud GitHub organization](https://github.com/nextcloud/).
 
 ---
 
 ## Further Reading
 
-- [Local CONTRIBUTING.md](CONTRIBUTING.md)
 - [Nextcloud Contribution Guidelines](https://github.com/nextcloud/all-in-one/blob/main/CONTRIBUTING.md)
 - [AI Contribution Policy](https://github.com/nextcloud/.github/blob/master/AI_POLICY.md)
 - [Developer Certificate of Origin](https://github.com/nextcloud/server/blob/master/contribute/developer-certificate-of-origin)
 - [How to Apply a License](https://github.com/nextcloud/server/blob/master/contribute/HowToApplyALicense.md)
-- [Developer Manual](https://github.com/nextcloud/all-in-one/blob/main/develop.md)
 - [Security Vulnerability Reporting (HackerOne)](https://hackerone.com/nextcloud)
