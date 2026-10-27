@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       branch:
-        description: 'Branch of nextcloud/all-in-one to build: main (pushed to develop and promoted via beta), or release-* (pushed to latest-candidate, to test and then promote directly to latest)'
+        description: 'Branch of nextcloud/all-in-one to build: main (pushed to develop and promoted via beta), or release-<major>.<minor> like release-14.4 (pushed to latest-candidate, to test and then promote directly to latest)'
         default: 'main'
         required: true
         type: string
@@ -30,18 +30,21 @@ jobs:
         env:
           BRANCH: ${{ inputs.branch }}
         run: |
-          case "$BRANCH" in
-            main)
-              echo "tag=develop" >> "$GITHUB_OUTPUT"
-              ;;
-            release-*)
-              echo "tag=latest-candidate" >> "$GITHUB_OUTPUT"
-              ;;
-            *)
-              echo "::error::Only main and release-* branches can be built, not $BRANCH."
-              exit 1
-              ;;
-          esac
+          if [ "$BRANCH" = "main" ]; then
+            echo "tag=develop" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if ! [[ "$BRANCH" =~ ^release-[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Only main and release-<major>.<minor> branches (e.g. release-14.4) can be built, not $BRANCH."
+            exit 1
+          fi
+          # Checked here, because the checkout's error doesn't say which release branches exist
+          RELEASE_BRANCHES="$(git ls-remote --heads https://github.com/nextcloud/all-in-one.git | sed 's|.*refs/heads/||' | grep -E '^release-[0-9]+\.[0-9]+$' | sort -V | paste -sd ' ' - || true)"
+          if [[ " $RELEASE_BRANCHES " != *" $BRANCH "* ]]; then
+            echo "::error::nextcloud/all-in-one has no branch $BRANCH. Its release branches are: ${RELEASE_BRANCHES:-none}"
+            exit 1
+          fi
+          echo "tag=latest-candidate" >> "$GITHUB_OUTPUT"
       - name: Check out this repo
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -50,7 +53,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: nextcloud/all-in-one
-          ref: ${{ inputs.branch }}
+          ref: refs/heads/${{ inputs.branch }}
           path: all-in-one
           persist-credentials: false
 
