@@ -93,7 +93,7 @@ jobs:
         if: steps.revision.outputs.sha == ''
         id: unverified
         run: |
-          echo 'names=["aio-alpine","aio-apache","aio-borgbackup","aio-collabora","aio-domaincheck","all-in-one","aio-nextcloud","aio-notify-push","aio-postgresql","aio-redis","aio-talk","aio-watchtower","aio-clamav","aio-onlyoffice","aio-eurooffice","aio-imaginary","aio-talk-recording","aio-fulltextsearch","aio-docker-socket-proxy","aio-harp","aio-whiteboard"]' >> "$GITHUB_OUTPUT"
+          echo 'names=["aio-alpine","aio-apache","aio-borgbackup","aio-collabora","aio-domaincheck","all-in-one","aio-nextcloud","aio-notify-push","aio-postgresql","aio-redis","aio-talk","aio-watchtower","aio-clamav","aio-onlyoffice","aio-eurooffice","aio-imaginary","aio-ffmpeg","aio-talk-recording","aio-fulltextsearch","aio-docker-socket-proxy","aio-harp","aio-whiteboard"]' >> "$GITHUB_OUTPUT"
 
   promote_to_latest:
     needs: [get_time, verify]
