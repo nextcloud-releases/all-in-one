@@ -30,6 +30,7 @@ jobs:
           'aio-onlyoffice',
           'aio-eurooffice',
           'aio-imaginary',
+          'aio-ffmpeg',
           'aio-talk-recording',
           'aio-fulltextsearch',
           'aio-docker-socket-proxy',
