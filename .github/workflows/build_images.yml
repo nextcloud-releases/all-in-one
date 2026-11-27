@@ -8,11 +8,25 @@ on:
         default: 'main'
         required: true
         type: string
+  workflow_call:
+    inputs:
+      ref:
+        description: Commit of nextcloud/all-in-one to build instead of the main branch
+        type: string
+        default: ''
+      tag:
+        description: Tag to push instead of develop
+        type: string
+        default: develop
+      images:
+        description: JSON array of image names to build instead of all of them
+        type: string
+        default: ''
 
 permissions: {}
 
 concurrency:
-  group: images-${{ inputs.branch == 'main' && 'develop' || 'latest-candidate' }}
+  group: images-${{ inputs.tag || (inputs.branch == 'main' && 'develop' || 'latest-candidate') }}
   cancel-in-progress: false
 
 jobs:
@@ -29,7 +43,12 @@ jobs:
         id: tag
         env:
           BRANCH: ${{ inputs.branch }}
+          TAG: ${{ inputs.tag }}
         run: |
+          if [ -n "$TAG" ]; then
+            echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
           if [ "$BRANCH" = "main" ]; then
             echo "tag=develop" >> "$GITHUB_OUTPUT"
             exit 0
@@ -53,7 +72,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: nextcloud/all-in-one
-          ref: refs/heads/${{ inputs.branch }}
+          ref: ${{ inputs.ref || format('refs/heads/{0}', inputs.branch || 'main') }}
           path: all-in-one
           persist-credentials: false
 
@@ -61,14 +80,29 @@ jobs:
       - name: Resolve the commit and the images to build
         id: resolve
         env:
-          BRANCH: ${{ inputs.branch }}
+          BRANCH: ${{ inputs.branch || 'main' }}
+          REF: ${{ inputs.ref }}
           TAG: ${{ steps.tag.outputs.tag }}
+          IMAGES: ${{ inputs.images }}
         run: |
           SHA="$(git -C ./all-in-one rev-parse HEAD)"
           NAMES="$(./build-image.sh --list ./all-in-one | jq --raw-input --slurp --compact-output 'split("\n") | map(select(length > 0))')"
+          if [ -n "$IMAGES" ]; then
+            UNKNOWN="$(jq --null-input --raw-output --argjson all "$NAMES" --argjson wanted "$IMAGES" '$wanted - $all | join(" ")')"
+            if [ -n "$UNKNOWN" ]; then
+              echo "::error::nextcloud/all-in-one@$SHA has no images named: $UNKNOWN"
+              exit 1
+            fi
+            NAMES="$(jq --null-input --compact-output --argjson all "$NAMES" --argjson wanted "$IMAGES" '$all - ($all - $wanted)')"
+          fi
           echo "sha=$SHA" >> "$GITHUB_OUTPUT"
           echo "names=$NAMES" >> "$GITHUB_OUTPUT"
-          echo "Building nextcloud/all-in-one@$SHA (branch: \`$BRANCH\`) as \`$TAG\` and \`$TAG-arm64\`." >> "$GITHUB_STEP_SUMMARY"
+          if [ -n "$REF" ]; then
+            ORIGIN="ref: \`$REF\`"
+          else
+            ORIGIN="branch: \`$BRANCH\`"
+          fi
+          echo "Building nextcloud/all-in-one@$SHA ($ORIGIN) as \`$TAG\` and \`$TAG-arm64\`." >> "$GITHUB_STEP_SUMMARY"
 
   build:
     needs: resolve
@@ -110,5 +144,5 @@ jobs:
           PLATFORM: ${{ matrix.arch.platform }}
           SHA: ${{ needs.resolve.outputs.sha }}
         run: |
-          ./build-image.sh ./all-in-one "$NAME" "$TAG" --platform "$PLATFORM" --no-cache --push \
+          ./build-image.sh ./all-in-one "$NAME" "$TAG" --platform "$PLATFORM" --pull --no-cache --push \
             --label "org.opencontainers.image.revision=$SHA"
